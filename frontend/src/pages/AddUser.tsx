@@ -1,83 +1,80 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {Button} from "react-bootstrap";
+import Card from "../components/Card";
 import {Form} from "react-bootstrap";
 import { useAppDispatch } from "../app/hooks";
 
 import classes from './AddUser.module.css';
+import useValidateForm from "../hooks/useValidateForm";
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 6;
 
 const AddUser = () => {
-    const dispatch = useAppDispatch();
-    const [userName, setUserName]     = useState('');
-    const [password, setPassword]     = useState('');
-    const [name, setName]             = useState('');
-    const [surname, setSurname]       = useState('');
-    const [email, setEmail]           = useState('');
-    const [adminRadio, setAdminRadio] = useState(false);
-    const [userRadio, setUserRadio]   = useState(true);          
+    const [userData, setUserData] = useState({
+        username: '',
+        password: '',
+        name:     '',
+        surname:  '',
+        email:    '',
+    });       
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isUser, setIsUser] =   useState(true);
 
-    const userNameChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUserName(e.target.value);
-    }
+    const formIsValid = useValidateForm(userData);
+    
+    const {username, password, name, surname, email} = userData;
 
-    const passwordChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPassword(e.target.value);
-    }
+    let validCredentials = useMemo(() => {
+        return  username.length >= MIN_USERNAME_LENGTH &&
+                password.length >= MIN_PASSWORD_LENGTH &&
+                email.includes('@');
+    }, [username, password, email]);  
 
-    const nameChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setName(e.target.value);
-    }
-
-    const surnameChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSurname(e.target.value);
-    }
-
-    const emailChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setEmail(e.target.value);
+    const userDataChangedHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUserData(prevUserData => ({
+            ...prevUserData,
+            [e.target.name]: e.target.value
+        }))
     }
 
     const adminChangeHandler = () => {
-        setAdminRadio(adminRadio => !adminRadio);
-        setUserRadio(false);
+        setIsAdmin(isAdmin => !isAdmin);
+        setIsUser(false);
     }
 
     const userChangeHandler = () => {
-        setUserRadio(userRadio => !userRadio);
-        setAdminRadio(false);
+        setIsUser(isUser => !isUser);
+        setIsAdmin(false);
     }
 
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setUserName('');
-        setPassword('');
-        setName('');
-        setSurname('');
-        setEmail('');
+        setUserData({
+            username: '',
+            password: '',
+            name: '',
+            surname: '',
+            email: '',
 
+        })
+        setIsUser(true);
+        setIsAdmin(false);
         // TODO send data to backend
-        console.log(userName, password, name, surname, email, adminRadio, userRadio);
-        // dispatch();
+        console.log(userData);
     }
 
-    let formIsValid = userName.length >= MIN_USERNAME_LENGTH && 
-                      password.length >= MIN_PASSWORD_LENGTH &&
-                      name !== '' &&
-                      surname !== '' &&
-                      email.includes('@');
-
-
     return (
-        <div className={classes.formContainer}>
+        <Card>
             <h1 className='text-primary'>Dodajanje uporabnika</h1>
             <Form onSubmit={submitFormHandler}>
                 <Form.Group className="mb-3" controlId="formBasicUserName">
                     <Form.Label>Uporabniško ime</Form.Label>
                     <Form.Control 
                         placeholder="Vnesite uporabniško ime" 
-                        value={userName} 
-                        onChange={userNameChangeHandler} 
+                        name="username"
+                        value={username} 
+                        onChange={userDataChangedHandler} 
                     />
                 </Form.Group>
 
@@ -86,8 +83,9 @@ const AddUser = () => {
                     <Form.Control 
                         type="password" 
                         placeholder="Vnesite geslo" 
+                        name='password'
                         value={password}
-                        onChange={passwordChangeHandler}
+                        onChange={userDataChangedHandler}
                     />
                 </Form.Group>
                 
@@ -95,8 +93,9 @@ const AddUser = () => {
                     <Form.Label>Ime</Form.Label>
                     <Form.Control 
                         placeholder="Vnesite ime" 
+                        name='name'
                         value={name}
-                        onChange={nameChangeHandler}
+                        onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
@@ -104,8 +103,9 @@ const AddUser = () => {
                     <Form.Label>Priimek</Form.Label>
                     <Form.Control 
                         placeholder="Vnesite priimek" 
+                        name='surname'
                         value={surname}
-                        onChange={surnameChangeHandler}
+                        onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
@@ -113,8 +113,9 @@ const AddUser = () => {
                     <Form.Label>E-pošta</Form.Label>
                     <Form.Control 
                         placeholder="Vnesite e-pošto" 
+                        name='email'
                         value={email}
-                        onChange={emailChangeHandler}
+                        onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
@@ -123,23 +124,23 @@ const AddUser = () => {
                         type='radio'
                         id='admin'
                         label='Administrator'
-                        checked={adminRadio}
+                        checked={isAdmin}
                         onClick={adminChangeHandler}
                     />
                     <Form.Check 
                         type='radio'
                         id='user'
                         label='User'
-                        checked={userRadio}
+                        checked={isUser}
                         onClick={userChangeHandler}
                     />
                 </div>
 
-                <Button variant="primary" type="submit" disabled={!formIsValid}>
+                <Button variant="primary" type="submit" disabled={!formIsValid || !validCredentials}>
                     Dodaj
                 </Button>
             </Form>
-        </div>
+        </Card>
     )
 }
 
