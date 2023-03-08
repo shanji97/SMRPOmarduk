@@ -1,11 +1,17 @@
 version: "3.7"
 services:
   mariadb:
-    image: mariadb
-    restart: always
+    image: linuxserver/mariadb:110.4.12mariabionic-ls60
+    container_name: smrpo-mariadb
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: secret
-    volumes:
-      - ./data:/var/lib/mysql
+      #MYSQL_ROOT_PASSWORD: secret
+      TZ: 'Europe/Ljubljana'
     ports:
       - 3306:3306
+    volumes:
+      - data:/config
+    
+volumes:
+  data:
+    driver: local
