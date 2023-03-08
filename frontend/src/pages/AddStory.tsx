@@ -22,7 +22,6 @@ const AddStory = () => {
   };
 
   const userDataChangedHandler = (e: any) => {
-    console.log(e.target.name);
     setStoryData((prevStoryData) => ({
       ...prevStoryData,
       [e.target.name]: e.target.value,
@@ -39,6 +38,10 @@ const AddStory = () => {
 
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // TODO send data to backend
+    console.log(storyData);
+    console.log(tests);
+
     setStoryData({
       title: "",
       description: "",
@@ -46,9 +49,7 @@ const AddStory = () => {
       businessValue: 5,
     });
 
-    // TODO send data to backend
-    console.log(storyData);
-    console.log(tests);
+    setTests([""]);
   };
 
   return (
