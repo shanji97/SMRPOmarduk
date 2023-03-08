@@ -2,13 +2,13 @@ import { useMemo, useState } from "react";
 import {Button} from "react-bootstrap";
 import Card from "../components/Card";
 import {Form} from "react-bootstrap";
-import { useAppDispatch } from "../app/hooks";
 
 import classes from './AddUser.module.css';
 import useValidateForm from "../hooks/useValidateForm";
+import ValidationError from "../components/ValidationError";
 
 const MIN_USERNAME_LENGTH = 4;
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 12;
 
 const AddUser = () => {
     const [userData, setUserData] = useState({
@@ -18,9 +18,10 @@ const AddUser = () => {
         surname:  '',
         email:    '',
     });       
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [isUser, setIsUser] =   useState(true);
-
+    const [isAdmin, setIsAdmin]             = useState(false);
+    const [isUser, setIsUser]               = useState(true);
+    const [passwordError, setPasswordError] = useState(false);
+    const [passwordType, setPasswordType]   = useState('password');
     const formIsValid = useValidateForm(userData);
     
     const {username, password, name, surname, email} = userData;
@@ -46,6 +47,14 @@ const AddUser = () => {
     const userChangeHandler = () => {
         setIsUser(isUser => !isUser);
         setIsAdmin(false);
+    }
+
+    const checkPasswordLength = () => {
+        password.length < MIN_PASSWORD_LENGTH ? setPasswordError(true) : setPasswordError(false);
+    }
+
+    const handleShowPassword = () => {
+        passwordType === 'password' ? setPasswordType('text') : setPasswordType('password');
     }
 
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
@@ -81,12 +90,15 @@ const AddUser = () => {
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                     <Form.Label>Geslo</Form.Label>
                     <Form.Control 
-                        type="password" 
+                        type={passwordType} 
                         placeholder="Vnesite geslo" 
                         name='password'
                         value={password}
                         onChange={userDataChangedHandler}
+                        onBlur={checkPasswordLength}
                     />
+                    <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
+                    {passwordError && <ValidationError>Geslo mora biti dolgo vsaj 12 znakov</ValidationError>}
                 </Form.Group>
                 
                 <Form.Group className="mb-3" controlId="formBasicName">
