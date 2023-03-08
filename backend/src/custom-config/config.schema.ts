@@ -3,9 +3,10 @@ import * as Joi from 'joi';
 export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   DOCS: Joi.boolean().default(true),
   DOC_PATH: Joi.string().default('openapi'),
-  GLOBAL_PREFIX: Joi.string().allow(null).default(null),
+  GLOBAL_PREFIX: Joi.string().allow(null).default('api'),
   NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
   PORT: Joi.number().default(process.env.PORT || 3002),
+  STATIC_DIR: Joi.string().default('client'),
 
   CONFIG: Joi.string(),
   IGNORE_CONFIG: Joi.boolean(),
