@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as compression from 'compression';
 import * as fs from 'fs';
 import helmet from 'helmet';
@@ -23,6 +24,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Get configuration
+  const docPath = configService.get<string>('DOC_PATH');
+  const enableDocs = configService.get<boolean>('DOCS');
   const globalPrefix = configService.get<string>('GLOBAL_PREFIX');
   const port = configService.get<number>('PORT');
   
@@ -37,6 +40,18 @@ async function bootstrap() {
   }));
   app.enableCors();
   app.enableShutdownHooks();
+
+  // API documentation
+  if (enableDocs) {
+    const docConfig = new DocumentBuilder()
+      .setTitle('SMRPO')
+      .setDescription('SMRPO application')
+      .setVersion(getAppVersion())
+      //.addTag('tag', 'name')
+      .build();
+    const document = SwaggerModule.createDocument(app, docConfig);
+    SwaggerModule.setup(docPath, app, document);
+  }
 
   await app.listen(port);
 }
