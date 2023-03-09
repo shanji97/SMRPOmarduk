@@ -50,7 +50,7 @@ async function bootstrap() {
       .addTag('health', 'Healthcheck')
       .build();
     const document = SwaggerModule.createDocument(app, docConfig);
-    SwaggerModule.setup(docPath, app, document);
+    SwaggerModule.setup((globalPrefix) ? `${globalPrefix}/${docPath}`: docPath, app, document);
   }
 
   await app.listen(port);
