@@ -47,7 +47,7 @@ async function bootstrap() {
       .setTitle('SMRPO')
       .setDescription('SMRPO application')
       .setVersion(getAppVersion())
-      //.addTag('tag', 'name')
+      .addTag('health', 'Healthcheck')
       .build();
     const document = SwaggerModule.createDocument(app, docConfig);
     SwaggerModule.setup(docPath, app, document);

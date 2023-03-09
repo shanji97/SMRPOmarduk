@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { CustomConfigModule } from './custom-config/custom-config.module';
 import { DatabaseConfigService } from './custom-config/database-config.service';
 import { ServeStaticConfigService } from './custom-config/serve-static-config.service';
+import { HealthModule } from './health/health.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -19,8 +21,9 @@ import { ServeStaticConfigService } from './custom-config/serve-static-config.se
       imports: [CustomConfigModule],
       useExisting: DatabaseConfigService,
     }),
+    HealthModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}
