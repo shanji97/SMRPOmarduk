@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { ConfigSchema } from './config.schema';
 import { DatabaseConfigService } from './database-config.service';
+import { HttpConfigService } from './http-config.service';
 import { ServeStaticConfigService } from './serve-static-config.service';
 
 @Global()
@@ -26,10 +27,12 @@ import { ServeStaticConfigService } from './serve-static-config.service';
   ],
   providers: [
     DatabaseConfigService,
+    HttpConfigService,
     ServeStaticConfigService,
   ],
   exports: [
     DatabaseConfigService,
+    HttpConfigService,
     ServeStaticConfigService,
   ]
 })
