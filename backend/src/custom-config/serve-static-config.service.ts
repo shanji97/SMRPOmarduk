@@ -32,9 +32,15 @@ export class ServeStaticConfigService implements ServeStaticModuleOptionsFactory
       this.logger.warn(e);
     }
     
+    const exclude: string[] = [];
+    const globalPrefix: string = this.configService.get<string>('GLOBAL_PREFIX');
+    if (globalPrefix) // Exlude API endpoints from serving frontend on not found
+      exclude.push(`/${globalPrefix}/(.*)`);
+    console.log(exclude);
     return [
       {
         rootPath: path,
+        exclude: exclude,
       },
     ];
   }
