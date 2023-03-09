@@ -5,8 +5,8 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   DOC_PATH: Joi.string().default('openapi'),
   GLOBAL_PREFIX: Joi.string().allow(null).default('api'),
   NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
-  PORT: Joi.number().default(process.env.PORT || 3002),
-  STATIC_DIR: Joi.string().default('client'),
+  PORT: Joi.number().default(process.env.PORT || 3000),
+  STATIC_DIR: Joi.string().default('static'),
 
   CONFIG: Joi.string(),
   IGNORE_CONFIG: Joi.boolean(),
