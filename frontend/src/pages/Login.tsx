@@ -1,7 +1,7 @@
 import Card from "../components/Card";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, Modal } from "react-bootstrap";
 import { BoxArrowInRight } from "react-bootstrap-icons";
-import React, { useState } from "react";
+import React, {Fragment, useState} from "react";
 
 import classes from './Login.module.css';
 import useValidateForm from "../hooks/useValidateForm";
@@ -11,9 +11,13 @@ const Login = () => {
         username: '',
         password: ''
     });
-    const formIsValid = useValidateForm(userData);
+    const [codeText, setCodeText]   = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const formIsValid               = useValidateForm(userData);
 
     const {username, password} = userData;
+
+    const closeModal = () => {setShowModal(false)};
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUserData(prevData => ({
@@ -22,8 +26,46 @@ const Login = () => {
         }));
     }
 
+    const handleCodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCodeText(e.target.value);
+    }
+
+    const handle2FALogin = () => {
+        // TODO send to backend
+        console.log(userData, codeText);
+    }
+
+    const renderModal = () => {
+        return (
+            <Modal show={showModal} onHide={closeModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>2 Step Authentication</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <p>Please enter your 6 digit code which was sent to your email</p>
+                    <Form.Group className="mb-3" controlId="formBasicUserName">
+                        <Form.Control
+                            placeholder="Code on your email"
+                            name="codeText"
+                            value={codeText}
+                            onChange={handleCodeInputChange}
+                            maxLength={6}
+                        />
+                    </Form.Group>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeModal}>Close</Button>
+                    <Button variant="primary" onClick={handle2FALogin}>Login</Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setShowModal(true);
     }
     
     return (
@@ -57,6 +99,9 @@ const Login = () => {
 
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>
+            <Fragment>
+                {showModal && renderModal()}
+            </Fragment>
         </Card>
     );
 }
