@@ -1,5 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
@@ -9,6 +10,9 @@ import { UserService } from './user.service';
 import { ValidationException } from '../common/exception/validation.exception';
 
 @ApiTags('user')
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('user')
 export class UserController {
   constructor(

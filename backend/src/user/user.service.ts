@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { hash } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { Repository, QueryFailedError } from 'typeorm';
 
 import { User } from './user.entity';
@@ -17,6 +17,10 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  async comparePassword(password: string, hash: string): Promise<boolean> {
+    return await compare(password, hash);
+  }
+
   async hashPassword(password: string): Promise<string> {
     return await hash(password, this.configService.get<number>('BCRYPT_SALT_ROUNDS')); 
   }
@@ -27,6 +31,10 @@ export class UserService {
 
   async getUserById(userId: number): Promise<User> {
     return await this.userRepository.findOneBy({ id: userId });
+  }
+
+  async getUserByUsernameForLogin(username: string): Promise<User> {
+    return await this.userRepository.createQueryBuilder('user').addSelect('user.password').where('user.username = :username', { username: username }).getOne();
   }
 
   async createUser(user) {

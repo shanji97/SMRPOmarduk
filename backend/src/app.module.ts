@@ -13,6 +13,7 @@ import { HealthController } from './health/health.controller';
 import { HttpConfigService } from './custom-config/http-config.service';
 import { HttpLoggingInterceptor } from './interceptor/http-logging/http-logging.interceptor';
 import { ServeStaticConfigService } from './custom-config/serve-static-config.service';
+import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { UserModule } from './user/user.module';
       useExisting: HttpConfigService,
     }),
     HealthModule,
+    AuthModule,
     UserModule,
   ],
   controllers: [AppController, HealthController],

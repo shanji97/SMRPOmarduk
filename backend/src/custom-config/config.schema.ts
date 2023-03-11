@@ -15,6 +15,8 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
 
   HTTP_TIMEOUT: Joi.number().min(0).default(5000),
   
+  BCRYPT_SALT_ROUNDS: Joi.number().default(10),
+
   /**
    * TypeORM
    * @see https://typeorm.io/#/using-ormconfig/using-environment-variables
@@ -28,4 +30,13 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   TYPEORM_PORT: Joi.number().default(3306),
   TYPEORM_SYNCHRONIZE: Joi.boolean().default(false),
   TYPEORM_LOGGING: Joi.boolean().default(false),
+
+  /**
+	 * Authentication
+	 * @see https://github.com/nestjs/jwt
+	 */
+	JWT_SECRET: Joi.string(),
+	JWT_PUBLIC_KEY_PATH: Joi.string(),
+	JWT_PRIVATE_KEY_PATH: Joi.string(),
+	JWT_ACCESS_TOKEN_EXPIRE: Joi.allow(Joi.string(), Joi.number()).default('1h'),
 });

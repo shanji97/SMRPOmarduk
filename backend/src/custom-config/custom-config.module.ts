@@ -5,6 +5,7 @@ import { ConfigSchema } from './config.schema';
 import { DatabaseConfigService } from './database-config.service';
 import { HttpConfigService } from './http-config.service';
 import { ServeStaticConfigService } from './serve-static-config.service';
+import { JwtConfigService } from './jwt-config.service';
 
 @Global()
 @Module({
@@ -28,11 +29,13 @@ import { ServeStaticConfigService } from './serve-static-config.service';
   providers: [
     DatabaseConfigService,
     HttpConfigService,
+    JwtConfigService,
     ServeStaticConfigService,
   ],
   exports: [
     DatabaseConfigService,
     HttpConfigService,
+    JwtConfigService,
     ServeStaticConfigService,
   ]
 })

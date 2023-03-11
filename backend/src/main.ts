@@ -47,10 +47,21 @@ async function bootstrap() {
       .setTitle('SMRPO')
       .setDescription('SMRPO application')
       .setVersion(getAppVersion())
+      .addBearerAuth({
+        type: 'apiKey',
+        in: 'header',
+        name: 'Authorization',
+      })
+      .addTag('auth', 'Authentication')
       .addTag('health', 'Healthcheck')
+      .addTag('user', 'User')
       .build();
     const document = SwaggerModule.createDocument(app, docConfig);
-    SwaggerModule.setup((globalPrefix) ? `${globalPrefix}/${docPath}`: docPath, app, document);
+    SwaggerModule.setup((globalPrefix) ? `${globalPrefix}/${docPath}`: docPath, app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      }
+    });
   }
 
   await app.listen(port);
