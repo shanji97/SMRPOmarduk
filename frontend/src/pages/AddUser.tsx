@@ -65,7 +65,6 @@ const AddUser = () => {
             name: '',
             surname: '',
             email: '',
-
         })
         setIsUser(true);
         setIsAdmin(false);
