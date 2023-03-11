@@ -4,21 +4,29 @@ import Card from "../components/Card";
 import { Form } from "react-bootstrap";
 
 import classes from "./AddStory.module.css";
+import useValidateForm from "../hooks/useValidateForm";
 
 const AddStory = () => {
   const [storyData, setStoryData] = useState({
     title: "",
     description: "",
-    priority: 0,
+    tests: [""],
+    priority: 3, // 3 => must have, 0 => won't have this time
     businessValue: 5,
   });
 
-  const { title, description, priority, businessValue } = storyData;
+  const [businessValueError, setBusinessValueError] = useState(false);
+  const formIsValid = useValidateForm(storyData) && !businessValueError;
 
-  const [tests, setTests] = useState([""]);
+  const { title, description, tests, priority, businessValue } = storyData;
+
+  // TODO check doubling of story name
 
   const addInputHandler = () => {
-    setTests((prevTests) => [...prevTests, ""]);
+    setStoryData((prevStoryData) => ({
+      ...prevStoryData,
+      tests: [...prevStoryData.tests, ""],
+    }));
   };
 
   const userDataChangedHandler = (e: any) => {
@@ -28,28 +36,42 @@ const AddStory = () => {
     }));
   };
 
-  const testInputChangedHandler = (value: string, index: number) => {
-    setTests((prevTestsData) => {
-      const newTestsData: string[] = [...prevTestsData];
-      newTestsData[index] = value;
-      return newTestsData;
+  const testInputChangedHandler = (e: any, index: number) => {
+    setStoryData((prevStoryData) => {
+      const newTestsData: string[] = [...prevStoryData.tests];
+      newTestsData[index] = e.target.value;
+      return { ...prevStoryData, tests: newTestsData };
     });
+  };
+
+  const selectInputChangedHandler = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setStoryData((prevStoryData) => ({
+      ...prevStoryData,
+      priority: +e.target.value,
+    }));
+  };
+
+  const checkBusinessValue = () => {
+    businessValue < 0 || businessValue > 10
+      ? setBusinessValueError(true)
+      : setBusinessValueError(false);
   };
 
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO send data to backend
+
+    // TODO send data to backend via service
     console.log(storyData);
-    console.log(tests);
 
     setStoryData({
       title: "",
       description: "",
-      priority: 0,
+      tests: [""],
+      priority: 3,
       businessValue: 5,
     });
-
-    setTests([""]);
   };
 
   return (
@@ -84,17 +106,18 @@ const AddStory = () => {
         >
           <Form.Label>Tests</Form.Label>
           <Form.Group className="mb-3" controlId="form-tests">
-            {tests.map((input, index) => (
+            {storyData.tests.map((input, index) => (
               <Form.Group key={index}>
                 <Form.Text className="text-secondary">{`Test ${
                   index + 1
                 }`}</Form.Text>
                 <Form.Control
-                  type="text"
                   value={input}
-                  onChange={(e) =>
-                    testInputChangedHandler(e.target.value, index)
-                  }
+                  placeholder="Add test"
+                  onChange={(e) => {
+                    console.log();
+                    testInputChangedHandler(e, index);
+                  }}
                 />
               </Form.Group>
             ))}
@@ -113,14 +136,14 @@ const AddStory = () => {
           <Form.Label>Priority</Form.Label>
           <Form.Select
             aria-label="Select story priority"
-            onChange={userDataChangedHandler}
+            onChange={selectInputChangedHandler}
             value={priority}
             name="priority"
           >
-            <option value="0">Must have</option>
-            <option value="1">Should have</option>
-            <option value="2">Could have</option>
-            <option value="3">Won't have this time</option>
+            <option value="3">Must have</option>
+            <option value="2">Should have</option>
+            <option value="1">Could have</option>
+            <option value="0">Won't have this time</option>
           </Form.Select>
         </Form.Group>
 
@@ -131,9 +154,19 @@ const AddStory = () => {
             name="businessValue"
             value={businessValue}
             onChange={userDataChangedHandler}
+            onBlur={checkBusinessValue}
+            type="number"
           />
+          <Form.Text className="text-secondary">
+            Enter a number between 0 and 10.
+          </Form.Text>
         </Form.Group>
-        <Button variant="primary" type="submit" size="lg">
+        <Button
+          variant="primary"
+          type="submit"
+          size="lg"
+          disabled={!formIsValid}
+        >
           Add story
         </Button>
       </Form>
