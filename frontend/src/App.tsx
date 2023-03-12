@@ -15,7 +15,19 @@ function App() {
       <Router>
           <Routes>
               <Route path='/' element={<Home />}/>
-              <Route path='/add-user' element={<AddUser />}/>
+              <Route path='/add-user' element={
+                  <AddUser
+                      isEdit={false}
+                      usernameInit=''
+                      passwordInit=''
+                      nameInit=''
+                      surnameInit=''
+                      emailInit=''
+                      isAdminInit={false}
+                      handleClose={() => {}}
+                  />
+              }
+              />
               <Route path='/login' element={<Login />} />
               <Route path='/change-password' element={<ChangePassword />} />
               <Route path='/users' element={<Users />} />
