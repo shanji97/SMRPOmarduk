@@ -113,8 +113,8 @@ const Users = () => {
                             isEdit
                             usernameInit={DUMMY_USERS[editIndex].username}
                             passwordInit={DUMMY_USERS[editIndex].password}
-                            nameInit={DUMMY_USERS[editIndex].name}
-                            surnameInit={DUMMY_USERS[editIndex].surname}
+                            firstNameInit={DUMMY_USERS[editIndex].name}
+                            lastNameInit={DUMMY_USERS[editIndex].surname}
                             emailInit={DUMMY_USERS[editIndex].email}
                             isAdminInit={DUMMY_USERS[editIndex].isAdmin}
                             handleClose={closeModal}

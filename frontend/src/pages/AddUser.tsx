@@ -5,6 +5,7 @@ import Card from "../components/Card";
 import classes from './AddUser.module.css';
 import useValidateForm from "../hooks/useValidateForm";
 import ValidationError from "../components/ValidationError";
+import {UserData} from "../../classes/userData";
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 12;
@@ -13,8 +14,8 @@ interface AddUserProps {
     isEdit:       boolean,
     usernameInit: string,
     passwordInit: string,
-    nameInit:     string,
-    surnameInit:  string,
+    firstNameInit:string,
+    lastNameInit: string,
     emailInit:    string,
     isAdminInit:  boolean,
     handleClose:  () => void
@@ -26,8 +27,8 @@ const AddUser: React.FC<AddUserProps> = (
         isEdit,
         usernameInit,
         passwordInit,
-        nameInit,
-        surnameInit,
+        firstNameInit,
+        lastNameInit,
         emailInit,
         isAdminInit,
         handleClose
@@ -35,12 +36,12 @@ const AddUser: React.FC<AddUserProps> = (
     const [userData, setUserData] = useState({
         username: usernameInit,
         password: passwordInit,
-        name: nameInit,
-        surname: surnameInit,
+        firstName: firstNameInit,
+        lastName: lastNameInit,
         email: emailInit,
     });
 
-    const {username, password, name, surname, email} = userData;
+    const {username, password, firstName, lastName, email} = userData;
 
     const [isAdminRadio, setIsAdminRadio]   = useState(false);
     const [isUserRadio, setIsUserRadio]     = useState(true);
@@ -88,11 +89,23 @@ const AddUser: React.FC<AddUserProps> = (
 
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        const newUser: UserData = {
+            username,
+            password,
+            firstName,
+            lastName,
+            email,
+            isAdmin: isAdminRadio
+        }
+
+        console.log(newUser);
+
         setUserData({
             username: '',
             password: '',
-            name: '',
-            surname: '',
+            firstName: '',
+            lastName: '',
             email: '',
         })
         setIsUserRadio(true);
@@ -101,8 +114,6 @@ const AddUser: React.FC<AddUserProps> = (
             handleClose();
         }
         // TODO send data to backend
-        console.log(userData);
-        console.log(isAdminRadio, isUserRadio);
     }
 
     if (isEdit) {
@@ -136,18 +147,18 @@ const AddUser: React.FC<AddUserProps> = (
                     <Form.Label>Name</Form.Label>
                     <Form.Control
                         placeholder="Enter your name"
-                        name='name'
-                        value={name}
+                        name='firstName'
+                        value={firstName}
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicSurname">
-                    <Form.Label>Surname</Form.Label>
+                    <Form.Label>Lastname</Form.Label>
                     <Form.Control
-                        placeholder="Enter your surname"
-                        name='surname'
-                        value={surname}
+                        placeholder="Enter your lastname"
+                        name='lastName'
+                        value={lastName}
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>
@@ -217,18 +228,18 @@ const AddUser: React.FC<AddUserProps> = (
                     <Form.Label>Name</Form.Label>
                     <Form.Control
                         placeholder="Enter your name"
-                        name='name'
-                        value={name}
+                        name='firstName'
+                        value={firstName}
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicSurname">
-                    <Form.Label>Surname</Form.Label>
+                    <Form.Label>Lastname</Form.Label>
                     <Form.Control
-                        placeholder="Enter your surname"
-                        name='surname'
-                        value={surname}
+                        placeholder="Enter your lastname"
+                        name='lastName'
+                        value={lastName}
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>

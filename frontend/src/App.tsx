@@ -21,8 +21,8 @@ function App() {
                       isEdit={false}
                       usernameInit=''
                       passwordInit=''
-                      nameInit=''
-                      surnameInit=''
+                      firstNameInit=''
+                      lastNameInit=''
                       emailInit=''
                       isAdminInit={false}
                       handleClose={() => {}}
