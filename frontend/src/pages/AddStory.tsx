@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "react-bootstrap";
 import Card from "../components/Card";
 import { Form } from "react-bootstrap";
@@ -18,7 +18,7 @@ const AddStory = () => {
   const [businessValueError, setBusinessValueError] = useState(false);
   const formIsValid = useValidateForm(storyData) && !businessValueError;
 
-  const { title, description, tests, priority, businessValue } = storyData;
+  const { title, description, priority, businessValue } = storyData;
 
   // TODO check doubling of story name
 
