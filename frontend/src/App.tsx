@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import AddUser from "./pages/AddUser";
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
+import Users from "./pages/Users";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -14,9 +15,22 @@ function App() {
       <Router>
           <Routes>
               <Route path='/' element={<Home />}/>
-              <Route path='/add-user' element={<AddUser />}/>
+              <Route path='/add-user' element={
+                  <AddUser
+                      isEdit={false}
+                      usernameInit=''
+                      passwordInit=''
+                      nameInit=''
+                      surnameInit=''
+                      emailInit=''
+                      isAdminInit={false}
+                      handleClose={() => {}}
+                  />
+              }
+              />
               <Route path='/login' element={<Login />} />
               <Route path='/change-password' element={<ChangePassword />} />
+              <Route path='/users' element={<Users />} />
           </Routes>
       </Router>
     </Fragment>
