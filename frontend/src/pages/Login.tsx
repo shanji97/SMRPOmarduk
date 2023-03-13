@@ -5,9 +5,13 @@ import React, {Fragment, useState} from "react";
 
 import classes from './Login.module.css';
 import useValidateForm from "../hooks/useValidateForm";
+import { useAppDispatch } from "../app/hooks";
+import { login } from "../features/users/userSlice";
+import { LoginData } from "../../classes/userData";
 
 const Login = () => {
-    const [userData, setUserData] = useState({
+    const dispatch = useAppDispatch();
+    const [userData, setUserData] = useState<LoginData>({
         username: '',
         password: ''
     });
@@ -32,6 +36,7 @@ const Login = () => {
 
     const handle2FALogin = () => {
         // TODO send to backend
+        dispatch(login(userData));
         console.log(userData, codeText);
     }
 
@@ -65,6 +70,7 @@ const Login = () => {
 
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        dispatch(login(userData));
         setShowModal(true);
     }
     
@@ -100,7 +106,8 @@ const Login = () => {
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>
             <Fragment>
-                {showModal && renderModal()}
+                {/* NOTE TO SELF: SET false BACK TO showModal WHEN BACKEND 2FA IS IMPLEMENTED */}
+                {false && renderModal()}
             </Fragment>
         </Card>
     );

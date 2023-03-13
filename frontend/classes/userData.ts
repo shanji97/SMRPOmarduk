@@ -6,3 +6,8 @@ export interface UserData {
     email:     string,
     isAdmin:   boolean,
 }
+
+export interface LoginData {
+    username: string,
+    password: string,
+}
