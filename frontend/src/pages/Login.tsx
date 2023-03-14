@@ -1,16 +1,19 @@
 import Card from "../components/Card";
 import { Button, Form, Modal } from "react-bootstrap";
 import { BoxArrowInRight } from "react-bootstrap-icons";
-import React, {Fragment, useState} from "react";
-
+import React, {Fragment, useEffect, useState} from "react";
+import ValidationError from "../components/ValidationError";
 import classes from './Login.module.css';
 import useValidateForm from "../hooks/useValidateForm";
-import { useAppDispatch } from "../app/hooks";
+import {useAppDispatch, useAppSelector} from "../app/hooks";
+import {useNavigate} from "react-router-dom";
 import { login } from "../features/users/userSlice";
 import { LoginData } from "../../classes/userData";
 
 const Login = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const {user, isError, message, isSuccess} = useAppSelector(state => state.users);
     const [userData, setUserData] = useState<LoginData>({
         username: '',
         password: ''
@@ -20,6 +23,14 @@ const Login = () => {
     const formIsValid               = useValidateForm(userData);
 
     const {username, password} = userData;
+
+    useEffect(() => {
+        if (isError) {
+            return;
+        } else if (isSuccess || user) {
+            navigate('/');
+        }
+    }, [isError, isSuccess, navigate, user]);
 
     const closeModal = () => {setShowModal(false)};
 
@@ -101,8 +112,8 @@ const Login = () => {
                         value={password}
                         onChange={handleInputChange}
                     />
+                    {message !== '' && <ValidationError>Invalid credentials</ValidationError>}
                 </Form.Group>
-
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>
             <Fragment>

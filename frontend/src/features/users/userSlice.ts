@@ -6,6 +6,7 @@ const user = JSON.parse(localStorage.getItem('user')!);
 
 interface UserState {
     user: string | null
+    users: UserData[]
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -14,6 +15,7 @@ interface UserState {
 
 const initialState: UserState = {
     user: user ? user : null,
+    users: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -39,6 +41,24 @@ export const createUser = createAsyncThunk('auth/create', async (userData: UserD
     }  
 });
 
+export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkAPI) => {
+    try {
+        return await userService.getAllUsers();
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: string, thunkAPI) => {
+    try {
+        return await userService.deleteUser(userId);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 export const userSlice = createSlice({
     name: 'users',
     initialState,
@@ -60,9 +80,42 @@ export const userSlice = createSlice({
                 state.isSuccess = true;
                 state.isError = false;
                 state.message = '';
-                state.user = action.payload
+                state.user = action.payload.token
             })
             .addCase(login.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+                state.user = null
+            })
+            .addCase(getAllUsers.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getAllUsers.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.users = action.payload
+            })
+            .addCase(getAllUsers.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+                state.user = null
+            })
+            .addCase(deleteUser.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(deleteUser.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                // @ts-ignore
+                state.users = state.users.filter(user => user.id !== action.payload)
+            })
+            .addCase(deleteUser.rejected, (state, action) => {
                 state.isLoading = false
                 state.isError = true
                 state.message = action.payload
