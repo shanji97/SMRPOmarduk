@@ -44,3 +44,6 @@ Configuration options are specified [here](./src//custom-config/config.schema.ts
 
 By default if there are no users in database, default user `admin:admin` is automaticaly generated.
 
+## API documentation
+
+Available on `/api/doc` if `DOCS=true`. For authentication use `JWT <token>`.
