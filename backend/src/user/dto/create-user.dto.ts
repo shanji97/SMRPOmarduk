@@ -49,6 +49,14 @@ export class CreateUserDto {
   email: string | null;
 
   @ApiProperty({
+    default: false,
+    example: false,
+    nullable: false,
+    required: false,
+  })
+  isAdmin?: boolean;
+
+  @ApiProperty({
     example: 'Sample description',
     minLength: 1,
     maxLength: 65535,
@@ -65,6 +73,7 @@ export const CreateUserSchema = Joi.object().keys({
   username: Joi.string().trim().min(1).max(128).required(),
   password: Joi.string().trim().min(1).max(60).required(),
   email: Joi.string().trim().min(1).max(255).allow(null),
+  isAdmin: Joi.boolean(),
   description: Joi.string().trim().min(1).max(65535).allow(null),
   dateCreated: Joi.any().strip(),
   dateUpdated: Joi.any().strip(),
