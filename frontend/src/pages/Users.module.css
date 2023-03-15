@@ -1,0 +1,12 @@
+.usernameContainer {
+    display: flex;
+    justify-content: space-between;
+}
+
+.pencilBtn {
+    cursor: pointer;
+}
+
+.modal {
+    width: 90%;
+}
