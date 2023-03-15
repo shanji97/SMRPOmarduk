@@ -32,6 +32,7 @@ export class UserService implements OnModuleInit {
         lastName: 'User',
         username: defaultUserUsername,
         password: defaultUserPassword,
+        isAdmin: true,
       });
       this.logger.log(`Default user ${defaultUserUsername} created.`);
     }

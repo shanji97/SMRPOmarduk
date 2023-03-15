@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
+import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -20,10 +21,12 @@ export class AuthService {
     return null; // Not valid credentials
   }
 
-  async createTokenForUser(user) {
+  async createTokenForUser(user: User) {
     const payload = {
       sid: user.id,
       sub: user.username,
+      sname: `${user.firstName} ${user.lastName}`,
+      isAdmin: user.isAdmin,
     };
     return {
       token: await this.jwtService.signAsync(payload, {
