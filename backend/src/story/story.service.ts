@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { compare, hash } from 'bcrypt';
 import { Repository, QueryFailedError } from 'typeorm';
 
 import { Story } from './story.entity';
@@ -15,7 +14,7 @@ export class StoryService {
     private readonly configService: ConfigService,
     @InjectRepository(Story)
     private readonly storyRepository: Repository<Story>,
-  ) {}
+  ) { }
 
   async getAllStories(): Promise<Story[]> {
     return await this.storyRepository.find();
@@ -25,12 +24,15 @@ export class StoryService {
     return await this.storyRepository.findOneBy({ id: storyId });
   }
 
-  async createStory(story) {
+  async createStory(story): Promise<object> {
     try {
-      await this.storyRepository.insert(story);
+      const insertedResult = await this.storyRepository.insert(story);
+      return {
+        id: insertedResult.identifiers[0]
+      }
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
-        switch(ex.driverError.errno) {
+        switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
             throw new ValidationException('Storyname already exists');
         }
@@ -43,7 +45,7 @@ export class StoryService {
       await this.storyRepository.update({ id: storyId }, story);
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
-        switch(ex.driverError.errno) {
+        switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
             throw new ValidationException('Storyname already exists');
         }

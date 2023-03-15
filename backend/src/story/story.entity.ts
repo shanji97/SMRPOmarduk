@@ -1,6 +1,6 @@
-import { title } from 'process';
-import { text } from 'stream/consumers';
-import { Entity, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column,PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+
+import {Test} from '../test/test.entity';
 
 @Entity()
 export class Story {
@@ -16,5 +16,9 @@ export class Story {
   @Column({ type: "tinyint" })
   priority: number
 
+  @Column({ type: "tinyint" })
+  businessValues: number
 
+  @OneToMany(type => Test, test => test.story)
+  testi: Test
 }

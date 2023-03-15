@@ -1,68 +1,60 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
+import { string } from 'joi';
 
 export class UpdateStoryDto {
 
-/*@ApiProperty({
-  example: 'John',
-  minLength: 1,
-  maxLength: 128,
-  nullable: false,
-  required: false,
-})
-firstName?: string;
+  @ApiProperty({
+    example: "This is sample title",
+    minLength: 1,
+    maxLength: 128,
+    type: String,
+    required: true
+  })
+  title: string;
 
-@ApiProperty({
-  example: 'Doe',
-  minLength: 1,
-  maxLength: 128,
-  nullable: false,
-  required: false,
-})
-lastName?: string;
+  @ApiProperty({
+    example: "Tests",
+    type: String[],
+    required: true
+  })
+  test: string[];
 
-@ApiProperty({
-  example: 'jdoe',
-  minLength: 0,
-  maxLength: 128,
-  nullable: false,
-  required: false,
-})
-username?: string;
+  @ApiProperty({
+    example: "This is sample description",
+    minLength: 1,
+    required: true
+  })
+  description: string;
 
-@ApiProperty({
-  example: 'jdoe',
-  minLength: 1,
-  maxLength: 60,
-  nullable: false,
-  required: false,
-})
-password?: string;
-
-@ApiProperty({
-  example: 'jdoe@example.com',
-  minLength: 1,
-  maxLength: 255,
-  nullable: true,
-  required: false,
-})
-email?: string | null;
-
-@ApiProperty({
-  example: 'Sample description',
-  minLength: 1,
-  maxLength: 65535,
-  nullable: true,
-  required: false,
-})
-description?: string | null;
-*/
+  @ApiProperty({
+    description: "Priority",
+    example: 3,
+    minimum: 0,
+    maximum: 3,
+    default: 3,
+    type:Number,
+    required: true
+  })
+  priority: number;
+  
+  @ApiProperty({
+    description: "Business value",
+    example: 5,
+    minimum: 0,
+    maximum: 10,
+    default: 5,
+    type:Number,
+    required: true
+  })
+  businessValue: number;
 }
 
 export const UpdateStorySchema = Joi.object().keys({
   id: Joi.any().strip(),
   title: Joi.string().trim().min(1).max(128).required(),
-  description: Joi.string().trim().min(1).required(),
+  description: Joi.string().trim().min(5).required(),
+  tests: Joi.any,
   priority: Joi.number().required()["default"](3),
   businessValue: Joi.number().greater(-1).less(11).required()["default"](5)
 });

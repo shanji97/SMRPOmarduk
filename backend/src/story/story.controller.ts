@@ -6,19 +6,25 @@ import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { UpdateStoryDto, UpdateStorySchema } from './dto/update-story.dto';
 import { Story } from './story.entity';
 import { StoryService } from './story.service';
+import { TestService } from '../test/test.service';
 import { ValidationException } from '../common/exception/validation.exception';
 
+// Posebej controller za teste
+// returnaj story id
+//vsakem testu dodati story id.
+
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+//@ApiBearerAuth()
+//@ApiUnauthorizedResponse()
+//@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
     private readonly storyService: StoryService,
-  ) {}
-  
-  @ApiOperation({ summary: 'List storys' })
+    private readonly testService: TestService,
+  ) { }
+
+  @ApiOperation({ summary: 'List stories' })
   @ApiOkResponse()
   @Get()
   async listStorys(): Promise<Story[]> {
@@ -40,7 +46,8 @@ export class StoryController {
   @Post()
   async createStory(@Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto) {
     try {
-      await this.storyService.createStory(story);
+      const row = await this.storyService.createStory(story);
+      await this.testService.createTest(row[0].id, story.test);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);

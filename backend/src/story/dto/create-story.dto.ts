@@ -3,67 +3,56 @@ import * as Joi from 'joi';
 
 export class CreateStoryDto {
 
-  /*
   @ApiProperty({
-    example: 'Lorem',
+    example: "This is sample title",
     minLength: 1,
     maxLength: 128,
-    nullable: false,
-    required: true,
+    type: String,
+    required: true
   })
-  firstName: string;
+  title: string;
 
   @ApiProperty({
-    example: 'Doe',
+    example: "This is sample description",
     minLength: 1,
-    maxLength: 128,
-    nullable: false,
-    required: true,
+    required: true
   })
-  lastName: string;
+  description: string;
 
   @ApiProperty({
-    example: 'jdoe',
-    minLength: 0,
-    maxLength: 128,
-    nullable: false,
-    required: true,
+    example: "Tests",
+    required: true
   })
-  username: string;
+  test: string[];
 
   @ApiProperty({
-    example: 'jdoe',
-    minLength: 1,
-    maxLength: 60,
-    nullable: false,
-    required: true,
+    description: "Priority",
+    example: 3,
+    minimum: 0,
+    maximum: 3,
+    default: 3,
+    type: Number,
+    required: true
   })
-  password: string;
+  priority: number;
 
   @ApiProperty({
-    example: 'jdoe@example.com',
-    minLength: 1,
-    maxLength: 255,
-    nullable: true,
-    required: false,
+    description: "Business value",
+    example: 5,
+    minimum: 0,
+    maximum: 10,
+    default: 5,
+    type: Number,
+    required: true
   })
-  email: string | null;
-
-  @ApiProperty({
-    example: 'Sample description',
-    minLength: 1,
-    maxLength: 65535,
-    nullable: true,
-    required: false,
-  })
-  description?: string | null;
-  */
+  businessValue: number;
 }
 
 export const CreateStorySchema = Joi.object().keys({
   id: Joi.any().strip(),
   title: Joi.string().trim().min(1).max(128).required(),
   description: Joi.string().trim().min(1).required(),
+  tests: Joi.any(),
   priority: Joi.number().required()["default"](3),
   businessValue: Joi.number().greater(-1).less(11).required()["default"](5)
 });
