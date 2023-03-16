@@ -5,7 +5,7 @@ export interface UserData {
     firstName: string,
     lastName:  string,
     email:     string,
-    isAdmin:   boolean,
+    //isAdmin:   boolean,
 }
 
 export interface LoginData {

@@ -31,28 +31,30 @@ export const login = createAsyncThunk('auth/login', async (userData: LoginData, 
     }  
 });
 
-export const createUser = createAsyncThunk('auth/create', async (userData: UserData, thunkAPI) => {
+export const createUser = createAsyncThunk('auth/create', async (userData: UserData, thunkAPI: any) => {
     try {
-        console.log(userData);
-        return await userService.create(userData);
+        const token = thunkAPI.getState().users.user.token; 
+        return await userService.create(userData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
     }  
 });
 
-export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkAPI) => {
+export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkAPI: any) => {
     try {
-        return await userService.getAllUsers();
+        const token = thunkAPI.getState().users.user.token; 
+        return await userService.getAllUsers(token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
     }
 });
 
-export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: string, thunkAPI) => {
+export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: string, thunkAPI: any) => {
     try {
-        return await userService.deleteUser(userId);
+        const token = thunkAPI.getState().users.user.token; 
+        return await userService.deleteUser(userId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)

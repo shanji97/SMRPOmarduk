@@ -14,24 +14,37 @@ const login = async (userData: LoginData) => {
     return response.data;
 }
 
-const create = async (userData: UserData) => {
-    const response = await axios.post(`${USERS_API_URL}`, userData);
-
-    if (response.data) {
-        localStorage.setItem('user', JSON.stringify(response.data));
+const create = async (userData: UserData, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
     }
 
-    return response.data;
-}
-
-const getAllUsers = async () => {
-    const response = await axios.get(`${USERS_API_URL}`);
+    const response = await axios.post(`${USERS_API_URL}`, userData, config);
+    console.log(response.status);
 
     return response.data;
 }
 
-const deleteUser = async (userId: string) => {
-    const response = await axios.delete(`${USERS_API_URL}/${userId}`);
+const getAllUsers = async (token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${USERS_API_URL}`, config);
+
+    return response.data;
+}
+
+const deleteUser = async (userId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.delete(`${USERS_API_URL}/${userId}`, config);
 
     return response.data;
 }

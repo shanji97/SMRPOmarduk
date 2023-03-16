@@ -46,6 +46,7 @@ const AddUser: React.FC<AddUserProps> = (
     });
 
     const {username, password, firstName, lastName, email} = userData;
+    console.log(userData);
 
     const [isAdminRadio, setIsAdminRadio]   = useState(false);
     const [isUserRadio, setIsUserRadio]     = useState(true);
@@ -61,9 +62,14 @@ const AddUser: React.FC<AddUserProps> = (
     }, []);
 
     let validCredentials = useMemo(() => {
-        return  username.length >= MIN_USERNAME_LENGTH &&
-                password.length >= MIN_PASSWORD_LENGTH &&
+        if (isEdit) {
+            return  username.length >= MIN_USERNAME_LENGTH &&
                 email.includes('@');
+        } else {
+            return  username.length >= MIN_USERNAME_LENGTH &&
+                    password.length >= MIN_PASSWORD_LENGTH &&
+                    email.includes('@');
+        }
     }, [username, password, email]);  
 
     const userDataChangedHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,10 +106,29 @@ const AddUser: React.FC<AddUserProps> = (
             firstName,
             lastName,
             email,
-            isAdmin: isAdminRadio
+//            isAdmin: isAdminRadio
         }
 
-        dispatch(createUser(newUser));
+        if (isEdit) { 
+            if (password) {
+                const body = {
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                    password
+                }  
+                // dispatch
+            } else {
+                const body = {
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                } 
+                // dispatch
+            }
+        }
 
         setUserData({
             username: '',
@@ -193,7 +218,7 @@ const AddUser: React.FC<AddUserProps> = (
                         onClick={userChangeHandler}
                     />
                 </div>
-                <Button variant="primary" type="submit" disabled={!formIsValid || !validCredentials}>
+                <Button variant="primary" type="submit" disabled={!validCredentials}>
                     Save
                 </Button>
             </Form>

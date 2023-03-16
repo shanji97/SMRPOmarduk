@@ -1,49 +1,22 @@
 import {DropdownButton, Table, Dropdown, Modal} from "react-bootstrap";
 import {Check, PencilFill, TrashFill, X} from "react-bootstrap-icons";
 import Card from "../components/Card";
-import React, {Fragment, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import AddUser from "./AddUser";
 
 import classes from './Users.module.css';
-
-const DUMMY_USERS = [
-    {
-        username: 'tinec',
-        password: '123123',
-        name: 'Tine',
-        surname: 'Crnugelj',
-        email: 'tine.crnugelj@gmail.com',
-        isAdmin: false
-    },
-    {
-        username: 'martind',
-        password: '123123',
-        name: 'Martin',
-        surname: 'Dagarin',
-        email: 'martin.dagarin@gmail.com',
-        isAdmin: true
-    },
-    {
-        username: 'simonk',
-        password: '123123',
-        name: 'Simon',
-        surname: 'Klavzar',
-        email: 'simon.klavzar@gmail.com',
-        isAdmin: false
-    },
-    {
-        username: 'matevzl',
-        password: '123123',
-        name: 'Matevz',
-        surname: 'Lapajne',
-        email: 'matevz.lapajne@gmail.com',
-        isAdmin: true
-    },
-];
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { deleteUser, getAllUsers } from "../features/users/userSlice";
 
 const Users = () => {
+    const dispatch = useAppDispatch(); 
+    let {users} = useAppSelector(state => state.users);
     const [showModal, setShowModal] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
+
+    useEffect(() => {
+        dispatch(getAllUsers());
+    }, []);
 
     const openEditUserModal = (index: number) => {
         setEditIndex(index);
@@ -54,8 +27,9 @@ const Users = () => {
         setShowModal(false);
     }
 
-    const handleDeleteUser = (i: number) => {
-        console.log(i);
+    const handleDeleteUser = (userId: string) => {
+        dispatch(deleteUser(userId));
+        dispatch(getAllUsers());
     }
 
     return (
@@ -66,7 +40,6 @@ const Users = () => {
                     <tr>
                         <th>#</th>
                         <th>Username</th>
-                        <th>Password</th>
                         <th>Name</th>
                         <th>Surname</th>
                         <th>Email</th>
@@ -74,24 +47,23 @@ const Users = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {DUMMY_USERS.map((user, i) => {
+                    {users.map((user, i) => {
                         return (
                             <tr key={i}>
-                                <td>{i+1}</td>
+                                <td>{user.id}</td>
                                 <td>
                                     <div className={classes.usernameContainer}>
                                         {user.username}
                                         <DropdownButton id='dropdown-basic-button' title=''>
                                             <Dropdown.Item onClick={() => {openEditUserModal(i)}}>Edit <PencilFill className={classes.pencilBtn} /></Dropdown.Item>
-                                            <Dropdown.Item onClick={() => {handleDeleteUser(i)}}>Delete <TrashFill /></Dropdown.Item>
+                                            <Dropdown.Item onClick={() => {handleDeleteUser(user.id!)}}>Delete <TrashFill /></Dropdown.Item>
                                         </DropdownButton>
                                     </div>
                                 </td>
-                                <td>{user.password}</td>
-                                <td>{user.name}</td>
-                                <td>{user.surname}</td>
+                                <td>{user.firstName}</td>
+                                <td>{user.lastName}</td>
                                 <td>{user.email}</td>
-                                <td>{user.isAdmin ? <Check size={30} color='green' /> : <X size={30} color='red' />}</td>
+                                {/*<td>{user.isAdmin ? <Check size={30} color='green' /> : <X size={30} color='red' />}</td>*/}
                             </tr>
                         );
                     })}
@@ -111,12 +83,12 @@ const Users = () => {
                     <Modal.Body>
                         <AddUser
                             isEdit
-                            usernameInit={DUMMY_USERS[editIndex].username}
-                            passwordInit={DUMMY_USERS[editIndex].password}
-                            firstNameInit={DUMMY_USERS[editIndex].name}
-                            lastNameInit={DUMMY_USERS[editIndex].surname}
-                            emailInit={DUMMY_USERS[editIndex].email}
-                            isAdminInit={DUMMY_USERS[editIndex].isAdmin}
+                            usernameInit={users[editIndex].username}
+                            passwordInit={users[editIndex].password}
+                            firstNameInit={users[editIndex].firstName}
+                            lastNameInit={users[editIndex].lastName}
+                            emailInit={users[editIndex].email}
+                            isAdminInit={true}
                             handleClose={closeModal}
                         />
                     </Modal.Body>
