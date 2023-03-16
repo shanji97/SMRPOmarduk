@@ -62,6 +62,10 @@ export class UserService implements OnModuleInit {
     return await this.userRepository.createQueryBuilder('user').addSelect('user.password').where('user.username = :username', { username: username }).getOne();
   }
 
+  async getUserPassword(userId: number): Promise<string | null> {
+    return (await this.userRepository.createQueryBuilder('user').select('user.password').where('user.id = :id', { id: userId }).getOne())?.password || null;
+  }
+
   async createUser(user: DeepPartial<User>) {
     // Hash password
     if (user.password)
@@ -83,6 +87,7 @@ export class UserService implements OnModuleInit {
     // Hash passwords
     if (user.password)
       user.password = await this.hashPassword(user.password);
+    console.log(user);
     
     try {
       await this.userRepository.update({ id: userId }, user);
