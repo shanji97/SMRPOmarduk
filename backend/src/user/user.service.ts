@@ -1,14 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compare, hash } from 'bcrypt';
-import { Repository, QueryFailedError } from 'typeorm';
+import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
 
 import { User } from './user.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   private readonly logger: Logger = new Logger(UserService.name);
 
   constructor(
@@ -16,6 +16,27 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  onModuleInit() {
+    this.initDefaultUser().then(() => {}).catch(e => this.logger.error(e));
+  }
+
+  async initDefaultUser() {
+    const defaultUserUsername: string | null = this.configService.get<string | null>('DEFAULT_USER_USERNAME');
+    const defaultUserPassword: string | null = this.configService.get<string | null>('DEFAULT_USER_PASSWORD');
+
+    const count = await this.getUserCount();
+    if (count === 0 && defaultUserPassword !== null && defaultUserUsername !== null) {
+      await this.createUser({
+        firstName: 'Default',
+        lastName: 'User',
+        username: defaultUserUsername,
+        password: defaultUserPassword,
+        isAdmin: true,
+      });
+      this.logger.log(`Default user ${defaultUserUsername} created.`);
+    }
+  }
 
   async comparePassword(password: string, hash: string): Promise<boolean> {
     return await compare(password, hash);
@@ -26,7 +47,11 @@ export class UserService {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find({ order: { lastName: 'ASC', firstName: 'ASC' }});
+    return await this.userRepository.find({ where: { deleted: false }, order: { lastName: 'ASC', firstName: 'ASC' }});
+  }
+
+  async getUserCount(): Promise<number> {
+    return await this.userRepository.count();
   }
 
   async getUserById(userId: number): Promise<User> {
@@ -37,7 +62,11 @@ export class UserService {
     return await this.userRepository.createQueryBuilder('user').addSelect('user.password').where('user.username = :username', { username: username }).getOne();
   }
 
-  async createUser(user) {
+  async getUserPassword(userId: number): Promise<string | null> {
+    return (await this.userRepository.createQueryBuilder('user').select('user.password').where('user.id = :id', { id: userId }).getOne())?.password || null;
+  }
+
+  async createUser(user: DeepPartial<User>) {
     // Hash password
     if (user.password)
       user.password = await this.hashPassword(user.password);
@@ -54,10 +83,11 @@ export class UserService {
     }
   }
 
-  async updateUserById(userId, user) {
+  async updateUserById(userId: number, user: DeepPartial<User>) {
     // Hash passwords
     if (user.password)
       user.password = await this.hashPassword(user.password);
+    console.log(user);
     
     try {
       await this.userRepository.update({ id: userId }, user);
@@ -72,6 +102,6 @@ export class UserService {
   }
 
   async deleteUserById(userId: number) {
-    await this.userRepository.delete({ id: userId });
+    await this.userRepository.update({ id: userId }, { deleted: true });
   }
 }

@@ -18,10 +18,16 @@ export class User {
   password: string;
 
   @Column({ nullable: true })
-  email: string | null;
+  email?: string | null;
+
+  @Column({ type: 'bool', unsigned: true, default: false })
+  isAdmin: boolean;
+
+  @Column({ type: 'bool', unsigned: true, default: false })
+  deleted: boolean;
 
   @Column({ type: 'text', nullable: true })
-  description: string | null;
+  description?: string | null;
 
   @CreateDateColumn()
   dateCreated: string;

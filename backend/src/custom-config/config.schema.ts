@@ -16,6 +16,8 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   HTTP_TIMEOUT: Joi.number().min(0).default(5000),
   
   BCRYPT_SALT_ROUNDS: Joi.number().default(10),
+  DEFAULT_USER_USERNAME: Joi.string().trim().min(1).default('admin'),
+  DEFAULT_USER_PASSWORD: Joi.string().trim().min(1).default('admin'),
 
   /**
    * TypeORM
