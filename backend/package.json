@@ -9,6 +9,8 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "start:env": "$Env:CONFIG='config/test.env';$Env:DOCS='true'",
+    "start:dev-win": "nest start --watch",
     "start:dev": "CONFIG=config/test.env DOCS=true nest start --watch",
     "start:debug": "CONFIG=config/test.env DOCS=true nest start --debug --watch",
     "start:prod": "node dist/main",

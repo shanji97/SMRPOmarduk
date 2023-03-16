@@ -1,9 +1,12 @@
-import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
+import { AdminOnly } from '../auth/decorator/admin-only.decorator';
+import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
+import { Token } from '../auth/decorator/token.decorator';
 import { UpdateUserDto, UpdateUserSchema } from './dto/update-user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
@@ -12,7 +15,7 @@ import { ValidationException } from '../common/exception/validation.exception';
 @ApiTags('user')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('user')
 export class UserController {
   constructor(
@@ -28,6 +31,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiOkResponse()
+  @ApiNotFoundResponse()
   @Get(':userId')
   async getUser(@Param('userId', ParseIntPipe) userId: number): Promise<User> {
     const user = await this.userService.getUserById(userId);
@@ -38,6 +42,8 @@ export class UserController {
 
   @ApiOperation({ summary: 'Create user' })
   @ApiCreatedResponse()
+  @ApiBadRequestResponse()
+  @AdminOnly()
   @Post()
   async createUser(@Body(new JoiValidationPipe(CreateUserSchema)) user: CreateUserDto) {
     try {
@@ -51,9 +57,20 @@ export class UserController {
 
   @ApiOperation({ summary: 'Update user' })
   @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
   @Patch(':userId')
-  async updateUser(@Param('userId', ParseIntPipe) userId: number, @Body(new JoiValidationPipe(UpdateUserSchema)) user: UpdateUserDto) {
+  async updateUser(@Token() token, @Param('userId', ParseIntPipe) userId: number, @Body(new JoiValidationPipe(UpdateUserSchema)) user: UpdateUserDto) {
     try {
+      if (!token.isAdmin) { // Non-admin user => chaning own info
+        if (token.sid !== userId) // Don't allow normal user to update other users data
+          throw new ForbiddenException();
+        const passwordOld: string = await this.userService.getUserPassword(token.sid);
+        if (!passwordOld || !await this.userService.comparePassword(user.passwordOld || '', passwordOld))
+          throw new BadRequestException('Wrong current password');
+      }
+      if (user.passwordOld) // Delete non-ORM field
+        delete user.passwordOld;
       await this.userService.updateUserById(userId, user);
     } catch (ex) {
       if (ex instanceof ValidationException)
@@ -64,6 +81,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Delete user' })
   @ApiOkResponse()
+  @AdminOnly()
   @Delete(':userId')
   async deleteUser(@Param('userId', ParseIntPipe) userId: number) {
     await this.userService.deleteUserById(userId);

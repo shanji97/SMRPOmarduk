@@ -18,6 +18,8 @@ export const tokenSchema = Joi.object().keys({
 	exp: Joi.date().timestamp('unix'),							// Expire Time (RFC)
 	jti: Joi.string().trim(),												// JWT ID (RFC)
 
-	sid: Joi.number().required(),	// Subject ID
-	sub: Joi.string().trim().required(),						// Subject
+	sid: Joi.number().required(),										// Subject ID
+	sub: Joi.string().trim().required(),						// Subject username
+	sname: Joi.string().trim().allow(null),					// Subject name
+	isAdmin: Joi.bool().required(),									// Is subject an admin
 });
