@@ -23,6 +23,9 @@ export class User {
   @Column({ type: 'bool', unsigned: true, default: false })
   isAdmin: boolean;
 
+  @Column({ type: 'bool', unsigned: true, default: false })
+  deleted: boolean;
+
   @Column({ type: 'text', nullable: true })
   description?: string | null;
 

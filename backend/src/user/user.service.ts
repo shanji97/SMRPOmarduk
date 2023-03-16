@@ -47,7 +47,7 @@ export class UserService implements OnModuleInit {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find({ order: { lastName: 'ASC', firstName: 'ASC' }});
+    return await this.userRepository.find({ where: { deleted: false }, order: { lastName: 'ASC', firstName: 'ASC' }});
   }
 
   async getUserCount(): Promise<number> {
@@ -97,6 +97,6 @@ export class UserService implements OnModuleInit {
   }
 
   async deleteUserById(userId: number) {
-    await this.userRepository.delete({ id: userId });
+    await this.userRepository.update({ id: userId }, { deleted: true });
   }
 }

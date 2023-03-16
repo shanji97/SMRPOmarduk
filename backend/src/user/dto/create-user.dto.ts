@@ -74,6 +74,7 @@ export const CreateUserSchema = Joi.object().keys({
   password: Joi.string().trim().min(1).max(60).required(),
   email: Joi.string().trim().min(1).max(255).allow(null),
   isAdmin: Joi.boolean(),
+  deleted: Joi.any().strip(),
   description: Joi.string().trim().min(1).max(65535).allow(null),
   dateCreated: Joi.any().strip(),
   dateUpdated: Joi.any().strip(),
