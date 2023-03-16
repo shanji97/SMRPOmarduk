@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { LoginData, UserData } from "../../../classes/userData";
+import { parseJwt } from "../../helpers/helpers";
 import userService from "./userService";
 
 const user = JSON.parse(localStorage.getItem('user')!);
 
 interface UserState {
-    user: string | null
+    user: string | null,
+    isAdmin: boolean,
     users: UserData[]
     isLoading: boolean
     isSuccess: boolean
@@ -15,6 +17,7 @@ interface UserState {
 
 const initialState: UserState = {
     user: user ? user : null,
+    isAdmin: false,
     users: [],
     isLoading: false,
     isSuccess: false,
@@ -99,6 +102,7 @@ export const userSlice = createSlice({
                 state.isError = false;
                 state.message = '';
                 state.users = action.payload
+
             })
             .addCase(getAllUsers.rejected, (state, action) => {
                 state.isLoading = false

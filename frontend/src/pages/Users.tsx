@@ -2,21 +2,31 @@ import {DropdownButton, Table, Dropdown, Modal} from "react-bootstrap";
 import {Check, PencilFill, TrashFill, X} from "react-bootstrap-icons";
 import Card from "../components/Card";
 import React, {Fragment, useEffect, useState} from "react";
+import {useNavigate} from 'react-router-dom';
 import AddUser from "./AddUser";
 
 import classes from './Users.module.css';
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { deleteUser, getAllUsers } from "../features/users/userSlice";
+import { parseJwt } from "../helpers/helpers";
 
 const Users = () => {
     const dispatch = useAppDispatch(); 
-    let {users} = useAppSelector(state => state.users);
+    const navigate = useNavigate();
+    let {users, isAdmin} = useAppSelector(state => state.users);
     const [showModal, setShowModal] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
 
     useEffect(() => {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        const isAdmin = parseJwt(token).isAdmin;
+        if (!isAdmin) {
+            navigate('/');
+            return;
+        }
+
         dispatch(getAllUsers());
-    }, []);
+    }, [isAdmin]);
 
     const openEditUserModal = (index: number) => {
         setEditIndex(index);
@@ -63,7 +73,7 @@ const Users = () => {
                                 <td>{user.firstName}</td>
                                 <td>{user.lastName}</td>
                                 <td>{user.email}</td>
-                                {/*<td>{user.isAdmin ? <Check size={30} color='green' /> : <X size={30} color='red' />}</td>*/}
+                                <td>{user.isAdmin ? <Check size={30} color='green' /> : <X size={30} color='red' />}</td>
                             </tr>
                         );
                     })}
@@ -88,7 +98,7 @@ const Users = () => {
                             firstNameInit={users[editIndex].firstName}
                             lastNameInit={users[editIndex].lastName}
                             emailInit={users[editIndex].email}
-                            isAdminInit={true}
+                            isAdminInit={users[editIndex].isAdmin}
                             handleClose={closeModal}
                         />
                     </Modal.Body>

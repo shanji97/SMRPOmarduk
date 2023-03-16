@@ -106,7 +106,7 @@ const AddUser: React.FC<AddUserProps> = (
             firstName,
             lastName,
             email,
-//            isAdmin: isAdminRadio
+            isAdmin: isAdminRadio
         }
 
         if (isEdit) { 
