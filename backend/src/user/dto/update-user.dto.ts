@@ -40,6 +40,15 @@ export class UpdateUserDto {
   password?: string;
 
   @ApiProperty({
+    example: 'jdoe',
+    minLength: 1,
+    maxLength: 60,
+    nullable: false,
+    required: false,
+  })
+  passwordOld?: string;
+
+  @ApiProperty({
     example: 'jdoe@example.com',
     minLength: 1,
     maxLength: 255,
@@ -72,6 +81,7 @@ export const UpdateUserSchema = Joi.object().keys({
   lastName: Joi.string().trim().min(1).max(128),
   username: Joi.string().trim().min(1).max(128),
   password: Joi.string().trim().min(1).max(60),
+  passwordOld: Joi.string().trim().min(1),
   email: Joi.string().trim().min(1).max(255).allow(null),
   isAdmin: Joi.boolean(),
   deleted: Joi.any().strip(),

@@ -62,9 +62,15 @@ export class UserController {
   @Patch(':userId')
   async updateUser(@Token() token, @Param('userId', ParseIntPipe) userId: number, @Body(new JoiValidationPipe(UpdateUserSchema)) user: UpdateUserDto) {
     try {
-      if (!token.isAdmin && token.sid !== userId) // Don't allow normal user to update other users data
-        throw new ForbiddenException();
-
+      if (!token.isAdmin) { // Non-admin user => chaning own info
+        if (token.sid !== userId) // Don't allow normal user to update other users data
+          throw new ForbiddenException();
+        const passwordOld: string = await this.userService.getUserPassword(token.sid);
+        if (!passwordOld || !await this.userService.comparePassword(user.passwordOld || '', passwordOld))
+          throw new BadRequestException('Wrong current password');
+      }
+      if (user.passwordOld) // Delete non-ORM field
+        delete user.passwordOld;
       await this.userService.updateUserById(userId, user);
     } catch (ex) {
       if (ex instanceof ValidationException)
