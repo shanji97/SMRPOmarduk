@@ -8,6 +8,8 @@ import ValidationError from "../components/ValidationError";
 import {UserData} from "../../classes/userData";
 import { useAppDispatch } from "../app/hooks";
 import { createUser } from "../features/users/userSlice";
+import { parseJwt} from "../helpers/helpers";
+import {useNavigate} from 'react-router-dom';
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 12;
@@ -37,6 +39,7 @@ const AddUser: React.FC<AddUserProps> = (
     }) => {
     
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const [userData, setUserData] = useState({
         username: usernameInit,
         password: passwordInit,
@@ -55,6 +58,12 @@ const AddUser: React.FC<AddUserProps> = (
     const formIsValid = useValidateForm(userData);
 
     useEffect(() => {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        const isAdmin = parseJwt(token).isAdmin;
+        if (!isAdmin) {
+            navigate('/');
+            return;
+        }
         if (isAdminInit) {
             setIsAdminRadio(true);
             setIsUserRadio(false);
@@ -128,7 +137,10 @@ const AddUser: React.FC<AddUserProps> = (
                 } 
                 // dispatch
             }
+            return;
         }
+
+        dispatch(createUser(newUser));
 
         setUserData({
             username: '',
@@ -142,7 +154,6 @@ const AddUser: React.FC<AddUserProps> = (
         if (isEdit) {
             handleClose();
         }
-        // TODO send data to backend
     }
 
     if (isEdit) {
