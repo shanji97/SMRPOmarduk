@@ -4,38 +4,60 @@ import Card from "../components/Card";
 import { Form } from "react-bootstrap";
 
 import classes from "./AddStory.module.css";
-import useValidateForm from "../hooks/useValidateForm";
 
 const AddSubtask = () => {
   const [subtaskData, setSubtaskData] = useState({
     description: "",
-    time: "",
-    ownerID: "",
+    time: 0,
+    ownerUsername: "",
   });
 
   // TODO get this from backend - this is just sample data
-  const allUsers: { id: string; name: string }[] = [
+  const DUMMY_USERS = [
     {
-      id: "asdsadsadadsa",
-      name: "Tim",
+      username: "tinec",
+      password: "123123",
+      name: "Tine",
+      surname: "Crnugelj",
+      email: "tine.crnugelj@gmail.com",
+      isAdmin: false,
     },
     {
-      id: "zzzzzzzz",
-      name: "Jim",
+      username: "martind",
+      password: "123123",
+      name: "Martin",
+      surname: "Dagarin",
+      email: "martin.dagarin@gmail.com",
+      isAdmin: true,
+    },
+    {
+      username: "simonk",
+      password: "123123",
+      name: "Simon",
+      surname: "Klavzar",
+      email: "simon.klavzar@gmail.com",
+      isAdmin: false,
+    },
+    {
+      username: "matevzl",
+      password: "123123",
+      name: "Matevz",
+      surname: "Lapajne",
+      email: "matevz.lapajne@gmail.com",
+      isAdmin: true,
     },
   ];
 
-  const [businessValueError, setBusinessValueError] = useState(false);
-
-  const { description, time, ownerID } = subtaskData;
+  const { description, time, ownerUsername } = subtaskData;
 
   const subtaskDataChangedHandler = (e: any) => {
-    console.log(e.target.name, e.target.value);
     setSubtaskData((prevSubtaskData) => ({
       ...prevSubtaskData,
       [e.target.name]: e.target.value,
     }));
   };
+
+  let formHasError = subtaskData.description === "" || subtaskData.time <= 0;
 
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,8 +67,8 @@ const AddSubtask = () => {
 
     setSubtaskData({
       description: "",
-      time: "",
-      ownerID: "",
+      time: 0,
+      ownerUsername: "",
     });
   };
 
@@ -65,12 +87,13 @@ const AddSubtask = () => {
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="form-title">
-          <Form.Label>Estimated duration</Form.Label>
+          <Form.Label>Estimated duration (in hours)</Form.Label>
           <Form.Control
             placeholder="Add subtask duration"
             name="time"
             value={time}
             onChange={subtaskDataChangedHandler}
+            type="number"
           />
         </Form.Group>
 
@@ -79,12 +102,14 @@ const AddSubtask = () => {
           <Form.Select
             aria-label="Select subtask owner"
             onChange={subtaskDataChangedHandler}
-            value={ownerID}
-            name="ownerID"
+            value={ownerUsername}
+            name="ownerUsername"
           >
             <option value="">Select subtask owner</option>
-            {allUsers.map((user) => (
-              <option value={`${user.id}`}>{user.name}</option>
+            {DUMMY_USERS.map((user) => (
+              <option value={`${user.username}`} key={user.username}>
+                {user.username}
+              </option>
             ))}
           </Form.Select>
         </Form.Group>
@@ -93,9 +118,9 @@ const AddSubtask = () => {
           variant="primary"
           type="submit"
           size="lg"
-          //   disabled={!formIsValid}
+          disabled={formHasError}
         >
-          Add story
+          Add subtask
         </Button>
       </Form>
     </Card>
