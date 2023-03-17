@@ -8,74 +8,119 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import classes from "./AddProject.module.css";
-import useValidateForm from "../hooks/useValidateForm";
 
-const AddStory = () => {
-  const [projectData, setProjectData] = useState({
-    name: "",
-    members: [{}],
-  });
+const AddProject = () => {
+  const [projectName, setProjectName] = useState("");
 
-  const { name, members } = projectData;
+  const [membersArray, setMembersArray] = useState([
+    { username: "", role: -1 },
+  ]);
 
   // TODO get this from backend -> is there a user class i can use here?
-  const users: string[] = ["Joel", "Ellie", "Marlene"];
+  const DUMMY_USERS = [
+    {
+      username: "tinec",
+      password: "123123",
+      name: "Tine",
+      surname: "Crnugelj",
+      email: "tine.crnugelj@gmail.com",
+      isAdmin: false,
+    },
+    {
+      username: "martind",
+      password: "123123",
+      name: "Martin",
+      surname: "Dagarin",
+      email: "martin.dagarin@gmail.com",
+      isAdmin: true,
+    },
+    {
+      username: "simonk",
+      password: "123123",
+      name: "Simon",
+      surname: "Klavzar",
+      email: "simon.klavzar@gmail.com",
+      isAdmin: false,
+    },
+    {
+      username: "matevzl",
+      password: "123123",
+      name: "Matevz",
+      surname: "Lapajne",
+      email: "matevz.lapajne@gmail.com",
+      isAdmin: true,
+    },
+  ];
 
   // TODO check doubling of project name
 
   const addInputHandler = () => {
-    console.log();
-    setProjectData((prevProjectData) => ({
-      ...prevProjectData,
-      members: [...prevProjectData.members, ""],
-    }));
+    setMembersArray((prevMembersArray) => [
+      ...prevMembersArray,
+      { username: "", role: -1 },
+    ]);
   };
 
-  const userDataChangedHandler = (e: any) => {
-    console.log();
-    setProjectData((prevProjectData) => ({
-      ...prevProjectData,
-      [e.target.name]: e.target.value,
-    }));
+  const projectNameChangedHandler = (e: any) => {
+    setProjectName(e.target.value);
   };
 
-  const testInputChangedHandler = (e: any, index: number) => {
-    console.log();
-    // setStoryData((prevStoryData) => {
-    //   const newTestsData: string[] = [...prevStoryData.tests];
-    //   newTestsData[index] = e.target.value;
-    //   return { ...prevStoryData, tests: newTestsData };
-    // });
+  const memberInputChangedHandler = (e: any, index: number) => {
+    setMembersArray((prevMembersArray) => {
+      const newMembersArray = [...prevMembersArray];
+
+      newMembersArray[index] = {
+        ...newMembersArray[index],
+        username: e.target.value,
+      };
+      return newMembersArray;
+    });
   };
 
-  const selectInputChangedHandler = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    //   setStoryData((prevStoryData) => ({
-    //     ...prevStoryData,
-    //     priority: +e.target.value,
-    //   }));
+  const roleInputChangedHandler = (e: any, index: number) => {
+    setMembersArray((prevMembersArray) => {
+      const newMembersArray = [...prevMembersArray];
+
+      newMembersArray[index] = {
+        ...newMembersArray[index],
+        role: +e.target.value,
+      };
+      return newMembersArray;
+    });
   };
 
-  const checkBusinessValue = () => {
-    // businessValue < 0 || businessValue > 10
-    //   ? setBusinessValueError(true)
-    //   : setBusinessValueError(false);
+  const removeMemberHandler = (index: any) => {
+    setMembersArray((prevMembersArray) => {
+      const newMembersArray = [...prevMembersArray];
+      newMembersArray.splice(index, 1);
+      return newMembersArray;
+    });
   };
+
+  const validateForm = () => {
+    let nameError: boolean = projectName === "";
+
+    let usersInputError: boolean = membersArray.some((u) => u.username === "");
+
+    let roleInputError: boolean = membersArray.some((u) => u.role === -1);
+
+    return nameError || usersInputError || roleInputError;
+  };
+
+  let formHasError = validateForm();
 
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    let formData = {
+      projectName: projectName,
+      members: membersArray,
+    };
 
     // TODO send data to backend via service
-    // console.log(storyData);
+    console.log(formData);
 
-    // setStoryData({
-    //   title: "",
-    //   description: "",
-    //   tests: [""],
-    //   priority: 3,
-    //   businessValue: 5,
-    // });
+    setProjectName("");
+    setMembersArray([]);
   };
 
   return (
@@ -86,9 +131,9 @@ const AddStory = () => {
           <Form.Label>Project name</Form.Label>
           <Form.Control
             placeholder="Add project name"
-            name="name"
-            value={name}
-            onChange={userDataChangedHandler}
+            name="projectName"
+            value={projectName}
+            onChange={projectNameChangedHandler}
           />
         </Form.Group>
 
@@ -98,10 +143,8 @@ const AddStory = () => {
         >
           <Form.Label>Project members</Form.Label>
           <Form.Group className="mb-3" controlId="form-tests">
-            {projectData.members.map((member, index) => (
-              <Form.Group
-                key={index /* TODO this should be user id not index */}
-              >
+            {membersArray.map((member, index) => (
+              <Form.Group key={index}>
                 <Form.Text className="text-secondary">{`Member ${
                   index + 1
                 }`}</Form.Text>
@@ -109,32 +152,60 @@ const AddStory = () => {
                   <Row>
                     <Col>
                       <Form.Select
-                        aria-label="Select member"
-                        onChange={selectInputChangedHandler}
-                        name="member"
+                        name="membersArray.username"
+                        value={membersArray[index].username}
+                        onChange={(e) => {
+                          memberInputChangedHandler(e, index);
+                        }}
                       >
-                        {users.map((user, index) => (
-                          <option
-                            key={
-                              index /* TODO this should be user id not index */
-                            }
-                            value={user}
-                          >
-                            {user}
-                          </option>
-                        ))}
+                        <option key={-1} value={""}>
+                          Select member
+                        </option>
+                        {DUMMY_USERS.map(
+                          (user) =>
+                            // ce je username notr ga ne prikazi
+                            (!membersArray.find(
+                              (u) => u.username === user.username
+                            ) ||
+                              membersArray[index].username ===
+                                user.username) && (
+                              <option key={user.username} value={user.username}>
+                                {user.username}
+                              </option>
+                            )
+                        )}
                       </Form.Select>
                     </Col>
                     <Col>
                       <Form.Select
-                        aria-label="Select member role"
-                        onChange={selectInputChangedHandler}
+                        as="select"
+                        value={membersArray[index].role}
+                        onChange={(e) => {
+                          roleInputChangedHandler(e, index);
+                        }}
                         name="role"
+                        key={index + "s"}
                       >
+                        <option value="-1">Select member role</option>
                         <option value="0">Developer</option>
-                        <option value="1">Scrum master</option>
-                        <option value="2">Product owner</option>
+                        {(!membersArray.find((u) => u.role === 1) ||
+                          membersArray[index].role === 1) && (
+                          <option value="1">Scrum master</option>
+                        )}
+                        {(!membersArray.find((u) => u.role === 2) ||
+                          membersArray[index].role === 2) && (
+                          <option value="2">Product owner</option>
+                        )}
                       </Form.Select>
+                    </Col>
+                    <Col>
+                      <Button
+                        variant="link"
+                        type="button"
+                        onClick={() => removeMemberHandler(index)}
+                      >
+                        Remove member
+                      </Button>
                     </Col>
                   </Row>
                 </Container>
@@ -154,7 +225,7 @@ const AddStory = () => {
           variant="primary"
           type="submit"
           size="lg"
-          disabled={false /* TODO */}
+          disabled={formHasError}
         >
           Add story
         </Button>
@@ -163,4 +234,4 @@ const AddStory = () => {
   );
 };
 
-export default AddStory;
+export default AddProject;
