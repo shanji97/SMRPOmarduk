@@ -1,35 +1,97 @@
-import { useMemo, useState } from "react";
-import {Button} from "react-bootstrap";
+import {useEffect, useMemo, useState} from "react";
+import {Button, Form} from "react-bootstrap";
 import Card from "../components/Card";
-import {Form} from "react-bootstrap";
 
 import classes from './AddUser.module.css';
 import useValidateForm from "../hooks/useValidateForm";
+import useMatchingPasswords from "../hooks/useMatchingPasswords";
 import ValidationError from "../components/ValidationError";
+import {UserData, UserDataEdit} from "../classes/userData";
+import { useAppDispatch } from "../app/hooks";
+import { createUser, editUser, getAllUsers } from "../features/users/userSlice";
+import { parseJwt} from "../helpers/helpers";
+import {useNavigate} from 'react-router-dom';
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 12;
 
-const AddUser = () => {
-    const [userData, setUserData] = useState({
-        username: '',
-        password: '',
-        name:     '',
-        surname:  '',
-        email:    '',
-    });       
-    const [isAdmin, setIsAdmin]             = useState(false);
-    const [isUser, setIsUser]               = useState(true);
-    const [passwordError, setPasswordError] = useState(false);
-    const [passwordType, setPasswordType]   = useState('password');
-    const formIsValid = useValidateForm(userData);
+interface AddUserProps {
+    isEdit:              boolean,
+    idInit?:             string,
+    usernameInit:        string,
+    passwordOldInit?:    string,
+    passwordInit:        string,
+    confirmPasswordInit: string,
+    firstNameInit:       string,
+    lastNameInit:        string,
+    emailInit:           string,
+    isAdminInit:         boolean,
+    handleClose:         () => void
+}
+
+
+const AddUser: React.FC<AddUserProps> = (
+    {
+        isEdit,
+        idInit,
+        usernameInit,
+        passwordInit,
+        passwordOldInit,
+        confirmPasswordInit,
+        firstNameInit,
+        lastNameInit,
+        emailInit,
+        isAdminInit,
+        handleClose
+    }) => {
     
-    const {username, password, name, surname, email} = userData;
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const [userData, setUserData] = useState({
+        id: idInit,
+        username: usernameInit,
+        passwordOld: passwordOldInit,
+        confirmPassword: confirmPasswordInit,
+        firstName: firstNameInit,
+        lastName: lastNameInit,
+        email: emailInit,
+    });
+
+    const {id, username, passwordOld, confirmPassword, firstName, lastName, email} = userData;
+
+    const [isAdminRadio, setIsAdminRadio]       = useState(false);
+    const [showChecked, setShowChecked]         = useState(false);
+    const [isUserRadio, setIsUserRadio]         = useState(true);
+    const [passwordError, setPasswordError]     = useState(false);
+    const [passwordType, setPasswordType]       = useState('password');
+    const [oldPasswordType, setOldPasswordType] = useState('password');
+    const [password, setPassword]               = useState(passwordInit);
+    const [passHidden, setPassHidden]           = useState(confirmPasswordInit);
+    const formIsValid                           = useValidateForm(userData);
+    const passwordsMatch                        = useMatchingPasswords(passHidden, confirmPassword);
+
+    useEffect(() => {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        const isAdmin = parseJwt(token).isAdmin;
+        if (!isAdmin) {
+            navigate('/');
+            return;
+        }
+        if (isAdminInit) {
+            setIsAdminRadio(true);
+            setIsUserRadio(false);
+        }
+    }, []);
 
     let validCredentials = useMemo(() => {
-        return  username.length >= MIN_USERNAME_LENGTH &&
-                password.length >= MIN_PASSWORD_LENGTH &&
+        if (isEdit) {
+            return  username.length >= MIN_USERNAME_LENGTH &&
                 email.includes('@');
+        } else {
+            return  username.length >= MIN_USERNAME_LENGTH &&
+                    password.length >= MIN_PASSWORD_LENGTH &&
+                    email.includes('@');
+        }
     }, [username, password, email]);  
 
     const userDataChangedHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,13 +102,13 @@ const AddUser = () => {
     }
 
     const adminChangeHandler = () => {
-        setIsAdmin(isAdmin => !isAdmin);
-        setIsUser(false);
+        setIsAdminRadio(isAdminRadio => !isAdminRadio);
+        setIsUserRadio(false);
     }
 
     const userChangeHandler = () => {
-        setIsUser(isUser => !isUser);
-        setIsAdmin(false);
+        setIsUserRadio(isUserRadio => !isUserRadio);
+        setIsAdminRadio(false);
     }
 
     const checkPasswordLength = () => {
@@ -54,77 +116,189 @@ const AddUser = () => {
     }
 
     const handleShowPassword = () => {
+        setShowChecked(showChecked => !showChecked);
         passwordType === 'password' ? setPasswordType('text') : setPasswordType('password');
     }
 
-    const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setUserData({
-            username: '',
-            password: '',
-            name: '',
-            surname: '',
-            email: '',
-
-        })
-        setIsUser(true);
-        setIsAdmin(false);
-        // TODO send data to backend
-        console.log(userData);
+    const handleShowOldPassword = () => {
+        oldPasswordType === 'password' ? setOldPasswordType('text') : setOldPasswordType('password');
     }
 
-    return (
-        <Card>
-            <h1 className='text-primary'>Dodajanje uporabnika</h1>
+    const onPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const passwordValue = e.target.value;
+        const hiddenPassValue = passHidden;
+    
+        let showLength = 1;
+        let hideAll = setTimeout(() => {}, 0);
+    
+        let offset = passwordValue.length - hiddenPassValue.length;
+    
+        if (offset > 0) {
+            setPassHidden(hiddenPassValue +
+                passwordValue.substring(
+                  hiddenPassValue.length,
+                  hiddenPassValue.length + offset
+                )
+            );
+        } else if (offset < 0) {
+          setPassHidden(
+            hiddenPassValue.substring(
+              0,
+              hiddenPassValue.length + offset
+            )
+          );
+        }
+    
+        if (passwordValue.length > showLength) {
+          setPassword(
+              passwordValue
+                .substring(0, passwordValue.length - showLength)
+                .replace(/./g, "•") +
+              passwordValue.substring(
+                passwordValue.length - showLength,
+                passwordValue.length
+              )
+          );
+        }
+    
+        clearTimeout(hideAll);
+        hideAll = setTimeout(() => {
+          setPassword(passwordValue.replace(/./g, "•"))
+        }, 200);
+    };
+
+    const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        const newUser: UserData = {
+            username,
+            password: passHidden,
+            firstName,
+            lastName,
+            email,
+            isAdmin: isAdminRadio
+        }
+
+        if (isEdit) { 
+            if (password) {
+                const userDataEdit: UserDataEdit = {
+                    id,
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                    passwordOld,
+                    password: passHidden,
+                    isAdmin: isAdminRadio
+                }  
+                dispatch(editUser(userDataEdit));
+            } else {
+                const userDataEdit: UserDataEdit = {
+                    id,
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                    isAdmin: isAdminRadio,
+                } 
+                dispatch(editUser(userDataEdit))
+                dispatch(getAllUsers());
+            }
+            handleClose();
+            return;
+        }
+        dispatch(createUser(newUser));
+
+        setUserData({
+            id: '',
+            username: '',
+            passwordOld: '',
+            confirmPassword: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+        })
+        setPassword('');
+        setIsUserRadio(true);
+        setIsAdminRadio(false);
+    }
+
+    if (isEdit) {
+        return (
             <Form onSubmit={submitFormHandler}>
                 <Form.Group className="mb-3" controlId="formBasicUserName">
-                    <Form.Label>Uporabniško ime</Form.Label>
-                    <Form.Control 
-                        placeholder="Vnesite uporabniško ime" 
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control
+                        placeholder="Enter username"
                         name="username"
-                        value={username} 
-                        onChange={userDataChangedHandler} 
+                        value={username}
+                        onChange={userDataChangedHandler}
                     />
+                </Form.Group>
+                
+                <Form.Group className="mb-3" controlId="formBasicOldPassword">
+                    <Form.Label>Old password</Form.Label>
+                    <Form.Control
+                        type={oldPasswordType}
+                        placeholder="Enter old password"   
+                        name='passwordOld'
+                        value={passwordOld}
+                        onChange={userDataChangedHandler}
+                    />
+                    <Form.Check type='checkbox' id='showOldPassword' label='Show password' onClick={handleShowOldPassword} />              
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label>Geslo</Form.Label>
-                    <Form.Control 
-                        type={passwordType} 
-                        placeholder="Vnesite geslo" 
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control
+                        type='text'
+                        placeholder="Enter password"
                         name='password'
-                        value={password}
-                        onChange={userDataChangedHandler}
+                        value={showChecked ? passHidden : password}
+                        onChange={onPasswordChange}
                         onBlur={checkPasswordLength}
                     />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
-                    {passwordError && <ValidationError>Geslo mora biti dolgo vsaj 12 znakov</ValidationError>}
+                    {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
                 </Form.Group>
-                
+
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>Confirm password</Form.Label>
+                    <Form.Control
+                        type='password'
+                        placeholder="Repeat password"
+                        name='confirmPassword'
+                        value={confirmPassword}
+                        onChange={userDataChangedHandler}
+                        onBlur={checkPasswordLength}
+                    />
+                    {!passwordsMatch && <ValidationError>Passwords don't match</ValidationError>}
+                </Form.Group>
+
                 <Form.Group className="mb-3" controlId="formBasicName">
-                    <Form.Label>Ime</Form.Label>
-                    <Form.Control 
-                        placeholder="Vnesite ime" 
-                        name='name'
-                        value={name}
+                    <Form.Label>Firstname</Form.Label>
+                    <Form.Control
+                        placeholder="Enter your name"
+                        name='firstName'
+                        value={firstName}
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicSurname">
-                    <Form.Label>Priimek</Form.Label>
-                    <Form.Control 
-                        placeholder="Vnesite priimek" 
-                        name='surname'
-                        value={surname}
+                    <Form.Label>Lastname</Form.Label>
+                    <Form.Control
+                        placeholder="Enter your lastname"
+                        name='lastName'
+                        value={lastName}
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>E-pošta</Form.Label>
-                    <Form.Control 
-                        placeholder="Vnesite e-pošto" 
+                    <Form.Label>E-mail</Form.Label>
+                    <Form.Control
+                        placeholder="Enter your e-mail"
                         name='email'
                         value={email}
                         onChange={userDataChangedHandler}
@@ -132,19 +306,113 @@ const AddUser = () => {
                 </Form.Group>
 
                 <div className={classes.radioButtonContainer}>
-                    <Form.Check 
+                    <Form.Check
                         type='radio'
                         id='admin'
                         label='Administrator'
-                        checked={isAdmin}
+                        checked={isAdminRadio}
                         onClick={adminChangeHandler}
                     />
-                    <Form.Check 
+                    <Form.Check
                         type='radio'
                         id='user'
                         label='User'
-                        checked={isUser}
+                        checked={isUserRadio}
                         onClick={userChangeHandler}
+                    />
+                </div>
+                <Button variant="primary" type="submit" disabled={!validCredentials}>
+                    Save
+                </Button>
+            </Form>
+        );
+    }
+
+    return (
+        <Card style={{ marginTop: '1rem' }}>
+            <h1 className='text-primary'>Dodajanje uporabnika</h1>
+            <Form onSubmit={submitFormHandler}>
+                <Form.Group className="mb-3" controlId="formBasicUserName">
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control
+                        placeholder="Enter username"
+                        name="username"
+                        value={username}
+                        onChange={userDataChangedHandler}
+                    />
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control
+                        type='text'
+                        placeholder="Enter password"
+                        name='password'
+                        value={showChecked ? passHidden : password}
+                        onChange={onPasswordChange}
+                        onBlur={checkPasswordLength}
+                    />
+                    <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
+                    {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>Confirm password</Form.Label>
+                    <Form.Control
+                        type='password'
+                        placeholder="Repeat password"
+                        name='confirmPassword'
+                        value={confirmPassword}
+                        onChange={userDataChangedHandler}
+                        onBlur={checkPasswordLength}
+                    />
+                    {!passwordsMatch && <ValidationError>Passwords don't match</ValidationError>}
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicName">
+                    <Form.Label>Name</Form.Label>
+                    <Form.Control
+                        placeholder="Enter your name"
+                        name='firstName'
+                        value={firstName}
+                        onChange={userDataChangedHandler}
+                    />
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicSurname">
+                    <Form.Label>Lastname</Form.Label>
+                    <Form.Control
+                        placeholder="Enter your lastname"
+                        name='lastName'
+                        value={lastName}
+                        onChange={userDataChangedHandler}
+                    />
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicEmail">
+                    <Form.Label>E-mail</Form.Label>
+                    <Form.Control
+                        placeholder="Enter your e-mail"
+                        name='email'
+                        value={email}
+                        onChange={userDataChangedHandler}
+                    />
+                </Form.Group>
+
+                <div className={classes.radioButtonContainer}>
+                    <Form.Check
+                        type='radio'
+                        id='admin'
+                        label='Administrator'
+                        checked={isAdminRadio}
+                        onChange={adminChangeHandler}
+                    />
+                    <Form.Check
+                        type='radio'
+                        id='user'
+                        label='User'
+                        checked={isUserRadio}
+                        onChange={userChangeHandler}
                     />
                 </div>
 
