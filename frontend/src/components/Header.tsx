@@ -39,6 +39,10 @@ function Header() {
         navigate('/add-user');
     }
 
+    const redirectToChangePassword = () => {
+        navigate('/change-password');
+    }
+
     return (
         <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
             <Container >
@@ -64,7 +68,7 @@ function Header() {
                                             <span><PersonCircle className="mb-1"></PersonCircle> {userName}</span> : 
                                             <span><PersonCircle className="mb-1"></PersonCircle> Account</span>} id="basic-nav-dropdown">
                     <NavDropdown.Item onClick={handleLoginAndLogout}>{user === null ? 'Log in' : 'Logout'}</NavDropdown.Item>
-                    <NavDropdown.Item>
+                    <NavDropdown.Item onClick={redirectToChangePassword}>
                         Change password
                     </NavDropdown.Item>
                     {

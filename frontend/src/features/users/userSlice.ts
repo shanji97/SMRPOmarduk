@@ -51,7 +51,7 @@ export const createUser = createAsyncThunk('auth/create', async (userData: UserD
 
 export const editUser = createAsyncThunk('auth/edit', async (userData: UserDataEdit, thunkAPI: any) => {
     try {
-        const token = thunkAPI.getState().users.user.token; 
+        const token = JSON.parse(localStorage.getItem('user')!).token;
         return await userService.editUser(userData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
