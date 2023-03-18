@@ -12,8 +12,6 @@ import "bootstrap/dist/css/bootstrap.css";
 //npm install --save react-bootstrap
 //npm install bootstrap --save  
 
-
-
 const itemsFromBackend = [
     { id: uuid(), content: "First task" },
     { id: uuid(), content: "Second task" },
@@ -40,9 +38,6 @@ const itemsFromBackend = [
       items: []
     }
   };
-
-
-
 
 function Dashboard() {
 
@@ -83,9 +78,6 @@ function Dashboard() {
     });
   }
 };
-
-
-
 
     return (
         <div className="row flex-row flex-sm-nowrap m-1 mt-3">

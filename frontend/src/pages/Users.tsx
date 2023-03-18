@@ -44,7 +44,7 @@ const Users = () => {
 
     return (
         <Fragment>
-            <Card style={{ width: '70%' }}>
+            <Card style={{ width: '70%', marginTop: '1rem' }}>
                 <Table striped bordered hover>
                     <thead>
                     <tr>
@@ -93,8 +93,11 @@ const Users = () => {
                     <Modal.Body>
                         <AddUser
                             isEdit
+                            idInit={users[editIndex].id}
                             usernameInit={users[editIndex].username}
                             passwordInit={users[editIndex].password}
+                            passwordOldInit=''
+                            confirmPasswordInit=''
                             firstNameInit={users[editIndex].firstName}
                             lastNameInit={users[editIndex].lastName}
                             emailInit={users[editIndex].email}

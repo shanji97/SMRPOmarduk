@@ -8,7 +8,7 @@ import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
 import { login } from "../features/users/userSlice";
-import { LoginData } from "../../classes/userData";
+import { LoginData } from "../classes/userData";
 
 const Login = () => {
     const dispatch = useAppDispatch();
@@ -86,7 +86,7 @@ const Login = () => {
     }
     
     return (
-        <Card>
+        <Card style={{ marginTop: '10rem' }}>
             <div className={classes.header}>
                 <BoxArrowInRight size={50} color='royalblue' style={{ marginRight: '.5rem' }} />
                 <h1 className='text-primary'>Login</h1>

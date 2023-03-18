@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { LoginData, UserData } from "../../../classes/userData";
-import { parseJwt } from "../../helpers/helpers";
+import { LoginData, UserData, UserDataEdit } from "../../classes/userData";
 import userService from "./userService";
 
 const user = JSON.parse(localStorage.getItem('user')!);
 
 interface UserState {
     user: string | null,
+    editId?: string
     isAdmin: boolean,
     users: UserData[]
     isLoading: boolean
@@ -17,6 +17,7 @@ interface UserState {
 
 const initialState: UserState = {
     user: user ? user : null,
+    editId: '',
     isAdmin: false,
     users: [],
     isLoading: false,
@@ -34,10 +35,24 @@ export const login = createAsyncThunk('auth/login', async (userData: LoginData, 
     }  
 });
 
+export const logout = createAsyncThunk('auth/logout', async () => {
+    await userService.logout();
+});
+
 export const createUser = createAsyncThunk('auth/create', async (userData: UserData, thunkAPI: any) => {
     try {
         const token = thunkAPI.getState().users.user.token; 
         return await userService.create(userData, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const editUser = createAsyncThunk('auth/edit', async (userData: UserDataEdit, thunkAPI: any) => {
+    try {
+        const token = thunkAPI.getState().users.user.token; 
+        return await userService.editUser(userData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)

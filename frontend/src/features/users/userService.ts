@@ -1,5 +1,5 @@
 import axios from "axios";
-import { LoginData, UserData } from "../../../classes/userData";
+import { LoginData, UserData, UserDataEdit } from "../../classes/userData";
 
 const AUTH_API_URL = 'http://localhost:3000/api/auth';
 const USERS_API_URL = 'http://localhost:3000/api/user';
@@ -25,6 +25,22 @@ const create = async (userData: UserData, token: string) => {
     console.log(response.status);
 
     return response.data;
+}
+
+const editUser = async (userData: UserDataEdit, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.patch(`${USERS_API_URL}/${userData.id}`, userData, config);
+
+    return response.data;
+}
+
+const logout = async () => {
+    localStorage.removeItem('user');
 }
 
 const getAllUsers = async (token: string) => {
@@ -54,6 +70,8 @@ const userService = {
     create,
     getAllUsers,
     deleteUser,
+    logout,
+    editUser,
 }
 
 export default userService;

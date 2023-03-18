@@ -9,18 +9,22 @@ import AddStory from './pages/AddStory';
 import Users from "./pages/Users";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Dashboard from './pages/Dashboard';
+import Header from './components/Header';
 
 function App() {
   return (
     <Fragment>
       <Router>
+          <Header />
           <Routes>
-              <Route path='/' element={<Home />}/>
+              <Route path='/' element={<Dashboard />}/>
               <Route path='/add-user' element={
                   <AddUser
                       isEdit={false}
                       usernameInit=''
                       passwordInit=''
+                      confirmPasswordInit=''
                       firstNameInit=''
                       lastNameInit=''
                       emailInit=''
