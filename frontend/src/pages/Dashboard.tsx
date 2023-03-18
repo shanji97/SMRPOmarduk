@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
 import { v4 as uuid } from 'uuid';
 import { Card,  Dropdown, ProgressBar,  } from 'react-bootstrap';
 import { CircleFill, Clock, Pencil, ThreeDots, Trash, Stack, } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
+import { useAppSelector } from "../app/hooks";
+import { useNavigate } from "react-router-dom";
 
 //installed packages:
 //npm install @hello-pangea/dnd --save
@@ -11,8 +13,6 @@ import "bootstrap/dist/css/bootstrap.css";
 //npm install react-bootstrap-icons --save
 //npm install --save react-bootstrap
 //npm install bootstrap --save  
-
-
 
 const itemsFromBackend = [
     { id: uuid(), content: "First task" },
@@ -41,12 +41,19 @@ const itemsFromBackend = [
     }
   };
 
-
-
-
 function Dashboard() {
 
     const [columns, setColumns] = useState(columnsFromBackend);
+    const navigate = useNavigate();
+    const {user} = useAppSelector(state => state.users);
+
+    useEffect(() => {
+      if (user === null) {
+        console.log('redirect');
+        navigate('/login');
+      }
+    }, [user]);
+
     const onDragEnd = ({destination, source}: DropResult) => {
 
     if (!destination) return;
@@ -83,9 +90,6 @@ function Dashboard() {
     });
   }
 };
-
-
-
 
     return (
         <div className="row flex-row flex-sm-nowrap m-1 mt-3">
