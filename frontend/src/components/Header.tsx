@@ -3,37 +3,46 @@ import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar } from "rea
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/users/userSlice';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { parseJwt } from '../helpers/helpers';
 import { useNavigate } from 'react-router-dom';
 
 function Header() {
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const {user} = useAppSelector(state => state.users);
     const [userName, setUserName] = useState('');
-
+    const [isAdmin, setIsAdmin]   = useState(false);
+    
     useEffect(() => {
         if (user === null) {
-            navigate('/login');
             return;
         }
         const token = JSON.parse(localStorage.getItem('user')!).token;
         const userData = parseJwt(token);
+        setIsAdmin(userData.isAdmin);
         setUserName(userData.sub);
     }, [user]);
 
     const handleLoginAndLogout = () => {
         if (user !== null) {
             dispatch(logout());
+            window.location.replace('/login');
         }
-        navigate('/login');
+    }
+
+    const redirectToUsers = () => {
+        navigate('/users');
+    }
+
+    const redirectToAddUser = () => {
+        navigate('/add-user');
     }
 
     return (
         <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
             <Container >
-                <Navbar.Brand  href="#home" className="hstack"><HouseDoorFill className="me-2"></HouseDoorFill> Dashboard</Navbar.Brand>
+                <Navbar.Brand  href="/" className="hstack"><HouseDoorFill className="me-2"></HouseDoorFill> Dashboard</Navbar.Brand>
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                 <Navbar.Collapse id="responsive-navbar-nav">
                     <Nav className="ms-auto">
@@ -55,9 +64,22 @@ function Header() {
                                             <span><PersonCircle className="mb-1"></PersonCircle> {userName}</span> : 
                                             <span><PersonCircle className="mb-1"></PersonCircle> Account</span>} id="basic-nav-dropdown">
                     <NavDropdown.Item onClick={handleLoginAndLogout}>{user === null ? 'Log in' : 'Logout'}</NavDropdown.Item>
-                    <NavDropdown.Item href="#action/3.2">
+                    <NavDropdown.Item>
                         Change password
                     </NavDropdown.Item>
+                    {
+                        isAdmin && 
+                        (   
+                            <Fragment>
+                                <NavDropdown.Item onClick={redirectToUsers}>
+                                    Users
+                                </NavDropdown.Item>
+                                <NavDropdown.Item onClick={redirectToAddUser}>
+                                    + Add user
+                                </NavDropdown.Item>
+                            </Fragment>
+                        )
+                    }
                     </NavDropdown>    
                 </Nav>
                 </Navbar.Collapse>

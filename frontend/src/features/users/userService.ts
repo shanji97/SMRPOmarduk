@@ -22,7 +22,6 @@ const create = async (userData: UserData, token: string) => {
     }
 
     const response = await axios.post(`${USERS_API_URL}`, userData, config);
-    console.log(response.status);
 
     return response.data;
 }

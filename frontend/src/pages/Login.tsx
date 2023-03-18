@@ -3,12 +3,13 @@ import { Button, Form, Modal } from "react-bootstrap";
 import { BoxArrowInRight } from "react-bootstrap-icons";
 import React, {Fragment, useEffect, useState} from "react";
 import ValidationError from "../components/ValidationError";
-import classes from './Login.module.css';
 import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
 import { login } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
+
+import classes from './Login.module.css';
 
 const Login = () => {
     const dispatch = useAppDispatch();
@@ -25,12 +26,10 @@ const Login = () => {
     const {username, password} = userData;
 
     useEffect(() => {
-        if (isError) {
-            return;
-        } else if (isSuccess || user) {
+        if (isSuccess || user !== null) {
             navigate('/');
-        }
-    }, [isError, isSuccess, navigate, user]);
+        } 
+    }, [isError, navigate, user, isSuccess]);
 
     const closeModal = () => {setShowModal(false)};
 

@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { LoginData, UserData, UserDataEdit } from "../../classes/userData";
 import userService from "./userService";
 
-const user = JSON.parse(localStorage.getItem('user')!);
+let user = JSON.parse(localStorage.getItem('user')!);
 
 interface UserState {
     user: string | null,
@@ -41,7 +41,7 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 
 export const createUser = createAsyncThunk('auth/create', async (userData: UserData, thunkAPI: any) => {
     try {
-        const token = thunkAPI.getState().users.user.token; 
+        const token = JSON.parse(localStorage.getItem('user')!).token;
         return await userService.create(userData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
@@ -61,8 +61,8 @@ export const editUser = createAsyncThunk('auth/edit', async (userData: UserDataE
 
 export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkAPI: any) => {
     try {
-        const token = thunkAPI.getState().users.user.token; 
-        return await userService.getAllUsers(token);
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.getAllUsers(token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -141,6 +141,9 @@ export const userSlice = createSlice({
                 state.isError = true
                 state.message = action.payload
                 state.user = null
+            })
+            .addCase(logout.fulfilled, (state) => {
+                state.user = null;
             })
     }
 })
