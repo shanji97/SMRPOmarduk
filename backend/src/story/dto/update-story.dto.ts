@@ -15,7 +15,6 @@ export class UpdateStoryDto {
 
   @ApiProperty({
     example: "Tests",
-    type: String[],
     required: true
   })
   test: string[];
