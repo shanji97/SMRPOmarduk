@@ -47,7 +47,9 @@ export class StoryController {
   async createStory(@Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto) {
     try {
       const row = await this.storyService.createStory(story);
-      await this.testService.createTest(row[0].id, story.test);
+      const storyId = (JSON.parse(JSON.stringify(row)).id);
+
+      await this.testService.createTest(storyId, story.tests);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);

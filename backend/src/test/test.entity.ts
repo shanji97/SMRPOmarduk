@@ -8,7 +8,7 @@ export class Test {
   id: number;
 
   @Column({ type: "text" })
-  name: string;
+  description: string;
 
   @Column({ unsigned: true, nullable: true })
   storyId: number;

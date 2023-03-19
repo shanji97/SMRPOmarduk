@@ -5,6 +5,7 @@ import { Repository, QueryFailedError } from 'typeorm';
 
 import { Test } from './test.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { CreateTestDto, CreateTestSchema } from './dto/create-test.dto';
 
 @Injectable()
 export class TestService {
@@ -28,7 +29,8 @@ export class TestService {
         try {
             for (let i = 0; i < testName.length; i++) {
                 let testToInsert = new Test();
-                testToInsert.name = testName[i];
+                testToInsert.description = testName[i];
+                testToInsert.storyId = storyId;
                 await this.testRepository.insert(testToInsert);
             }
         } catch (ex) {

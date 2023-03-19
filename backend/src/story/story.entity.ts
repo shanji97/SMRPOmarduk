@@ -17,7 +17,7 @@ export class Story {
   priority: number
 
   @Column({ type: "tinyint" })
-  businessValues: number
+  businessValue: number
 
   @OneToMany(type => Test, test => test.story)
   testi: Test

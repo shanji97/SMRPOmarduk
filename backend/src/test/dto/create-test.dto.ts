@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 
-export class CreateStoryDto {
+export class CreateTestDto {
 
     @ApiProperty({
         example: "This is sample description",

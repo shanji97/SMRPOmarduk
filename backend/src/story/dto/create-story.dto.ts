@@ -20,10 +20,10 @@ export class CreateStoryDto {
   description: string;
 
   @ApiProperty({
-    example: "Tests",
+    example: ["Test1","Test2"],
     required: true
   })
-  test: string[];
+  tests: string[];
 
   @ApiProperty({
     description: "Priority",
