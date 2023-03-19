@@ -16,6 +16,8 @@ import { ServeStaticConfigService } from './custom-config/serve-static-config.se
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { StoryModule } from './story/story.module';
+import { TestModule } from './test/test.module';
+import { StoryController } from './story/story.controller';
 
 @Module({
   imports: [
@@ -36,8 +38,9 @@ import { StoryModule } from './story/story.module';
     AuthModule,
     UserModule,
     StoryModule,
+    TestModule
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController, HealthController, StoryController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

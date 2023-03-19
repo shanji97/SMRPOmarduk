@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Story } from './story.entity';
 import { StoryController } from './story.controller';
 import { StoryService } from './story.service';
+import { TestService } from 'src/test/test.service';
 
 @Module({
   imports: [
@@ -13,13 +14,13 @@ import { StoryService } from './story.service';
     ]),
   ],
   controllers: [
-    StoryController,
+    StoryController
   ],
   providers: [
-    StoryService,
+    StoryService, TestService
   ],
   exports: [
-    StoryService,
+    StoryService
   ]
 })
 export class StoryModule {}

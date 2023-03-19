@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Story } from 'src/story/story.entity';
+import { StoryService } from 'src/story/story.service';
 
 import { Test } from './test.entity';
 import { TestService } from './test.service';
@@ -8,14 +10,15 @@ import { TestService } from './test.service';
   imports: [
 
     TypeOrmModule.forFeature([
-      Test,
+      Test,Story
     ]),
   ],
   providers: [
    TestService,
+   StoryService
   ],
   exports: [
     TestService,
   ]
 })
-export class StoryModule {}
+export class TestModule {}

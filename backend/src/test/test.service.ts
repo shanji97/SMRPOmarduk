@@ -16,7 +16,7 @@ export class TestService {
         private readonly testRepository: Repository<Test>,
     ) { }
 
-    async getAllStories(): Promise<Test[]> {
+    async getAllTests(): Promise<Test[]> {
         return await this.testRepository.find();
     }
 
@@ -31,7 +31,6 @@ export class TestService {
                 testToInsert.name = testName[i];
                 await this.testRepository.insert(testToInsert);
             }
-
         } catch (ex) {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
