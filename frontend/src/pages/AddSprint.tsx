@@ -60,7 +60,7 @@ const AddSprint = () => {
     }
 
     return  (
-        <Card style={{ marginTop: '1rem' }}>
+        <Card style={{ marginTop: '3rem' }}>
             <h2>Add a new sprint</h2>
             <Form onSubmit={submitNewSprint}>
                 <Form.Group className="mb-3" controlId="formBasicName">
