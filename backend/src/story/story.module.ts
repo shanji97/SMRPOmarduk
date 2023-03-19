@@ -4,20 +4,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Story } from './story.entity';
 import { StoryController } from './story.controller';
 import { StoryService } from './story.service';
-import { TestService } from 'src/test/test.service';
+import { TestModule } from 'src/test/test.module';
 
 @Module({
-  imports: [
+ imports: [
 
     TypeOrmModule.forFeature([
       Story,
     ]),
+    TestModule
   ],
   controllers: [
     StoryController
   ],
   providers: [
-    StoryService, TestService
+    StoryService,
   ],
   exports: [
     StoryService

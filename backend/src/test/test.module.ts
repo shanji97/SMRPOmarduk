@@ -10,12 +10,11 @@ import { TestService } from './test.service';
   imports: [
 
     TypeOrmModule.forFeature([
-      Test,Story
+      Test
     ]),
   ],
   providers: [
    TestService,
-   StoryService
   ],
   exports: [
     TestService,
