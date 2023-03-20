@@ -13,6 +13,6 @@ export class Test {
   @Column({ unsigned: true, nullable: true })
   storyId: number;
 
-  @ManyToOne(type => Story, story => story.testi, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  @ManyToOne(type => Story, story => story.tests, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   story: Story;
 }

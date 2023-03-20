@@ -14,11 +14,11 @@ export class Story {
   description: string;
 
   @Column({ type: "tinyint" })
-  priority: number
+  priority: number;
 
   @Column({ type: "tinyint" })
-  businessValue: number
+  businessValue: number;
 
   @OneToMany(type => Test, test => test.story)
-  testi: Test
+  tests: Test;
 }
