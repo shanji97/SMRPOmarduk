@@ -20,5 +20,5 @@ export class Story {
   businessValue: number;
 
   @OneToMany(type => Test, test => test.story)
-  tests: Test;
+  tests: Test[];
 }
