@@ -15,6 +15,7 @@ import { HttpLoggingInterceptor } from './interceptor/http-logging/http-logging.
 import { ServeStaticConfigService } from './custom-config/serve-static-config.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import {ProjectModule} from './project/project.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserModule } from './user/user.module';
     HealthModule,
     AuthModule,
     UserModule,
+    ProjectModule
   ],
   controllers: [AppController, HealthController],
   providers: [

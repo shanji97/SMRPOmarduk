@@ -15,10 +15,10 @@ export class UserService implements OnModuleInit {
     private readonly configService: ConfigService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   onModuleInit() {
-    this.initDefaultUser().then(() => {}).catch(e => this.logger.error(e));
+    this.initDefaultUser().then(() => { }).catch(e => this.logger.error(e));
   }
 
   async initDefaultUser() {
@@ -43,11 +43,11 @@ export class UserService implements OnModuleInit {
   }
 
   async hashPassword(password: string): Promise<string> {
-    return await hash(password, this.configService.get<number>('BCRYPT_SALT_ROUNDS')); 
+    return await hash(password, this.configService.get<number>('BCRYPT_SALT_ROUNDS'));
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find({ where: { deleted: false }, order: { lastName: 'ASC', firstName: 'ASC' }});
+    return await this.userRepository.find({ where: { deleted: false }, order: { lastName: 'ASC', firstName: 'ASC' } });
   }
 
   async getUserCount(): Promise<number> {
@@ -70,12 +70,12 @@ export class UserService implements OnModuleInit {
     // Hash password
     if (user.password)
       user.password = await this.hashPassword(user.password);
-    
+
     try {
       await this.userRepository.insert(user);
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
-        switch(ex.driverError.errno) {
+        switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
             throw new ValidationException('Username already exists');
         }
@@ -88,12 +88,12 @@ export class UserService implements OnModuleInit {
     if (user.password)
       user.password = await this.hashPassword(user.password);
     console.log(user);
-    
+
     try {
       await this.userRepository.update({ id: userId }, user);
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
-        switch(ex.driverError.errno) {
+        switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
             throw new ValidationException('Username already exists');
         }
