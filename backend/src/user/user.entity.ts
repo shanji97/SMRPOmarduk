@@ -36,6 +36,6 @@ export class User {
   @UpdateDateColumn()
   dateUpdated: string;
 
-  // @OneToMany(type => Member, member => member.user)
-  // members: Member[]
+  @OneToMany(type => Member, member => member.user)
+  members: Member[]
 }

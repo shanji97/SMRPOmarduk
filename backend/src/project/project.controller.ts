@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -50,10 +50,11 @@ export class ProjectController {
   @Post()
   async createProject(@Body(new JoiValidationPipe(CreateProjectSchema)) project: CreateProjectDto) {
     try {
-      const row = await this.projectService.createProject(project);
-      const projectId = JSON.parse(JSON.stringify(row)).id;
+     Logger.verbose(project);
+      //const row = await this.projectService.createProject(project);
+     // const projectId = JSON.parse(JSON.stringify(row)).id;
 
-      await this.memberSerivece.createMember(projectId, project.members);
+     // await this.memberSerivece.createMember(projectId, project.members);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);

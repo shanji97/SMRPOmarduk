@@ -30,7 +30,10 @@ export class ProjectService {
 
   async createProject(project): Promise<object> {
     try {
-      return await (await this.projectRepository.insert(project)).identifiers[0]
+      let p = new Project();
+      p.projectname = project.projectName;
+      
+      return await (await this.projectRepository.insert(p)).identifiers[0]
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
