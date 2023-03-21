@@ -16,7 +16,7 @@ export class AuthController {
   @ApiBody({ required: true, type: LoginDto })
   @ApiOkResponse({ description: 'Login succesful' })
   @ApiUnauthorizedResponse({ description: 'Login failed' })
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(AuthGuard('local'), AuthGuard('otp'))
   @Post('login')
   @HttpCode(200)
   async login(@Req() req) {
