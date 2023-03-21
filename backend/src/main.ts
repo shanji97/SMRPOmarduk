@@ -53,6 +53,7 @@ async function bootstrap() {
         name: 'Authorization',
       })
       .addTag('auth', 'Authentication')
+      .addTag('common-password', 'Common password')
       .addTag('health', 'Healthcheck')
       .addTag('user', 'User')
       .addTag('story', 'Story')
