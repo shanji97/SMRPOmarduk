@@ -43,10 +43,10 @@ export class CreateUserDto {
     example: 'jdoe@example.com',
     minLength: 1,
     maxLength: 255,
-    nullable: true,
-    required: false,
+    nullable: false,
+    required: true,
   })
-  email: string | null;
+  email: string;
 
   @ApiProperty({
     default: false,
@@ -72,7 +72,7 @@ export const CreateUserSchema = Joi.object().keys({
   lastName: Joi.string().trim().min(1).max(128).required(),
   username: Joi.string().trim().min(1).max(128).required(),
   password: Joi.string().trim().min(1).max(60).required(),
-  email: Joi.string().trim().min(1).max(255).allow(null),
+  email: Joi.string().trim().min(1).max(255),
   twoFa: Joi.any().strip(),
   twoFaConfirmed: Joi.any().strip(),
   isAdmin: Joi.boolean(),

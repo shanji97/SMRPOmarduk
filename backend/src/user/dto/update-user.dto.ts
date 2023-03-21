@@ -52,10 +52,10 @@ export class UpdateUserDto {
     example: 'jdoe@example.com',
     minLength: 1,
     maxLength: 255,
-    nullable: true,
+    nullable: false,
     required: false,
   })
-  email?: string | null;
+  email: string;
 
   @ApiProperty({
     default: false,
@@ -82,7 +82,7 @@ export const UpdateUserSchema = Joi.object().keys({
   username: Joi.string().trim().min(1).max(128),
   password: Joi.string().trim().min(1).max(60),
   passwordOld: Joi.string().trim().min(1),
-  email: Joi.string().trim().min(1).max(255).allow(null),
+  email: Joi.string().trim().min(1).max(255),
   twoFa: Joi.any().strip(),
   twoFaConfirmed: Joi.any().strip(),
   isAdmin: Joi.boolean(),

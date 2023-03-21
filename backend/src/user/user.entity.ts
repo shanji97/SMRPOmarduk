@@ -17,8 +17,8 @@ export class User {
   @Column({ length: 60, select: false })
   password: string;
 
-  @Column({ nullable: true })
-  email?: string | null;
+  @Column({ unique: true })
+  email: string;
 
   @Column({ type: 'char', length: 16, nullable: true, default: null, select: false })
   twoFa: string | null;
