@@ -25,6 +25,6 @@ export class CreateProjectDto {
 
 export const CreateProjectSchema = Joi.object().keys({
   id: Joi.any().strip(),
-  project: Joi.string().trim().min(1).max(128).required(),
+  projectName: Joi.string().trim().min(1).max(128).required(),
   members: Joi.array()
 });

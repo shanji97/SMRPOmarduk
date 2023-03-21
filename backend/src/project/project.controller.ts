@@ -3,15 +3,12 @@ import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenR
 import { AuthGuard } from '@nestjs/passport';
 
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
-import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { CreateProjectDto, CreateProjectSchema } from './dto/create-project.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { Token } from '../auth/decorator/token.decorator';
 import { Project } from './project.entity';
 import { ProjectService } from './project.service';
 import { ValidationException } from '../common/exception/validation.exception';
-import { contentSecurityPolicy } from 'helmet';
-import { CreateMemberDto } from '../member/dto/create-member.dto';
 import { MemberService } from '../member/member.service';
 
 @ApiTags('project')
@@ -51,9 +48,9 @@ export class ProjectController {
   async createProject(@Body(new JoiValidationPipe(CreateProjectSchema)) project: CreateProjectDto) {
     try {
       const row = await this.projectService.createProject(project);
-     const projectId = JSON.parse(JSON.stringify(row)).id;
+      const projectId = JSON.parse(JSON.stringify(row)).id;
 
-     // await this.memberSerivece.createMember(projectId, project.members);
+      await this.memberSerivece.createMember(projectId, project.members);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);

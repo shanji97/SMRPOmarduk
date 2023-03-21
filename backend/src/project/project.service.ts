@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
@@ -39,10 +39,10 @@ export class ProjectService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Projectname already exists');
+            throw new ConflictException('Project with this name already exists! Please chose a new one.');
         }
       }
-    }
+    }"
   }
 
   async updateProjectById(projectId: number, project: DeepPartial<Project>) {
