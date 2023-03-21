@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { compare, hash } from 'bcrypt';
 import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
 
+import { CommonPasswordService } from './common-password.service';
 import { User } from './user.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
@@ -12,6 +13,7 @@ export class UserService implements OnModuleInit {
   private readonly logger: Logger = new Logger(UserService.name);
 
   constructor(
+    private readonly commonPasswordService: CommonPasswordService,
     private readonly configService: ConfigService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -68,9 +70,12 @@ export class UserService implements OnModuleInit {
 
   async createUser(user: DeepPartial<User>) {
     // Hash password
-    if (user.password)
+    if (user.password) {
+      if (await this.commonPasswordService.checkIfPasswordIsCommon(user.password))
+        throw new ValidationException('Password is among common passwords');
       user.password = await this.hashPassword(user.password);
-    
+    }
+
     try {
       await this.userRepository.insert(user);
     } catch (ex) {
@@ -85,9 +90,11 @@ export class UserService implements OnModuleInit {
 
   async updateUserById(userId: number, user: DeepPartial<User>) {
     // Hash passwords
-    if (user.password)
+    if (user.password) {
+      if (await this.commonPasswordService.checkIfPasswordIsCommon(user.password))
+        throw new ValidationException('Password is among common passwords');
       user.password = await this.hashPassword(user.password);
-    console.log(user);
+    }
     
     try {
       await this.userRepository.update({ id: userId }, user);
