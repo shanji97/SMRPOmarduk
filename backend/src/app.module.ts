@@ -37,10 +37,10 @@ import { StoryController } from './story/story.controller';
     HealthModule,
     AuthModule,
     UserModule,
-    StoryModule,
-    TestModule
+    TestModule,
+    StoryModule
   ],
-  controllers: [AppController, HealthController, StoryController],
+  controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

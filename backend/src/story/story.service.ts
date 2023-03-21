@@ -26,7 +26,8 @@ export class StoryService {
 
   async createStory(story): Promise<object> {
     try {
-      return await (await this.storyRepository.insert(story)).identifiers[0]
+      const inserted = await this.storyRepository.insert(story);
+      return inserted.identifiers[0];
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {

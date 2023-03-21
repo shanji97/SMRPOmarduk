@@ -28,7 +28,7 @@ export class CreateStoryDto {
   sequenceNumber: number;
 
   @ApiProperty({
-    example: ['Test1','Test2'],
+    example: ['Test1', 'Test2'],
     required: true
   })
   tests: string[];
@@ -60,8 +60,8 @@ export const CreateStorySchema = Joi.object().keys({
   id: Joi.any().strip(),
   title: Joi.string().trim().min(1).max(128).required(),
   description: Joi.string().trim().min(1).required(),
-  sequenceNumber: Joi.number().greater(0).min(1).required()['default'](1),
+  sequenceNumber: Joi.number().greater(0).min(1).required().default(1),
   tests: Joi.any(),
-  priority: Joi.number().required()['default'](3),
-  businessValue: Joi.number().greater(-1).less(11).required()['default'](5)
+  priority: Joi.number().required().default(3),
+  businessValue: Joi.number().greater(-1).less(11).required().default(5)
 });

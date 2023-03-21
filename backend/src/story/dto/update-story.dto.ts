@@ -53,6 +53,6 @@ export const UpdateStorySchema = Joi.object().keys({
   title: Joi.string().trim().min(1).max(128).required(),
   description: Joi.string().trim().min(5).required(),
   tests: Joi.any,
-  priority: Joi.number().required()["default"](3),
-  businessValue: Joi.number().greater(-1).less(11).required()["default"](5)
+  priority: Joi.number().required().default(3),
+  businessValue: Joi.number().greater(-1).less(11).required().default(5)
 });

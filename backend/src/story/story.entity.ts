@@ -1,16 +1,16 @@
-import { Entity, Column,PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
-import {Test} from '../test/test.entity';
+import { Test } from '../test/test.entity';
 
 @Entity()
 export class Story {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({unsigned: true, unique:true})
+  @Column({ unsigned: true, unique: true })
   sequenceNumber: number
 
-  @Column("varchar", { length: 200, unique: true})
+  @Column({ type: "varchar", length: 200, unique: true })
   title: string;
 
   @Column({ type: "text" })
