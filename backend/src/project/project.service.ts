@@ -30,6 +30,7 @@ export class ProjectService {
 
   async createProject(project): Promise<object> {
     try {
+      this.logger.error(project.projectName);
       let p = new Project();
       p.projectname = project.projectName;
       

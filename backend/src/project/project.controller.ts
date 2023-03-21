@@ -50,9 +50,8 @@ export class ProjectController {
   @Post()
   async createProject(@Body(new JoiValidationPipe(CreateProjectSchema)) project: CreateProjectDto) {
     try {
-     Logger.verbose(project);
-      //const row = await this.projectService.createProject(project);
-     // const projectId = JSON.parse(JSON.stringify(row)).id;
+      const row = await this.projectService.createProject(project);
+     const projectId = JSON.parse(JSON.stringify(row)).id;
 
      // await this.memberSerivece.createMember(projectId, project.members);
     } catch (ex) {
