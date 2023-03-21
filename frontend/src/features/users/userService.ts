@@ -3,6 +3,7 @@ import { LoginData, UserData, UserDataEdit } from "../../classes/userData";
 
 const AUTH_API_URL = 'http://localhost:3000/api/auth';
 const USERS_API_URL = 'http://localhost:3000/api/user';
+const COMMON_PASSWORD_API_URL = 'http://localhost:3000/api/common-password';
 
 const login = async (userData: LoginData) => {
     const response = await axios.post(`${AUTH_API_URL}/login`, userData);
@@ -64,6 +65,17 @@ const deleteUser = async (userId: string, token: string) => {
     return response.data;
 }
 
+const commonPassword = async (password: {password: string}, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.post(COMMON_PASSWORD_API_URL, password, config);
+
+    return response.data;
+}
+
 const userService = {
     login,
     create,
@@ -71,6 +83,7 @@ const userService = {
     deleteUser,
     logout,
     editUser,
+    commonPassword,
 }
 
 export default userService;

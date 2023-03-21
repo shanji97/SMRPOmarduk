@@ -7,8 +7,8 @@ import useValidateForm from "../hooks/useValidateForm";
 import useMatchingPasswords from "../hooks/useMatchingPasswords";
 import ValidationError from "../components/ValidationError";
 import {UserData, UserDataEdit} from "../classes/userData";
-import { useAppDispatch } from "../app/hooks";
-import { createUser, editUser, getAllUsers } from "../features/users/userSlice";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { createUser, editUser, getAllUsers, commonPassword } from "../features/users/userSlice";
 import { parseJwt} from "../helpers/helpers";
 import {useNavigate} from 'react-router-dom';
 
@@ -46,6 +46,7 @@ const AddUser: React.FC<AddUserProps> = (
     }) => {
     
     const dispatch = useAppDispatch();
+    const {isCommonPassword} = useAppSelector(state => state.users);
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
         id: idInit,
@@ -207,6 +208,10 @@ const AddUser: React.FC<AddUserProps> = (
             handleClose();
             return;
         }
+        dispatch(commonPassword({password: newUser.password}));
+        if (isCommonPassword) {
+            return;
+        }
         dispatch(createUser(newUser));
 
         setUserData({
@@ -260,6 +265,7 @@ const AddUser: React.FC<AddUserProps> = (
                     />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
                     {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                    {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicPassword">
@@ -354,6 +360,7 @@ const AddUser: React.FC<AddUserProps> = (
                     />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
                     {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                    {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}                
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicPassword">

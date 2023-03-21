@@ -12,6 +12,7 @@ interface UserState {
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
+    isCommonPassword: boolean
     message: any
 }
 
@@ -23,7 +24,8 @@ const initialState: UserState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
-    message: ''
+    message: '',
+    isCommonPassword: false,
 }
 
 export const login = createAsyncThunk('auth/login', async (userData: LoginData, thunkAPI) => {
@@ -73,6 +75,16 @@ export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: str
     try {
         const token = thunkAPI.getState().users.user.token; 
         return await userService.deleteUser(userId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const commonPassword = createAsyncThunk('/auth/commonPassword', async (password: {password: string}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.commonPassword(password, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -144,6 +156,23 @@ export const userSlice = createSlice({
             })
             .addCase(logout.fulfilled, (state) => {
                 state.user = null;
+            })
+            .addCase(commonPassword.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(commonPassword.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.isCommonPassword = action.payload.isCommon;
+            })
+            .addCase(commonPassword.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isCommonPassword = true;
+                state.message = '';
+                state.user = null;
+                state.isCommonPassword = action.payload.isCommon;
             })
     }
 })
