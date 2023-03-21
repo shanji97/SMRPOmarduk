@@ -31,7 +31,7 @@ export class StoryService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Storyname already exists');
+            throw new ValidationException('Story by this name already exists!');
         }
       }
     }

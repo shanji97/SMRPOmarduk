@@ -9,14 +9,10 @@ import { StoryService } from './story.service';
 import { TestService } from '../test/test.service';
 import { ValidationException } from '../common/exception/validation.exception';
 
-// Posebej controller za teste
-// returnaj story id
-//vsakem testu dodati story id.
-
 @ApiTags('story')
-//@ApiBearerAuth()
-//@ApiUnauthorizedResponse()
-//@UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
