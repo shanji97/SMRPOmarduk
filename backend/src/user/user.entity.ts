@@ -20,6 +20,12 @@ export class User {
   @Column({ nullable: true })
   email?: string | null;
 
+  @Column({ type: 'char', length: 16, nullable: true, default: null, select: false })
+  twoFa: string | null;
+
+  @Column({ type: 'bool', default: false, select: false })
+  twoFaConfirmed: boolean;
+
   @Column({ type: 'bool', unsigned: true, default: false })
   isAdmin: boolean;
 
