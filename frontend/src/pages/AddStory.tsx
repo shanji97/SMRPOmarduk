@@ -5,8 +5,13 @@ import { Form } from "react-bootstrap";
 
 import classes from "./AddStory.module.css";
 import useValidateForm from "../hooks/useValidateForm";
+import { StoryData } from "../classes/storyData";
+import { useAppDispatch } from "../app/hooks";
+import { createStory } from "../features/stories/storySlice";
 
 const AddStory = () => {
+  const dispatch = useAppDispatch();
+
   const [storyData, setStoryData] = useState({
     title: "",
     description: "",
@@ -18,7 +23,7 @@ const AddStory = () => {
   const [businessValueError, setBusinessValueError] = useState(false);
   const formIsValid = useValidateForm(storyData) && !businessValueError;
 
-  const { title, description, priority, businessValue } = storyData;
+  const { title, description, priority, businessValue, tests } = storyData;
 
   // TODO check doubling of story name
 
@@ -63,7 +68,17 @@ const AddStory = () => {
     e.preventDefault();
 
     // TODO send data to backend via service
+    const newStory: StoryData = {
+      title,
+      description,
+      tests,
+      priority,
+      businessValue,
+    };
+
     console.log(storyData);
+
+    dispatch(createStory(newStory));
 
     setStoryData({
       title: "",
