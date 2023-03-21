@@ -7,7 +7,7 @@ export class Story {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({unsigned: true})
+  @Column({unsigned: true, unique:true})
   sequenceNumber: number
 
   @Column("varchar", { length: 200, unique: true})

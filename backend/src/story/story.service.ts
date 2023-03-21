@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
@@ -31,7 +31,12 @@ export class StoryService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Story by this name already exists!');
+            // Get count of stories by user names.
+            const storyByTitle = await this.getStoryByTitle(story.title);
+            if (storyByTitle != null) {
+              throw new ConflictException('Story by this name already exists!');
+            }
+            throw new ConflictException('Please add a new sequence number for this story.');
         }
       }
     }
@@ -52,5 +57,9 @@ export class StoryService {
 
   async deleteStoryById(storyId: number) {
     await this.storyRepository.delete({ id: storyId });
+  }
+
+  async getStoryByTitle(title: string): Promise<Story> {
+    return await this.storyRepository.findOneBy({ title: title });
   }
 }
