@@ -83,6 +83,8 @@ export const UpdateUserSchema = Joi.object().keys({
   password: Joi.string().trim().min(1).max(60),
   passwordOld: Joi.string().trim().min(1),
   email: Joi.string().trim().min(1).max(255).allow(null),
+  twoFa: Joi.any().strip(),
+  twoFaConfirmed: Joi.any().strip(),
   isAdmin: Joi.boolean(),
   deleted: Joi.any().strip(),
   description: Joi.string().trim().min(1).max(65535).allow(null),

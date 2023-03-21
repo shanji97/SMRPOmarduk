@@ -16,6 +16,7 @@ export class AuthService {
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.userService.getUserByUsernameForLogin(username);
     if (user && await this.userService.comparePassword(password, user.password)) {
+      delete user.password;
       return user; // Return info about user
     }
     return null; // Not valid credentials
@@ -33,5 +34,9 @@ export class AuthService {
         expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRE'),
       }),
     };
+  }
+
+  validate2FA(code: string, secret: string): boolean {
+    return this.userService.validate2Fa(code, secret);
   }
 }
