@@ -42,7 +42,7 @@ export class ProjectService {
             throw new ConflictException('Project with this name already exists! Please chose a new one.');
         }
       }
-    }"
+    }
   }
 
   async updateProjectById(projectId: number, project: DeepPartial<Project>) {
