@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -9,6 +10,9 @@ import { JwtConfigService } from '../custom-config/jwt-config.service';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { OtpStrategy } from './otp.strategy';
+import { UserLogin } from './user-login.entity';
+import { UserLoginController } from './user-login.controller';
+import { UserLoginService } from './user-login.service';
 import { UserModule } from '../user/user.module';
 
 @Module({
@@ -21,6 +25,9 @@ import { UserModule } from '../user/user.module';
       defaultStrategy: 'jwt',
       session: false,
     }),
+    TypeOrmModule.forFeature([
+      UserLogin,
+    ]),
     UserModule,
   ],
   providers: [
@@ -28,9 +35,11 @@ import { UserModule } from '../user/user.module';
     LocalStrategy,
     JwtStrategy,
     OtpStrategy,
+    UserLoginService,
   ],
   controllers: [
     AuthController,
+    UserLoginController,
   ],
   exports: [
     AuthService,
