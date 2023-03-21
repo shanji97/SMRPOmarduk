@@ -3,12 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { User } from '../user/user.entity';
+import { UserLoginService } from './user-login.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly configService: ConfigService,
+    private readonly userLoginService: UserLoginService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
@@ -29,6 +31,10 @@ export class AuthService {
       sname: `${user.firstName} ${user.lastName}`,
       isAdmin: user.isAdmin,
     };
+
+    // Log user login
+    await this.userLoginService.logLoginForUser(user.id);
+
     return {
       token: await this.jwtService.signAsync(payload, {
         expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRE'),

@@ -56,6 +56,7 @@ async function bootstrap() {
       .addTag('common-password', 'Common password')
       .addTag('health', 'Healthcheck')
       .addTag('user', 'User')
+      .addTag('user-login', 'User logins')
       .build();
     const document = SwaggerModule.createDocument(app, docConfig);
     SwaggerModule.setup((globalPrefix) ? `${globalPrefix}/${docPath}`: docPath, app, document, {
