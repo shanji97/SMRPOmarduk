@@ -83,7 +83,7 @@ export class UserService implements OnModuleInit {
       if (ex instanceof QueryFailedError) {
         switch(ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Username already exists');
+            throw new ValidationException('Username or email already exists');
         }
       }
     }
@@ -103,7 +103,7 @@ export class UserService implements OnModuleInit {
       if (ex instanceof QueryFailedError) {
         switch(ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Username already exists');
+            throw new ValidationException('Username or email already exists');
         }
       }
     }
