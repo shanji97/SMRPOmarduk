@@ -13,9 +13,9 @@ import { AdminOnlyGuard } from 'src/auth/guard/admin-only.guard';
 import { UserService } from 'src/user/user.service';
 
 @ApiTags('project')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(

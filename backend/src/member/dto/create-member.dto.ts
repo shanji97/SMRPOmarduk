@@ -25,5 +25,5 @@ export class CreateMemberDto {
 export const CreateMemberSchema = Joi.object().keys({
     id: Joi.any().strip(),
     userId: Joi.number().min(1).required(),
-    role: Joi.number().greater(-1).less(3).required()["default"](0)
+    role: Joi.number().greater(-1).less(3).required().default(0)
 });
