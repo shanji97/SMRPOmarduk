@@ -54,10 +54,6 @@ export class ProjectController {
         if (user == null) {
           throw new NotFoundException(`User by ID ${member.userId} not found in the database.`);
         }
-
-        if (member.role < 1 || member.role > 2) {
-          throw new UnauthorizedException(`User with the user ID ${member.userId} has not the sufficient privileges to create a project.`);
-        }
       }
 
       const row = await this.projectService.createProject(project);
