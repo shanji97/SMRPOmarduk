@@ -9,7 +9,7 @@ export class Project {
 
   @Column({ length: 128, unique: true })
   projectname: string;
-
+ 
   @OneToMany(type => Member, member => member.project)
   members: Member[];
 

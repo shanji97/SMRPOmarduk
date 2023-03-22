@@ -5,6 +5,7 @@ import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
 
 import { Project } from './project.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { CreateProjectDto } from './dto/create-project.dto';
 
 @Injectable()
 export class ProjectService {
@@ -28,13 +29,13 @@ export class ProjectService {
     return await this.projectRepository.findOneBy({ id: projectId });
   }
 
-  async createProject(project): Promise<object> {
+  async createProject(project: CreateProjectDto): Promise<object> {
     try {
-      this.logger.error(project.projectName);
-      let p = new Project();
-      p.projectname = project.projectName;
-      
-      return await (await this.projectRepository.insert(p)).identifiers[0]
+
+      let newProject = this.createProjectObject(project);
+
+      const inserted = await this.projectRepository.insert(newProject);
+      return inserted.identifiers[0];
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
@@ -60,5 +61,12 @@ export class ProjectService {
 
   async deleteProjectById(projectId: number) {
     await this.projectRepository.delete({ id: projectId });
+  }
+
+  createProjectObject(project: CreateProjectDto): Project {
+    let newProject = new Project();
+    newProject.projectname = project.projectName;
+
+    return newProject;
   }
 }

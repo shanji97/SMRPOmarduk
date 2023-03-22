@@ -2,7 +2,6 @@ import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
-
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateStoryDto } from './dto/create-story.dto';
@@ -28,26 +27,26 @@ export class StoryService {
   async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
     try {
 
-      let newStory = new Story()
-      newStory.projectId = projectId;
-      newStory.title = story.title;
-      newStory.description = story.description;
-      newStory.sequenceNumber = story.sequenceNumber;
-      newStory.priority = story.priority;
-      newStory.businessValue = story.businessValue;
+      //Check if a story with this title and project combo exists.
+      let existingStory = this.getStoryByTitleAndProjectId(story.title, projectId)
+      if (existingStory != null) {
+        throw new ConflictException('Story by this name already exists!');
+      }
 
+      //Check if a story with this title and project combo exists.
+      existingStory = this.getStoryBySequenceNumberAndProjectId(story.sequenceNumber, projectId)
+      if (existingStory != null) {
+        throw new ConflictException('Please add a new sequence number for this story.');
+      }
+
+      let newStory = this.createStoryObject(story, projectId);
       const inserted = await this.storyRepository.insert(newStory);
       return inserted.identifiers[0];
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            // Get count of stories by user names.
-            const storyByTitle = await this.getStoryByTitle(story.title);
-            if (storyByTitle != null) {
-              throw new ConflictException('Story by this name already exists!');
-            }
-            throw new ConflictException('Please add a new sequence number for this story.');
+            throw new ConflictException("A Story with this ID already exist");
         }
       }
     }
@@ -70,7 +69,27 @@ export class StoryService {
     await this.storyRepository.delete({ id: storyId });
   }
 
+  async getStoryByTitleAndProjectId(title: string, projectId: number): Promise<Story> {
+    return await this.storyRepository.findOneBy({ title: title, projectId: projectId });
+  }
+
+  async getStoryBySequenceNumberAndProjectId(sequenceNumber: number, projectId: number): Promise<Story> {
+    return await this.storyRepository.findOneBy({ sequenceNumber: sequenceNumber, projectId: projectId });
+  }
+
   async getStoryByTitle(title: string): Promise<Story> {
     return await this.storyRepository.findOneBy({ title: title });
+  }
+
+  createStoryObject(story: CreateStoryDto, projectId: number): Story {
+
+    let newStory = new Story()
+    newStory.projectId = projectId;
+    newStory.title = story.title;
+    newStory.description = story.description;
+    newStory.sequenceNumber = story.sequenceNumber;
+    newStory.priority = story.priority;
+    newStory.businessValue = story.businessValue;
+    return newStory;
   }
 }

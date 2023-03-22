@@ -11,10 +11,10 @@ export class Story {
   @Column({unsigned:true, type: "int" })
   projectId: number;
 
-  @Column({ unsigned: true, unique: true })
-  sequenceNumber: number
+  @Column({ unsigned: true)
+  sequenceNumber: number;
 
-  @Column({ type: "varchar", length: 200, unique: true })
+  @Column({ type: "varchar", length: 200})
   title: string;
 
   @Column({ type: "text" })

@@ -12,9 +12,9 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { MemberService } from '../member/member.service';
 
 @ApiTags('project')
-//@ApiBearerAuth()
-//@ApiUnauthorizedResponse()
-//@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
