@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Button } from "react-bootstrap";
 import Card from "../components/Card";
 import { Form } from "react-bootstrap";
 
 import classes from "./AddStory.module.css";
-import useValidateForm from "../hooks/useValidateForm";
 import { StoryData } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { createStory } from "../features/stories/storySlice";
@@ -14,14 +13,13 @@ import Col from "react-bootstrap/Col";
 
 const AddStory = () => {
   const dispatch = useAppDispatch();
-
   let state = useAppSelector((state) => state.stories);
 
   const [storyData, setStoryData] = useState({
     title: "",
     description: "",
     tests: [""],
-    priority: "", // 3 => must have, 0 => won't have this time
+    priority: "3", // 3 => must have, 0 => won't have this time
     businessValue: "",
     sequenceNumber: "",
   });
@@ -36,6 +34,12 @@ const AddStory = () => {
   const [sequenceNumberTouched, setSequenceNumberTouched] = useState(false);
   const [testsTouched, setTestsTouched] = useState([false]);
 
+  const wasAnythingTouched =
+    titleTouched ||
+    businessValueTouched ||
+    sequenceNumberTouched ||
+    testsTouched.includes(true);
+
   const formIsValid =
     titleTouched &&
     !titleError &&
@@ -49,6 +53,7 @@ const AddStory = () => {
   const { title, description, priority, businessValue, tests, sequenceNumber } =
     storyData;
 
+  // for adding inputs in the 'Tests' section
   const addInputHandler = () => {
     setStoryData((prevStoryData) => ({
       ...prevStoryData,
@@ -58,6 +63,7 @@ const AddStory = () => {
     setTestsTouched((prevTestsTouched) => [...prevTestsTouched, false]);
   };
 
+  // for removing inputs in the 'Tests' section
   const removeInputHandler = (index: any) => {
     setStoryData((prevStoryData) => {
       const newTestsArray = [...prevStoryData.tests];
@@ -69,13 +75,14 @@ const AddStory = () => {
     });
   };
 
-  const userDataChangedHandler = (e: any) => {
+  const storyDataChangedHandler = (e: any) => {
     setStoryData((prevStoryData) => ({
       ...prevStoryData,
       [e.target.name]: e.target.value,
     }));
   };
 
+  // handle inputs for tests
   const testInputChangedHandler = (e: any, index: number) => {
     setStoryData((prevStoryData) => {
       const newTestsData: string[] = [...prevStoryData.tests];
@@ -84,6 +91,7 @@ const AddStory = () => {
     });
   };
 
+  //handle input for priority selection
   const selectInputChangedHandler = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -93,15 +101,17 @@ const AddStory = () => {
     }));
   };
 
+  // title validation
   const checkStoryTitle = () => {
     storyData.title.trim() === "" ? setTitleError(true) : setTitleError(false);
     setTitleTouched(true);
   };
 
+  // business value validation
   const checkBusinessValue = () => {
     setBusinessValueTouched(true);
 
-    if (businessValue === "") {
+    if (businessValue.trim() === "") {
       setBusinessValueError(true);
       return;
     }
@@ -111,9 +121,10 @@ const AddStory = () => {
       : setBusinessValueError(false);
   };
 
+  // sequence number validation
   const checkSequenceNumber = () => {
     setSequenceNumberTouched(true);
-    if (sequenceNumber === "") {
+    if (sequenceNumber.trim() === "") {
       setSequenceNumberError(true);
       return;
     }
@@ -123,6 +134,7 @@ const AddStory = () => {
       : setSequenceNumberError(false);
   };
 
+  // tests validation
   const checkTestInput = (index: number) => {
     const inputValue = storyData.tests[index];
     const newTestsError = [...testsError];
@@ -136,6 +148,7 @@ const AddStory = () => {
     });
   };
 
+  // handle submit
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -150,16 +163,24 @@ const AddStory = () => {
 
     console.log(storyData);
 
-    console.log("DISŠATCH RETURN " + dispatch(createStory(newStory)));
+    // send to backend
+    dispatch(createStory(newStory));
 
+    // set inputs to default values
     setStoryData({
       title: "",
       description: "",
       tests: [""],
-      priority: "",
+      priority: "3",
       businessValue: "",
       sequenceNumber: "",
     });
+
+    // set validation values back to default
+    setTitleTouched(false);
+    setSequenceNumberTouched(false);
+    setTestsTouched([false]);
+    setBusinessValueTouched(false);
   };
 
   return (
@@ -178,7 +199,7 @@ const AddStory = () => {
                   placeholder="Enter #"
                   name="sequenceNumber"
                   value={sequenceNumber}
-                  onChange={userDataChangedHandler}
+                  onChange={storyDataChangedHandler}
                   onBlur={checkSequenceNumber}
                   type="number"
                 />
@@ -195,7 +216,7 @@ const AddStory = () => {
                   placeholder="Add story title"
                   name="title"
                   value={title}
-                  onChange={userDataChangedHandler}
+                  onChange={storyDataChangedHandler}
                   onBlur={checkStoryTitle}
                 />
                 <Form.Text className="text-secondary">
@@ -213,7 +234,7 @@ const AddStory = () => {
               placeholder="Add story description"
               name="description"
               value={description}
-              onChange={userDataChangedHandler}
+              onChange={storyDataChangedHandler}
             />
           </Form.Group>
 
@@ -257,12 +278,14 @@ const AddStory = () => {
                 </Form.Group>
               ))}
             </Form.Group>
-
+            <Form.Text className="text-secondary d-block mb-3">
+              Make sure all the test fields you add are filled in.
+            </Form.Text>
             <Button
               variant="outline-primary"
               type="button"
               onClick={addInputHandler}
-              className="mb-3"
+              className="mb-1"
             >
               Add another test
             </Button>
@@ -293,7 +316,7 @@ const AddStory = () => {
                   placeholder="Enter business value"
                   name="businessValue"
                   value={businessValue}
-                  onChange={userDataChangedHandler}
+                  onChange={storyDataChangedHandler}
                   onBlur={checkBusinessValue}
                   type="number"
                 />
@@ -303,7 +326,12 @@ const AddStory = () => {
               </Form.Group>
             </Col>
           </Row>
-          {state.isError && <Alert variant={"danger"}>{state.message}</Alert>}
+          {state.isError && !state.isLoading && !wasAnythingTouched && (
+            <Alert variant={"danger"}>{state.message}</Alert>
+          )}
+          {state.isSuccess && !state.isLoading && !wasAnythingTouched && (
+            <Alert variant={"success"}>Story added successfully!</Alert>
+          )}
           <Button
             variant="primary"
             type="submit"
