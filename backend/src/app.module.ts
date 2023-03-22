@@ -18,6 +18,7 @@ import { UserModule } from './user/user.module';
 import { StoryModule } from './story/story.module';
 import { TestModule } from './test/test.module';
 import { StoryController } from './story/story.controller';
+import {ProjectModule} from './project/project.module';
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { StoryController } from './story/story.controller';
     AuthModule,
     UserModule,
     TestModule,
-    StoryModule
+    StoryModule,
+    ProjectModule
   ],
   controllers: [AppController, HealthController],
   providers: [

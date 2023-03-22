@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, ConflictException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateStoryDto, CreateStorySchema } from './dto/create-story.dto';
@@ -39,18 +39,23 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Create story' })
   @ApiCreatedResponse()
-  @Post()
-  async createStory(@Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto) {
+  @Post('/:projectId/add-story')
+  async createStory(@Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto, @Param() params) {
     try {
-      const row = await this.storyService.createStory(story);
+      const projectId = parseInt(params.projectId);
+      const row = await this.storyService.createStory(story, projectId);
       const storyId = row["id"];
       await this.testService.createTest(storyId, story.tests);
     } catch (ex) {
-      if (ex instanceof ValidationException)
+      if (ex instanceof ConflictException) {
+        throw new HttpException(ex.message,HttpStatus.CONFLICT)
+      } else if (ex instanceof ValidationException) {
         throw new BadRequestException(ex.message);
-      throw ex;
+        throw ex;
+      }
     }
   }
+
 
   @ApiOperation({ summary: 'Update story' })
   @ApiOkResponse()

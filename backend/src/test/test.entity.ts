@@ -7,7 +7,7 @@ export class Test {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({ type: "text" })
+  @Column({ type: 'text' })
   description: string;
 
   @Column({ unsigned: true, nullable: true })
