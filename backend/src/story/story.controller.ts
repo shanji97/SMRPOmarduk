@@ -39,10 +39,11 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Create story' })
   @ApiCreatedResponse()
-  @Post()
-  async createStory(@Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto) {
+  @Post('/:projectId/add-story')
+  async createStory(@Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto, @Param() params) {
     try {
-      const row = await this.storyService.createStory(story);
+      const projectId = parseInt(params.projectId);
+      const row = await this.storyService.createStory(story, projectId);
       const storyId = row["id"];
       await this.testService.createTest(storyId, story.tests);
     } catch (ex) {

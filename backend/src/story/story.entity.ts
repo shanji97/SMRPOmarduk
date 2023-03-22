@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Project } from 'src/project/project.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne} from 'typeorm';
 
 import { Test } from '../test/test.entity';
 
@@ -6,6 +7,9 @@ import { Test } from '../test/test.entity';
 export class Story {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
+
+  @Column({unsigned:true, type: "int" })
+  projectId: number;
 
   @Column({ unsigned: true, unique: true })
   sequenceNumber: number
@@ -24,4 +28,8 @@ export class Story {
 
   @OneToMany(type => Test, test => test.story)
   tests: Test[];
+
+  @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  project: Project;
+  
 }

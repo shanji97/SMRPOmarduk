@@ -39,7 +39,7 @@ import {ProjectModule} from './project/project.module';
     AuthModule,
     UserModule,
     TestModule,
-    StoryModule
+    StoryModule,
     ProjectModule
   ],
   controllers: [AppController, HealthController],

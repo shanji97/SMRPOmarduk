@@ -5,6 +5,7 @@ import { Repository, QueryFailedError } from 'typeorm';
 
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { CreateStoryDto } from './dto/create-story.dto';
 
 @Injectable()
 export class StoryService {
@@ -24,9 +25,18 @@ export class StoryService {
     return await this.storyRepository.findOneBy({ id: storyId });
   }
 
-  async createStory(story): Promise<object> {
+  async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
     try {
-      const inserted = await this.storyRepository.insert(story);
+
+      let newStory = new Story()
+      newStory.projectId = projectId;
+      newStory.title = story.title;
+      newStory.description = story.description;
+      newStory.sequenceNumber = story.sequenceNumber;
+      newStory.priority = story.priority;
+      newStory.businessValue = story.businessValue;
+
+      const inserted = await this.storyRepository.insert(newStory);
       return inserted.identifiers[0];
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
