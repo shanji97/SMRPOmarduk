@@ -5,6 +5,7 @@ import { Project } from './project.entity';
 import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
 import { MemberModule } from 'src/member/member.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { MemberModule } from 'src/member/member.module';
     TypeOrmModule.forFeature([
       Project,
     ]),
-    MemberModule
+    MemberModule,
+    UserModule
   ],
   controllers: [
     ProjectController,

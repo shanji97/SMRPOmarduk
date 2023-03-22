@@ -62,4 +62,8 @@ export class MemberService {
     async deleteMemberById(memberId: number) {
         await this.memberRepository.delete({ id: memberId });
     }
+
+    async getProjetMember(){
+        await this.memberRepository.findOneBy({})
+    }
 }

@@ -16,7 +16,7 @@ export class CreateProjectDto {
 
 
   @ApiProperty({
-    example: [{ userId: 1, role: 1 }, { userId: 1, role: 2 }],
+    example: [{ userId:3 , role: 1 }, { userId: 1, role: 0}],
     required: true
   })
   members: CreateMemberDto[];

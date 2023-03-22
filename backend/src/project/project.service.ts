@@ -31,9 +31,7 @@ export class ProjectService {
 
   async createProject(project: CreateProjectDto): Promise<object> {
     try {
-
       let newProject = this.createProjectObject(project);
-
       const inserted = await this.projectRepository.insert(newProject);
       return inserted.identifiers[0];
     } catch (ex) {

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
@@ -10,16 +10,18 @@ import { ProjectService } from './project.service';
 import { ValidationException } from '../common/exception/validation.exception';
 import { MemberService } from '../member/member.service';
 import { AdminOnlyGuard } from 'src/auth/guard/admin-only.guard';
+import { UserService } from 'src/user/user.service';
 
 @ApiTags('project')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
-    private readonly memberSerivece: MemberService,
+    private readonly memberService: MemberService,
+    private readonly userService: UserService
   ) { }
 
   @ApiOperation({ summary: 'List projects' })
@@ -47,10 +49,16 @@ export class ProjectController {
   @Post()
   async createProject(@Body(new JoiValidationPipe(CreateProjectSchema)) project: CreateProjectDto) {
     try {
+      for (const member of project.members) {
+        let user = await this.userService.getUserById(member.userId);
+        if (user == null) {
+          throw new NotFoundException(`User by ID ${member.userId} not found in the database.`);
+        }
+      }
+
       const row = await this.projectService.createProject(project);
       const projectId = JSON.parse(JSON.stringify(row)).id;
-
-      await this.memberSerivece.createMember(projectId, project.members);
+      await this.memberService.createMember(projectId, project.members);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
