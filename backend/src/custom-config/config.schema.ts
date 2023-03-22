@@ -7,6 +7,7 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
   PORT: Joi.number().default(process.env.PORT || 3000),
   STATIC_DIR: Joi.string().default('static'),
+  DATA_DIR: Joi.string().default('data'),
 
   CONFIG: Joi.string(),
   IGNORE_CONFIG: Joi.boolean(),
@@ -18,6 +19,7 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   BCRYPT_SALT_ROUNDS: Joi.number().default(10),
   DEFAULT_USER_USERNAME: Joi.string().trim().min(1).default('admin'),
   DEFAULT_USER_PASSWORD: Joi.string().trim().min(1).default('admin'),
+  DEFAULT_USER_EMAIL: Joi.string().trim().min(1).default('admin@example.org'),
 
   /**
    * TypeORM

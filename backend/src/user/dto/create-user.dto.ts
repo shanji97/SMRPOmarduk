@@ -32,7 +32,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'jdoe',
-    minLength: 1,
+    minLength: 12,
     maxLength: 60,
     nullable: false,
     required: true,
@@ -43,10 +43,10 @@ export class CreateUserDto {
     example: 'jdoe@example.com',
     minLength: 1,
     maxLength: 255,
-    nullable: true,
-    required: false,
+    nullable: false,
+    required: true,
   })
-  email: string | null;
+  email: string;
 
   @ApiProperty({
     default: false,
@@ -71,8 +71,10 @@ export const CreateUserSchema = Joi.object().keys({
   firstName: Joi.string().trim().min(1).max(128).required(),
   lastName: Joi.string().trim().min(1).max(128).required(),
   username: Joi.string().trim().min(1).max(128).required(),
-  password: Joi.string().trim().min(1).max(60).required(),
-  email: Joi.string().trim().min(1).max(255).allow(null),
+  password: Joi.string().trim().min(12).max(64).required(),
+  email: Joi.string().trim().min(1).max(255),
+  twoFa: Joi.any().strip(),
+  twoFaConfirmed: Joi.any().strip(),
   isAdmin: Joi.boolean(),
   deleted: Joi.any().strip(),
   description: Joi.string().trim().min(1).max(65535).allow(null),
