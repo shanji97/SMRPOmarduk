@@ -1,4 +1,6 @@
-import { Entity, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
+import { UserLogin } from '../auth/user-login.entity';
 
 @Entity()
 export class User {
@@ -17,8 +19,14 @@ export class User {
   @Column({ length: 60, select: false })
   password: string;
 
-  @Column({ nullable: true })
-  email?: string | null;
+  @Column({ unique: true })
+  email: string;
+
+  @Column({ type: 'char', length: 16, nullable: true, default: null, select: false })
+  twoFa: string | null;
+
+  @Column({ type: 'bool', default: false, select: false })
+  twoFaConfirmed: boolean;
 
   @Column({ type: 'bool', unsigned: true, default: false })
   isAdmin: boolean;
@@ -34,4 +42,7 @@ export class User {
 
   @UpdateDateColumn()
   dateUpdated: string;
+
+  @OneToMany(type => UserLogin, login => login.user)
+  logins: UserLogin[];
 }
