@@ -1,7 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
 import { CreateProjectDto, CreateProjectSchema } from './dto/create-project.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
@@ -10,11 +9,12 @@ import { Project } from './project.entity';
 import { ProjectService } from './project.service';
 import { ValidationException } from '../common/exception/validation.exception';
 import { MemberService } from '../member/member.service';
+import { AdminOnlyGuard } from 'src/auth/guard/admin-only.guard';
 
 @ApiTags('project')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(

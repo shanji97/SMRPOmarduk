@@ -26,19 +26,6 @@ export class StoryService {
 
   async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
     try {
-
-      //Check if a story with this title and project combo exists.
-      let existingStory = this.getStoryByTitleAndProjectId(story.title, projectId)
-      if (existingStory != null) {
-        throw new ConflictException('Story by this name already exists!');
-      }
-
-      //Check if a story with this title and project combo exists.
-      existingStory = this.getStoryBySequenceNumberAndProjectId(story.sequenceNumber, projectId)
-      if (existingStory != null) {
-        throw new ConflictException('Please add a new sequence number for this story.');
-      }
-
       let newStory = this.createStoryObject(story, projectId);
       const inserted = await this.storyRepository.insert(newStory);
       return inserted.identifiers[0];
@@ -46,7 +33,11 @@ export class StoryService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ConflictException("A Story with this ID already exist");
+            const storyByTitle = await this.getStoryByTitleAndProjectId(story.title, projectId);
+            if (storyByTitle != null) {
+              throw new ConflictException('Story by this name already exists!');
+            }
+            throw new ConflictException('Please add a new sequence number for this story.');
         }
       }
     }
@@ -78,11 +69,11 @@ export class StoryService {
   }
 
   async getStoryByTitle(title: string): Promise<Story> {
-    return await this.storyRepository.findOneBy({ title: title });
+    return this.storyRepository.findOneBy({ title: title });
   }
 
   createStoryObject(story: CreateStoryDto, projectId: number): Story {
-
+    console.log(story);
     let newStory = new Story()
     newStory.projectId = projectId;
     newStory.title = story.title;
