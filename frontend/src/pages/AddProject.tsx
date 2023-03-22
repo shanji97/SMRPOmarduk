@@ -22,8 +22,15 @@ const AddProject = () => {
   const { users, isAdmin } = useAppSelector((state) => state.users);
 
   useEffect(() => {
+    if (localStorage.getItem("user") == null) {
+      navigate("/login");
+      return;
+    }
+
     const token = JSON.parse(localStorage.getItem("user")!).token;
     const isAdmin = parseJwt(token).isAdmin;
+    // console.log(isAdmin);
+
     if (!isAdmin) {
       navigate("/");
       return;
@@ -50,7 +57,7 @@ const AddProject = () => {
     memberNamesTouched.includes(true) ||
     memberRolesTouched.includes(true);
 
-  console.log(wasAnythingTouched);
+  // console.log(wasAnythingTouched);
 
   const formIsValid =
     nameTouched &&
@@ -89,7 +96,6 @@ const AddProject = () => {
       };
       return newMembersArray;
     });
-    checkMemberNameInput(index);
   };
 
   const roleInputChangedHandler = (e: any, index: number) => {
@@ -171,9 +177,8 @@ const AddProject = () => {
       members: membersArray,
     };
 
-    console.log(newProject);
+    // console.log(newProject);
 
-    // TODO send data to backend via service
     dispatch(createProject(newProject));
 
     setProjectName("");
@@ -200,10 +205,11 @@ const AddProject = () => {
               onBlur={checkProjectName}
               isInvalid={nameError}
             />
+            <Form.Text>Add a unique project name.</Form.Text>
           </Form.Group>
 
           <Form.Group
-            className={`mb-3 ${classes.testsGroup}`}
+            className={`mb-4 ${classes.testsGroup}`}
             controlId="form-tests"
           >
             <Form.Label>Project members</Form.Label>
@@ -284,6 +290,9 @@ const AddProject = () => {
                   </Container>
                 </Form.Group>
               ))}
+              <Form.Text>
+                Make sure to fill out all the member and role fields.
+              </Form.Text>
             </Form.Group>
 
             <Button

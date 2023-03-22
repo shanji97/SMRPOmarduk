@@ -67,18 +67,20 @@ function Header() {
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="ms-auto">
-            <NavDropdown
-              id="projects-dropdown"
-              title={
-                <span>
-                  <Journals className="mb-1"></Journals> Projects
-                </span>
-              }
-            >
-              <NavDropdown.Item onClick={redirectToNewProject}>
-                + Add project
-              </NavDropdown.Item>
-            </NavDropdown>
+            {isAdmin && (
+              <NavDropdown
+                id="projects-dropdown"
+                title={
+                  <span>
+                    <Journals className="mb-1"></Journals> Projects
+                  </span>
+                }
+              >
+                <NavDropdown.Item onClick={redirectToNewProject}>
+                  + Add project
+                </NavDropdown.Item>
+              </NavDropdown>
+            )}
             <NavDropdown
               id="sprint-dropdown"
               title={
