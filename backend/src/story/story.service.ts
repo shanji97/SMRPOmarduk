@@ -73,8 +73,7 @@ export class StoryService {
   }
 
   createStoryObject(story: CreateStoryDto, projectId: number): Story {
-    console.log(story);
-    let newStory = new Story()
+    let newStory = new Story();
     newStory.projectId = projectId;
     newStory.title = story.title;
     newStory.description = story.description;
