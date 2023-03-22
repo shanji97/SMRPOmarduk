@@ -14,6 +14,8 @@ interface UserState {
     isError: boolean
     isCommonPassword: boolean
     message: any
+    qrUrl: string
+    lastLogin: string
 }
 
 const initialState: UserState = {
@@ -26,6 +28,8 @@ const initialState: UserState = {
     isError: false,
     message: '',
     isCommonPassword: false,
+    qrUrl: '',
+    lastLogin: '',
 }
 
 export const login = createAsyncThunk('auth/login', async (userData: LoginData, thunkAPI) => {
@@ -73,7 +77,7 @@ export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkA
 
 export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: string, thunkAPI: any) => {
     try {
-        const token = thunkAPI.getState().users.user.token; 
+        const token = JSON.parse(localStorage.getItem('user')!).token;
         return await userService.deleteUser(userId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
@@ -85,6 +89,26 @@ export const commonPassword = createAsyncThunk('/auth/commonPassword', async (pa
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await userService.commonPassword(password, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const setUp2FA = createAsyncThunk('/auth/setUp2FA', async (userId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.setUp2FA(userId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getLastLogin = createAsyncThunk('/auth/lastLogin', async (userId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.getLastLogin(userId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -173,6 +197,36 @@ export const userSlice = createSlice({
                 state.message = '';
                 state.user = null;
                 state.isCommonPassword = action.payload.isCommon;
+            })
+            .addCase(setUp2FA.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(setUp2FA.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.qrUrl = action.payload.url;
+            })
+            .addCase(setUp2FA.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isCommonPassword = true;
+                state.message = '';
+            })
+            .addCase(getLastLogin.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getLastLogin.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.lastLogin = action.payload.date;
+            })
+            .addCase(getLastLogin.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isCommonPassword = true;
+                state.message = '';
             })
     }
 })

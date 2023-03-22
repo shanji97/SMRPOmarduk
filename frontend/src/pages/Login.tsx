@@ -6,10 +6,11 @@ import ValidationError from "../components/ValidationError";
 import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
-import { login } from "../features/users/userSlice";
+import { login, setUp2FA } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
 
 import classes from './Login.module.css';
+import { parseJwt } from "../helpers/helpers";
 
 const Login = () => {
     const dispatch = useAppDispatch();
@@ -19,6 +20,7 @@ const Login = () => {
         username: '',
         password: ''
     });
+    const [url, setUrl] = useState('');
     const [codeText, setCodeText]   = useState('');
     const [showModal, setShowModal] = useState(false);
     const formIsValid               = useValidateForm(userData);
@@ -26,10 +28,10 @@ const Login = () => {
     const {username, password} = userData;
 
     useEffect(() => {
-        if (isSuccess || user !== null) {
+        if (user || isSuccess) {
             navigate('/');
-        } 
-    }, [isError, navigate, user, isSuccess]);
+        }
+    }, [user, isSuccess]);
 
     const closeModal = () => {setShowModal(false)};
 
@@ -46,7 +48,9 @@ const Login = () => {
 
     const handle2FALogin = () => {
         // TODO send to backend
-        dispatch(login(userData));
+        
+        // get url of QR code and show it, user scans it and get the code
+        // dispatch 2fa login, send userData + CODE
         console.log(userData, codeText);
     }
 
@@ -81,7 +85,11 @@ const Login = () => {
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         dispatch(login(userData));
+        /*
+        dispatch(setUp2FA(userId));
+        debugger;
         setShowModal(true);
+        */
     }
     
     return (
@@ -116,8 +124,7 @@ const Login = () => {
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>
             <Fragment>
-                {/* NOTE TO SELF: SET false BACK TO showModal WHEN BACKEND 2FA IS IMPLEMENTED */}
-                {false && renderModal()}
+                {showModal && renderModal()}
             </Fragment>
         </Card>
     );

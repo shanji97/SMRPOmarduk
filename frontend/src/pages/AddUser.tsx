@@ -67,9 +67,7 @@ const AddUser: React.FC<AddUserProps> = (
     const [passwordType, setPasswordType]       = useState('password');
     const [oldPasswordType, setOldPasswordType] = useState('password');
     const [password, setPassword]               = useState(passwordInit);
-    const [passHidden, setPassHidden]           = useState(confirmPasswordInit);
-    const formIsValid                           = useValidateForm(userData);
-    const passwordsMatch                        = useMatchingPasswords(passHidden, confirmPassword);
+    const passwordsMatch                        = useMatchingPasswords(password, confirmPassword);
 
     useEffect(() => {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -83,6 +81,10 @@ const AddUser: React.FC<AddUserProps> = (
             setIsUserRadio(false);
         }
     }, []);
+
+    const formIsValid = useMemo(() => {
+        return !Object.values(userData).some(field => field === '');
+    }, [userData]);
 
     let validCredentials = useMemo(() => {
         if (isEdit) {
@@ -125,55 +127,16 @@ const AddUser: React.FC<AddUserProps> = (
         oldPasswordType === 'password' ? setOldPasswordType('text') : setOldPasswordType('password');
     }
 
-    const onPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const passwordValue = e.target.value;
-        const hiddenPassValue = passHidden;
-    
-        let showLength = 1;
-        let hideAll = setTimeout(() => {}, 0);
-    
-        let offset = passwordValue.length - hiddenPassValue.length;
-    
-        if (offset > 0) {
-            setPassHidden(hiddenPassValue +
-                passwordValue.substring(
-                  hiddenPassValue.length,
-                  hiddenPassValue.length + offset
-                )
-            );
-        } else if (offset < 0) {
-          setPassHidden(
-            hiddenPassValue.substring(
-              0,
-              hiddenPassValue.length + offset
-            )
-          );
-        }
-    
-        if (passwordValue.length > showLength) {
-          setPassword(
-              passwordValue
-                .substring(0, passwordValue.length - showLength)
-                .replace(/./g, "•") +
-              passwordValue.substring(
-                passwordValue.length - showLength,
-                passwordValue.length
-              )
-          );
-        }
-    
-        clearTimeout(hideAll);
-        hideAll = setTimeout(() => {
-          setPassword(passwordValue.replace(/./g, "•"))
-        }, 200);
-    };
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+    }
 
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const newUser: UserData = {
             username,
-            password: passHidden,
+            password,
             firstName,
             lastName,
             email,
@@ -189,7 +152,7 @@ const AddUser: React.FC<AddUserProps> = (
                     username,
                     email,
                     passwordOld,
-                    password: passHidden,
+                    password,
                     isAdmin: isAdminRadio
                 }  
                 dispatch(editUser(userDataEdit));
@@ -213,6 +176,7 @@ const AddUser: React.FC<AddUserProps> = (
             return;
         }
         dispatch(createUser(newUser));
+        navigate('/');
 
         setUserData({
             id: '',
@@ -256,11 +220,11 @@ const AddUser: React.FC<AddUserProps> = (
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                     <Form.Label>Password</Form.Label>
                     <Form.Control
-                        type='text'
+                        type={passwordType}
                         placeholder="Enter password"
                         name='password'
-                        value={showChecked ? passHidden : password}
-                        onChange={onPasswordChange}
+                        value={password}
+                        onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
                     />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
@@ -351,11 +315,11 @@ const AddUser: React.FC<AddUserProps> = (
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                     <Form.Label>Password</Form.Label>
                     <Form.Control
-                        type='text'
+                        type={passwordType}
                         placeholder="Enter password"
                         name='password'
-                        value={showChecked ? passHidden : password}
-                        onChange={onPasswordChange}
+                        value={password}
+                        onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
                     />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
@@ -424,7 +388,7 @@ const AddUser: React.FC<AddUserProps> = (
                 </div>
 
                 <Button variant="primary" type="submit" disabled={!formIsValid || !validCredentials}>
-                    Dodaj
+                    Save
                 </Button>
             </Form>
         </Card>
