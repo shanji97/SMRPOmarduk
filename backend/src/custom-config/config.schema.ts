@@ -19,6 +19,7 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   BCRYPT_SALT_ROUNDS: Joi.number().default(10),
   DEFAULT_USER_USERNAME: Joi.string().trim().min(1).default('admin'),
   DEFAULT_USER_PASSWORD: Joi.string().trim().min(1).default('admin'),
+  DEFAULT_USER_EMAIL: Joi.string().trim().min(1).default('admin@example.org'),
 
   /**
    * TypeORM

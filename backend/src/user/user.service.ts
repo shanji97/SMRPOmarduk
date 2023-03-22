@@ -27,18 +27,22 @@ export class UserService implements OnModuleInit {
   async initDefaultUser() {
     const defaultUserUsername: string | null = this.configService.get<string | null>('DEFAULT_USER_USERNAME');
     const defaultUserPassword: string | null = this.configService.get<string | null>('DEFAULT_USER_PASSWORD');
+    const defaultUserEmail: string | null = this.configService.get<string | null>('DEFAULT_USER_PASSWORD');
 
     const count = await this.getUserCount();
-    if (count === 0 && defaultUserPassword !== null && defaultUserUsername !== null) {
-      await this.createUser({
-        firstName: 'Default',
-        lastName: 'User',
-        username: defaultUserUsername,
-        password: defaultUserPassword,
-        isAdmin: true,
-      });
-      this.logger.log(`Default user ${defaultUserUsername} created.`);
-    }
+    if (count > 0 || !defaultUserUsername || !defaultUserPassword || !defaultUserEmail)
+      return;
+    
+    // Create default user
+    await this.createUser({
+      firstName: 'Default',
+      lastName: 'User',
+      username: defaultUserUsername,
+      password: defaultUserPassword,
+      email: defaultUserEmail,
+      isAdmin: true,
+    });
+    this.logger.log(`Default user ${defaultUserUsername} created.`); 
   }
 
   async comparePassword(password: string, hash: string): Promise<boolean> {
