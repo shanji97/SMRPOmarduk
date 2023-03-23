@@ -124,10 +124,23 @@ const AddProject = () => {
       newMemberNamesTouched.splice(index, 1);
       return newMemberNamesTouched;
     });
+    
     setMemberRolesTouched((prevMemberRolesTouched) => {
       const newMemberRolesTouched = [...prevMemberRolesTouched];
       newMemberRolesTouched.splice(index, 1);
       return newMemberRolesTouched;
+    });
+
+    setMemberNamesError((prevMemberNamesError) => {
+      const newMemberNamesError = [...prevMemberNamesError];
+      newMemberNamesError.splice(index, 1);
+      return newMemberNamesError;
+    });
+
+    setMemberRolesError((prevMemberRolesError) => {
+      const newMemberRolesError = [...prevMemberRolesError];
+      newMemberRolesError.splice(index, 1);
+      return newMemberRolesError;
     });
   };
 

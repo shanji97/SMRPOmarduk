@@ -2,7 +2,8 @@ import axios from "axios";
 import { ProjectData } from "../../classes/projectData";
 
 
-const PROJECTS_API_URL = `${window.location.protocol}//${window.location.hostname}/api/project`;
+// const PROJECTS_API_URL = `${window.location.protocol}//${window.location.hostname}/api/project`;
+const PROJECTS_API_URL = `http://localhost:3000/api/project`;
 
 
 const create = async (projectData: ProjectData, token: string) => {
@@ -18,7 +19,7 @@ const create = async (projectData: ProjectData, token: string) => {
 }
 
 const userService = {
-create
+    create
 }
 
 export default userService;

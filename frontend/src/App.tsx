@@ -9,7 +9,6 @@ import Login from "./pages/Login";
 import ChangePassword from "./pages/ChangePassword";
 import AddStory from "./pages/AddStory";
 import Users from "./pages/Users";
-import AddProject from "./pages/AddProject";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dashboard from './pages/Dashboard';
