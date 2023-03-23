@@ -77,7 +77,7 @@ export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkA
 
 export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: string, thunkAPI: any) => {
     try {
-        const token = JSON.parse(localStorage.getItem('user')!).token;
+        const token = thunkAPI.getState().users.user.token; 
         return await userService.deleteUser(userId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
@@ -114,6 +114,7 @@ export const getLastLogin = createAsyncThunk('/auth/lastLogin', async (userId: s
         return thunkAPI.rejectWithValue(message)
     }
 });
+
 
 export const userSlice = createSlice({
     name: 'users',

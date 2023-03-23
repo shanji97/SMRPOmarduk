@@ -7,6 +7,7 @@ import useValidateForm from "../hooks/useValidateForm";
 import useMatchingPasswords from "../hooks/useMatchingPasswords";
 import ValidationError from "../components/ValidationError";
 import {UserData, UserDataEdit} from "../classes/userData";
+
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { createUser, editUser, getAllUsers, commonPassword } from "../features/users/userSlice";
 import { parseJwt} from "../helpers/helpers";
@@ -46,6 +47,7 @@ const AddUser: React.FC<AddUserProps> = (
     }) => {
     
     const dispatch = useAppDispatch();
+
     const {isCommonPassword} = useAppSelector(state => state.users);
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
@@ -85,7 +87,6 @@ const AddUser: React.FC<AddUserProps> = (
     const formIsValid = useMemo(() => {
         return !Object.values(userData).some(field => field === '');
     }, [userData]);
-
     let validCredentials = useMemo(() => {
         if (isEdit) {
             return  username.length >= MIN_USERNAME_LENGTH &&
@@ -136,6 +137,7 @@ const AddUser: React.FC<AddUserProps> = (
 
         const newUser: UserData = {
             username,
+
             password,
             firstName,
             lastName,

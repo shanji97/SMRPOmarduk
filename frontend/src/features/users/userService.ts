@@ -1,10 +1,10 @@
 import axios from "axios";
 import { LoginData, UserData, UserDataEdit } from "../../classes/userData";
 
-const AUTH_API_URL = 'http://localhost:3000/api/auth';
-const USERS_API_URL = 'http://localhost:3000/api/user';
-const COMMON_PASSWORD_API_URL = 'http://localhost:3000/api/common-password';
-const USER_LOGIN_URL = 'http://localhost:3000/api/user-login';
+const AUTH_API_URL = `${window.location.protocol}//${window.location.hostname}/api/auth`;
+const USERS_API_URL = `${window.location.protocol}//${window.location.hostname}/api/user`;
+const COMMON_PASSWORD_API_URL = `${window.location.protocol}//${window.location.hostname}/api/common-password`;
+const USER_LOGIN_URL = `${window.location.protocol}//${window.location.hostname}/api/user-login`;
 
 
 const login = async (userData: LoginData) => {
@@ -97,6 +97,7 @@ const getLastLogin = async (userId: string, token: string) => {
     const response = await axios.get(`${USER_LOGIN_URL}/${userId}/last`, config);
     return response.data;
 }
+
 
 const userService = {
     login,

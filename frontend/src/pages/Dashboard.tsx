@@ -115,6 +115,7 @@ function Dashboard() {
                 </div>
                 <hr className="hr mx-3" />
 
+
                 <Droppable droppableId={columnId} key={columnId}>
                   {(provided, snapshot) => {
                     return (
@@ -204,12 +205,14 @@ function Dashboard() {
                             </Draggable>
                           );
                         })}
+
                         {provided.placeholder}
                       </div>
                     );
                   }}
                 </Droppable>
               </Card>
+
             </div>
           );
         })}

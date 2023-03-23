@@ -2,6 +2,7 @@ import {Container, Nav, Navbar, NavDropdown, } from 'react-bootstrap';
 import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
+
 import { getLastLogin, logout } from '../features/users/userSlice';
 import { Fragment, useEffect, useState } from 'react';
 import { parseDate, parseJwt } from '../helpers/helpers';
@@ -10,10 +11,12 @@ import { useNavigate } from 'react-router-dom';
 function Header() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
     const {user, lastLogin} = useAppSelector(state => state.users);
     const [userName, setUserName] = useState('');
     const [isAdmin, setIsAdmin]   = useState(false);
     const [lastLoginDate, setLastLoginDate] = useState('');
+
     
     useEffect(() => {
         if (user === null) {
@@ -23,6 +26,7 @@ function Header() {
         const userData = parseJwt(token);
         setIsAdmin(userData.isAdmin);
         setUserName(userData.sub);
+
         dispatch(getLastLogin(userData.sid));
         setLastLoginDate(lastLogin);
     }, [user, lastLogin]);
@@ -37,6 +41,7 @@ function Header() {
     const redirectToUsers = () => {
         navigate('/users');
     }
+
 
     const redirectToNewSprint = () => {
         navigate('/add-sprint');

@@ -6,6 +6,7 @@ import ValidationError from "../components/ValidationError";
 import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
+
 import { login, setUp2FA } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
 
@@ -20,6 +21,7 @@ const Login = () => {
         username: '',
         password: ''
     });
+
     const [url, setUrl] = useState('');
     const [codeText, setCodeText]   = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -28,10 +30,10 @@ const Login = () => {
     const {username, password} = userData;
 
     useEffect(() => {
-        if (user || isSuccess) {
+        if (isSuccess || user !== null) {
             navigate('/');
-        }
-    }, [user, isSuccess]);
+        } 
+    }, [isError, navigate, user, isSuccess]);
 
     const closeModal = () => {setShowModal(false)};
 
@@ -48,9 +50,8 @@ const Login = () => {
 
     const handle2FALogin = () => {
         // TODO send to backend
-        
-        // get url of QR code and show it, user scans it and get the code
-        // dispatch 2fa login, send userData + CODE
+
+        dispatch(login(userData));
         console.log(userData, codeText);
     }
 
@@ -85,11 +86,8 @@ const Login = () => {
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         dispatch(login(userData));
-        /*
-        dispatch(setUp2FA(userId));
-        debugger;
+
         setShowModal(true);
-        */
     }
     
     return (
@@ -124,7 +122,8 @@ const Login = () => {
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>
             <Fragment>
-                {showModal && renderModal()}
+                {/* NOTE TO SELF: SET false BACK TO showModal WHEN BACKEND 2FA IS IMPLEMENTED */}
+                {false && renderModal()}
             </Fragment>
         </Card>
     );

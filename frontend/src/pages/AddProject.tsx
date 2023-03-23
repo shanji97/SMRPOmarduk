@@ -9,6 +9,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import classes from "./AddProject.module.css";
+
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
@@ -93,6 +94,7 @@ const AddProject = () => {
       newMembersArray[index] = {
         ...newMembersArray[index],
         userId: e.target.value,
+
       };
       return newMembersArray;
     });
@@ -116,6 +118,7 @@ const AddProject = () => {
       newMembersArray.splice(index, 1);
       return newMembersArray;
     });
+
     setMemberNamesTouched((prevMemberNamesTouched) => {
       const newMemberNamesTouched = [...prevMemberNamesTouched];
       newMemberNamesTouched.splice(index, 1);
@@ -328,6 +331,7 @@ const AddProject = () => {
         </Form>
       </Card>
     </div>
+
   );
 };
 

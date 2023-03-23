@@ -4,6 +4,7 @@ import Card from "../components/Card";
 import { Form } from "react-bootstrap";
 
 import classes from "./AddStory.module.css";
+
 import { StoryData } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { createStory } from "../features/stories/storySlice";
@@ -91,6 +92,7 @@ const AddStory = () => {
     });
   };
 
+
   //handle input for priority selection
   const selectInputChangedHandler = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -167,6 +169,7 @@ const AddStory = () => {
     dispatch(createStory(newStory));
 
     // set inputs to default values
+
     setStoryData({
       title: "",
       description: "",
