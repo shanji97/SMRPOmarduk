@@ -1,8 +1,8 @@
 import axios from "axios";
 import { LoginData, UserData, UserDataEdit } from "../../classes/userData";
 
-const AUTH_API_URL = 'http://localhost:3000/api/auth';
-const USERS_API_URL = 'http://localhost:3000/api/user';
+const AUTH_API_URL = `${window.location.protocol}//${window.location.hostname}/api/auth`;
+const USERS_API_URL = `${window.location.protocol}//${window.location.hostname}/api/user`;
 
 const login = async (userData: LoginData) => {
     const response = await axios.post(`${AUTH_API_URL}/login`, userData);

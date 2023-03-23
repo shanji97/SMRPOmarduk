@@ -1,7 +1,7 @@
 import axios from "axios";
 import { StoryData } from "../../classes/storyData";
 
-const STORY_API_URL = 'http://localhost:3000/api/story';
+const STORY_API_URL = `${window.location.protocol}//${window.location.hostname}/api/story`;
 
 const create = async (storyData: StoryData, token: string) => {
     const config = {
