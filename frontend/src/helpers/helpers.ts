@@ -7,3 +7,14 @@ export function parseJwt (token: string) {
 
     return JSON.parse(jsonPayload);
 }
+
+export function parseDate(dateString: string) {
+    const splitted = dateString.split('T');
+    const date = splitted[0].replaceAll('-', '.');
+    const time = splitted[1].split('.');
+    
+    //const hour = time[0].charAt(1);
+    //const timeWithAddedHour = time[0].replace(hour, `${Number(hour)+1}`);
+
+    return `${date}, ${time[0]}`;
+}
