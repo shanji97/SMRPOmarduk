@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ProjectData } from "../../classes/projectData";
 
+
 const PROJECTS_API_URL = `${window.location.protocol}//${window.location.hostname}/api/project`;
 
 

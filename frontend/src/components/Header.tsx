@@ -2,17 +2,21 @@ import {Container, Nav, Navbar, NavDropdown, } from 'react-bootstrap';
 import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { logout } from '../features/users/userSlice';
+
+import { getLastLogin, logout } from '../features/users/userSlice';
 import { Fragment, useEffect, useState } from 'react';
-import { parseJwt } from '../helpers/helpers';
+import { parseDate, parseJwt } from '../helpers/helpers';
 import { useNavigate } from 'react-router-dom';
 
 function Header() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const {user} = useAppSelector(state => state.users);
+
+    const {user, lastLogin} = useAppSelector(state => state.users);
     const [userName, setUserName] = useState('');
     const [isAdmin, setIsAdmin]   = useState(false);
+    const [lastLoginDate, setLastLoginDate] = useState('');
+
     
     useEffect(() => {
         if (user === null) {
@@ -22,7 +26,10 @@ function Header() {
         const userData = parseJwt(token);
         setIsAdmin(userData.isAdmin);
         setUserName(userData.sub);
-    }, [user]);
+
+        dispatch(getLastLogin(userData.sid));
+        setLastLoginDate(lastLogin);
+    }, [user, lastLogin]);
 
     const handleLoginAndLogout = () => {
         if (user !== null) {
@@ -33,6 +40,11 @@ function Header() {
 
     const redirectToUsers = () => {
         navigate('/users');
+    }
+
+
+    const redirectToNewSprint = () => {
+        navigate('/add-sprint');
     }
 
     const redirectToAddUser = () => {
@@ -50,22 +62,22 @@ function Header() {
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                 <Navbar.Collapse id="responsive-navbar-nav">
                     <Nav className="ms-auto">
-                    <Nav.Link  href="#features"><Calendar className="mb-1" ></Calendar> Calendar</Nav.Link>
-                    <Nav.Link href="#pricing"><QuestionCircle className="mb-1"/> Documentation</Nav.Link>
-                    <NavDropdown title={<span><Bell className="mb-1"></Bell> Notifications</span>} id="basic-nav-dropdown">
-                    <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
-                    <NavDropdown.Item href="#action/3.2">
-                        Another action
-                    </NavDropdown.Item>
-                    <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-                    <NavDropdown.Divider />
-                    <NavDropdown.Item href="#action/3.4">
-                        Separated link
-                    </NavDropdown.Item>
+                    <NavDropdown
+                        id="sprint-dropdown"
+                        title={<span><Calendar className="mb-1"></Calendar> Sprints</span>}
+                    >   
+                        <NavDropdown.Item onClick={redirectToNewSprint}>+ Add sprint</NavDropdown.Item>
+                        <NavDropdown.Item>Sprint 1</NavDropdown.Item>
+                        <NavDropdown.Item>Sprint 2</NavDropdown.Item>
                     </NavDropdown>
 
                     <NavDropdown title={user !== null ? 
-                                            <span><PersonCircle className="mb-1"></PersonCircle> {userName}</span> : 
+                                            (   
+                                                <div style={{display: 'inline-flex'}}>
+                                                    <span><PersonCircle className="mb-1"></PersonCircle> {userName}, </span>
+                                                    {lastLoginDate ? <p>Last login: {parseDate(lastLoginDate)}</p> : <p>Last login: First login</p>}
+                                                </div>
+                                            ) : 
                                             <span><PersonCircle className="mb-1"></PersonCircle> Account</span>} id="basic-nav-dropdown">
                     <NavDropdown.Item onClick={handleLoginAndLogout}>{user === null ? 'Log in' : 'Logout'}</NavDropdown.Item>
                     <NavDropdown.Item onClick={redirectToChangePassword}>
