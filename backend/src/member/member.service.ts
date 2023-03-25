@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
-
 import { Member } from './member.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateMemberDto } from './dto/create-member.dto';
+import { array } from 'joi';
 
 
 @Injectable()
@@ -28,14 +28,16 @@ export class MemberService {
 
     async createMember(projectId: number, newMember: CreateMemberDto[]) {
         try {
-            for (let i = 0; i < newMember.length; i++) {
-                let member = new Member();
-                member.projectId = projectId;
-                member.userId = newMember[i].userId;
-                member.role = newMember[i].role;
+            let newMembers: Member[];
 
-                await this.memberRepository.insert(member);
-            }
+            newMember.forEach(member => {
+                member.role.forEach(memberRole => {
+                    newMembers.push(this.createMemberObject(projectId, member.userId, memberRole));
+                })
+            });
+
+            await this.memberRepository.insert(newMembers);
+
         } catch (ex) {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
@@ -63,7 +65,42 @@ export class MemberService {
         await this.memberRepository.delete({ id: memberId });
     }
 
-    async getProjetMember(){
-        await this.memberRepository.findOneBy({})
+    hasValidProjectOwner(projectMembers: CreateMemberDto[]): Boolean {
+        const hasOnlyProductOwnerRole = (member: CreateMemberDto) => member.role.length === 1 && member.role[0] === 2;
+        const hasProductOwnerRole = (member: CreateMemberDto) => member.role.includes(2);
+        return projectMembers.some(hasOnlyProductOwnerRole) && projectMembers.every(member => !hasProductOwnerRole(member) || hasOnlyProductOwnerRole(member));
+    }
+
+    isScrumMasterAndDeveloperPresent(projectMembers: CreateMemberDto[]): Boolean {
+
+        let roles: number[] = [1, 2];
+
+        let scrumMasterCount: number = 0;
+        let developerCount: number = 0;
+
+        projectMembers.forEach(member => {
+            member.role.forEach(memberRole => {
+                if (memberRole == 1) {
+                    scrumMasterCount++;
+                } else if (memberRole == 0) {
+                    developerCount++;
+                }
+
+                if (scrumMasterCount > 0 && developerCount > 0) {
+                    return true;
+                }
+            })
+        });
+        // Check if all roles are present. We need one product manager, at least one scrum master and at least one developer
+
+        return false;
+    }
+
+    createMemberObject(projectId: number, userId: number, role: number): Member {
+        let newMember = new Member();
+        newMember.projectId = projectId;
+        newMember.userId = userId;
+        newMember.role = role;
+        return newMember;
     }
 }
