@@ -115,6 +115,7 @@ export const getLastLogin = createAsyncThunk('/auth/lastLogin', async (userId: s
     }
 });
 
+
 export const userSlice = createSlice({
     name: 'users',
     initialState,

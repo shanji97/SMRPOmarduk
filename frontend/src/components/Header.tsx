@@ -1,7 +1,8 @@
 import {Container, Nav, Navbar, NavDropdown, } from 'react-bootstrap';
-import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar } from "react-bootstrap-icons";
+import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar, Journals } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
+
 import { getLastLogin, logout } from '../features/users/userSlice';
 import { Fragment, useEffect, useState } from 'react';
 import { parseDate, parseJwt } from '../helpers/helpers';
@@ -10,10 +11,12 @@ import { useNavigate } from 'react-router-dom';
 function Header() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
     const {user, lastLogin} = useAppSelector(state => state.users);
     const [userName, setUserName] = useState('');
     const [isAdmin, setIsAdmin]   = useState(false);
     const [lastLoginDate, setLastLoginDate] = useState('');
+
     
     useEffect(() => {
         if (user === null) {
@@ -23,6 +26,7 @@ function Header() {
         const userData = parseJwt(token);
         setIsAdmin(userData.isAdmin);
         setUserName(userData.sub);
+
         dispatch(getLastLogin(userData.sid));
         setLastLoginDate(lastLogin);
     }, [user, lastLogin]);
@@ -38,9 +42,14 @@ function Header() {
         navigate('/users');
     }
 
+
     const redirectToNewSprint = () => {
         navigate('/add-sprint');
     }
+
+    const redirectToNewProject = () => {
+        navigate("/add-project");
+      };
 
     const redirectToAddUser = () => {
         navigate('/add-user');
@@ -57,6 +66,20 @@ function Header() {
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                 <Navbar.Collapse id="responsive-navbar-nav">
                     <Nav className="ms-auto">
+                    {isAdmin && (
+              <NavDropdown
+                id="sprint-dropdown"
+                title={
+                  <span>
+                    <Journals className="mb-1"></Journals> Projects
+                  </span>
+                }
+              >
+                <NavDropdown.Item onClick={redirectToNewProject}>
+                  + Add Project
+                </NavDropdown.Item>
+              </NavDropdown>
+            )}
                     <NavDropdown
                         id="sprint-dropdown"
                         title={<span><Calendar className="mb-1"></Calendar> Sprints</span>}

@@ -21,6 +21,7 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
       migrations: [__dirname + '/../migration/**/*{.ts,.js}'],
       synchronize: this.configService.get<boolean>('TYPEORM_SYNCHRONIZE'),
       logging: this.configService.get<boolean>('TYPEORM_LOGGING'),
+      timezone: 'Z'
     };
   }  
 }
