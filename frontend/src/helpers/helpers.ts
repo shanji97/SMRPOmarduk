@@ -8,7 +8,7 @@ export function parseJwt (token: string) {
     return JSON.parse(jsonPayload);
 }
 
-export function parseDate(dateString: string) {
+export function parseDate(dateString: string): string {
     const splitted = dateString.split('T');
     const date = splitted[0].replaceAll('-', '.');
     const time = splitted[1].split('.');
@@ -17,4 +17,10 @@ export function parseDate(dateString: string) {
     //const timeWithAddedHour = time[0].replace(hour, `${Number(hour)+1}`);
 
     return `${date}, ${time[0]}`;
+}
+
+export function getBaseUrl(): string {
+    return window.location.hostname === 'localhost' ? 
+            'http://localhost:3000' : 
+            `${window.location.protocol}//${window.location.hostname}`;
 }

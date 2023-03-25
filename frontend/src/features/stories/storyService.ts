@@ -1,8 +1,9 @@
 import axios from "axios";
 import { StoryData } from "../../classes/storyData";
+import { getBaseUrl } from "../../helpers/helpers";
 
 
-const STORY_API_URL = `${window.location.protocol}//${window.location.hostname}/api/story`;
+const STORY_API_URL = `${getBaseUrl()}/api/story`;
 
 // const STORY_API_URL = `http://localhost:3000/api/story`;
 

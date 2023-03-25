@@ -1,8 +1,9 @@
 import axios from "axios";
 import { ProjectData } from "../../classes/projectData";
+import { getBaseUrl } from "../../helpers/helpers";
 
 
-const PROJECTS_API_URL = `${window.location.protocol}//${window.location.hostname}/api/project`;
+const PROJECTS_API_URL = `${getBaseUrl()}/api/project`;
 // const PROJECTS_API_URL = `http://localhost:3000/api/project`;
 
 
