@@ -6,10 +6,12 @@ import ValidationError from "../components/ValidationError";
 import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
-import { login } from "../features/users/userSlice";
+
+import { login, setUp2FA } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
 
 import classes from './Login.module.css';
+import { parseJwt } from "../helpers/helpers";
 
 const Login = () => {
     const dispatch = useAppDispatch();
@@ -19,6 +21,8 @@ const Login = () => {
         username: '',
         password: ''
     });
+
+    const [url, setUrl] = useState('');
     const [codeText, setCodeText]   = useState('');
     const [showModal, setShowModal] = useState(false);
     const formIsValid               = useValidateForm(userData);
@@ -46,6 +50,7 @@ const Login = () => {
 
     const handle2FALogin = () => {
         // TODO send to backend
+
         dispatch(login(userData));
         console.log(userData, codeText);
     }
@@ -81,6 +86,7 @@ const Login = () => {
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         dispatch(login(userData));
+
         setShowModal(true);
     }
     

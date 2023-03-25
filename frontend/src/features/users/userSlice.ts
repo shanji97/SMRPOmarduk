@@ -12,7 +12,10 @@ interface UserState {
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
+    isCommonPassword: boolean
     message: any
+    qrUrl: string
+    lastLogin: string
 }
 
 const initialState: UserState = {
@@ -23,7 +26,10 @@ const initialState: UserState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
-    message: ''
+    message: '',
+    isCommonPassword: false,
+    qrUrl: '',
+    lastLogin: '',
 }
 
 export const login = createAsyncThunk('auth/login', async (userData: LoginData, thunkAPI) => {
@@ -71,13 +77,44 @@ export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkA
 
 export const deleteUser = createAsyncThunk('auth/deleteUser', async (userId: string, thunkAPI: any) => {
     try {
-        const token = thunkAPI.getState().users.user.token; 
+        const token = JSON.parse(localStorage.getItem('user')!).token;
         return await userService.deleteUser(userId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
     }
 });
+
+export const commonPassword = createAsyncThunk('/auth/commonPassword', async (password: {password: string}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.commonPassword(password, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const setUp2FA = createAsyncThunk('/auth/setUp2FA', async (userId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.setUp2FA(userId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getLastLogin = createAsyncThunk('/auth/lastLogin', async (userId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.getLastLogin(userId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 
 export const userSlice = createSlice({
     name: 'users',
@@ -144,6 +181,53 @@ export const userSlice = createSlice({
             })
             .addCase(logout.fulfilled, (state) => {
                 state.user = null;
+            })
+            .addCase(commonPassword.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(commonPassword.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.isCommonPassword = action.payload.isCommon;
+            })
+            .addCase(commonPassword.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isCommonPassword = true;
+                state.message = '';
+                state.user = null;
+                state.isCommonPassword = action.payload.isCommon;
+            })
+            .addCase(setUp2FA.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(setUp2FA.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.qrUrl = action.payload.url;
+            })
+            .addCase(setUp2FA.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isCommonPassword = true;
+                state.message = '';
+            })
+            .addCase(getLastLogin.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getLastLogin.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.lastLogin = action.payload.date;
+            })
+            .addCase(getLastLogin.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isCommonPassword = true;
+                state.message = '';
             })
     }
 })
