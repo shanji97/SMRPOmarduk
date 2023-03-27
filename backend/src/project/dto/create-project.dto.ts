@@ -27,7 +27,7 @@ export class CreateProjectDto {
     required: true
   })
   members: CreateMemberDto[];
-
+  
 }
 
 export const CreateProjectSchema = Joi.object().keys({

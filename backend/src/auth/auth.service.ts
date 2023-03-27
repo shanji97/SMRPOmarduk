@@ -17,11 +17,11 @@ export class AuthService {
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.userService.getUserByUsernameForLogin(username);
-    if (user && await this.userService.comparePassword(password, user.password)) {
-      delete user.password;
-      return user; // Return info about user
-    }
-    return null; // Not valid credentials
+    if (!user || !await this.userService.comparePassword(password, user.password) || user.deleted)
+      return null; // Not valid credentials
+    
+    delete user.password;
+    return user; // Return info about user
   }
 
   async createTokenForUser(user: User) {
