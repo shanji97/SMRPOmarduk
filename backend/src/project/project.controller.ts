@@ -57,13 +57,13 @@ export class ProjectController {
         }
       }
       //Check if only one member is product owner and if this member does not have any other roles.
-      if (!this.memberService.hasValidProjectOwner(project.members, 0)) {
+      if (!this.memberService.hasValidProjectOwner(project.members, 2)) {
         throw new BadRequestException('There should only be one product owner, which cannot be anything else.');
       }
 
 
       // Check if there are all required roles.
-      if (!this.memberService.hasValidScrumMaster(project.members, 1) || !this.memberService.hasAtLeastOneDeveloper(project.members,2)) {
+      if (!this.memberService.hasValidScrumMaster(project.members, 1) || !this.memberService.hasAtLeastOneDeveloper(project.members,0)) {
         throw new BadRequestException('All roles must be included in the project, only one scrum master.');
       }
 
