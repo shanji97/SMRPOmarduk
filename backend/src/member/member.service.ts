@@ -42,7 +42,7 @@ export class MemberService {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
                     case 1062: // Duplicate entry
-                        throw new ValidationException('Membername already exists');
+                        throw new ValidationException('Member name already exists.');
                 }
             }
         }
@@ -55,7 +55,7 @@ export class MemberService {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
                     case 1062: // Duplicate entry
-                        throw new ValidationException('Member name already exists');
+                        throw new ValidationException('Member name already exists.');
                 }
             }
         }
@@ -65,36 +65,55 @@ export class MemberService {
         await this.memberRepository.delete({ id: memberId });
     }
 
-    hasValidProjectOwner(projectMembers: CreateMemberDto[]): Boolean {
-        const hasOnlyProductOwnerRole = (member: CreateMemberDto) => member.role.length === 1 && member.role[0] === 2;
-        const hasProductOwnerRole = (member: CreateMemberDto) => member.role.includes(2);
-        return projectMembers.some(hasOnlyProductOwnerRole) && projectMembers.every(member => !hasProductOwnerRole(member) || hasOnlyProductOwnerRole(member));
+    hasValidProjectOwner(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        return this.hasOneRole(projectMembers, roleForCheck) && this.hasOnlyThisRole(projectMembers, roleForCheck);
     }
 
-    isScrumMasterAndDeveloperPresent(projectMembers: CreateMemberDto[]): Boolean {
+    hasValidScrumMaster(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        return this.hasOneRole(projectMembers, roleForCheck);
+    }
 
-        let roles: number[] = [1, 2];
+    hasAtLeastOneDeveloper(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        return this.hasAtLeastOneRole(projectMembers, roleForCheck);
+    }
 
-        let scrumMasterCount: number = 0;
-        let developerCount: number = 0;
-
-        projectMembers.forEach(member => {
-            member.role.forEach(memberRole => {
-                if (memberRole == 1) {
-                    scrumMasterCount++;
-                } else if (memberRole == 0) {
-                    developerCount++;
+    hasOneRole(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        let roleCount: number = 0;
+        projectMembers.forEach(newMember => {
+            newMember.role.forEach(newRole => {
+                if (newRole == roleForCheck) {
+                    roleCount++;
                 }
-
-                if (scrumMasterCount > 0 && developerCount > 0) {
-                    return true;
-                }
-            })
+            });
         });
-        // Check if all roles are present. We need one product manager, at least one scrum master and at least one developer
 
-        return false;
+        return roleCount == 1;
     }
+
+    hasOnlyThisRole(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        let isValid: Boolean = false;
+        projectMembers.forEach(newMember => {
+            if (newMember.role.length == 1) {
+                if (newMember.role[0] == roleForCheck) {
+                    isValid = true;
+                }
+            }
+        });
+        return isValid;
+    }
+
+    hasAtLeastOneRole(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        let roleCount: number = 0;
+        projectMembers.forEach(newMember => {
+            newMember.role.forEach(newRole => {
+                if (newRole == roleForCheck) {
+                    roleCount++;
+                }
+            });
+        });
+        return roleCount > 0;
+    }
+
 
     createMemberObject(projectId: number, userId: number, role: number): Member {
         let newMember = new Member();
