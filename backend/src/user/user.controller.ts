@@ -81,9 +81,11 @@ export class UserController {
 
   @ApiOperation({ summary: 'Delete user' })
   @ApiOkResponse()
-  @AdminOnly()
   @Delete(':userId')
-  async deleteUser(@Param('userId', ParseIntPipe) userId: number) {
+  async deleteUser(@Token() token, @Param('userId', ParseIntPipe) userId: number) {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
     await this.userService.deleteUserById(userId);
   }
 
