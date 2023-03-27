@@ -229,6 +229,7 @@ const AddUser: React.FC<AddUserProps> = (
                         value={password}
                         onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
+                        maxLength={128}
                     />
                     <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
@@ -325,6 +326,7 @@ const AddUser: React.FC<AddUserProps> = (
                         value={password}
                         onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
+                        maxLength={128}
                     />
                     <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
