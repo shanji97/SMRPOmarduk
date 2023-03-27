@@ -56,7 +56,6 @@ export class ProjectController {
           throw new NotFoundException(`User by ID ${member.userId} not found in the database.`);
         }
       }
-
       //Check if only one member is product owner and if this member does not have any other roles.
       if (!this.memberService.hasValidProjectOwner(project.members, 0)) {
         throw new BadRequestException('There should only be one product owner, which cannot be anything else.');
