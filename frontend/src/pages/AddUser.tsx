@@ -4,64 +4,109 @@ import Card from "../components/Card";
 
 import classes from './AddUser.module.css';
 import useValidateForm from "../hooks/useValidateForm";
+import useMatchingPasswords from "../hooks/useMatchingPasswords";
 import ValidationError from "../components/ValidationError";
-import {UserData} from "../../classes/userData";
+import {UserData, UserDataEdit} from "../classes/userData";
+
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { createUser, editUser, getAllUsers, commonPassword, reset } from "../features/users/userSlice";
+import { parseJwt} from "../helpers/helpers";
+import {useNavigate} from 'react-router-dom';
+import PasswordStrengthBar from "react-password-strength-bar";
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 12;
 
 interface AddUserProps {
-    isEdit:       boolean,
-    usernameInit: string,
-    passwordInit: string,
-    firstNameInit:string,
-    lastNameInit: string,
-    emailInit:    string,
-    isAdminInit:  boolean,
-    handleClose:  () => void
+    isEdit:              boolean,
+    idInit?:             string,
+    usernameInit:        string,
+    passwordOldInit?:    string,
+    passwordInit:        string,
+    confirmPasswordInit: string,
+    firstNameInit:       string,
+    lastNameInit:        string,
+    emailInit:           string,
+    isAdminInit:         boolean,
+    handleClose:         () => void
 }
 
 
 const AddUser: React.FC<AddUserProps> = (
     {
         isEdit,
+        idInit,
         usernameInit,
         passwordInit,
+        passwordOldInit,
+        confirmPasswordInit,
         firstNameInit,
         lastNameInit,
         emailInit,
         isAdminInit,
         handleClose
     }) => {
+    
+    const dispatch = useAppDispatch();
+
+    const {isCommonPassword, isError, message} = useAppSelector(state => state.users);
+    const navigate = useNavigate();
     const [userData, setUserData] = useState({
+        id: idInit,
         username: usernameInit,
-        password: passwordInit,
+        passwordOld: passwordOldInit,
+        confirmPassword: confirmPasswordInit,
         firstName: firstNameInit,
         lastName: lastNameInit,
         email: emailInit,
     });
 
-    const {username, password, firstName, lastName, email} = userData;
+    const {id, username, passwordOld, confirmPassword, firstName, lastName, email} = userData;
 
-    const [isAdminRadio, setIsAdminRadio]   = useState(false);
-    const [isUserRadio, setIsUserRadio]     = useState(true);
-    const [passwordError, setPasswordError] = useState(false);
-    const [passwordType, setPasswordType]   = useState('password');
-    const formIsValid = useValidateForm(userData);
+    const [isAdminRadio, setIsAdminRadio]       = useState(false);
+    const [showChecked, setShowChecked]         = useState(false);
+    const [isUserRadio, setIsUserRadio]         = useState(true);
+    const [passwordError, setPasswordError]     = useState(false);
+    const [passwordType, setPasswordType]       = useState('password');
+    const [oldPasswordType, setOldPasswordType] = useState('password');
+    const [password, setPassword]               = useState(passwordInit);
+    const passwordsMatch                        = useMatchingPasswords(password, confirmPassword);
 
     useEffect(() => {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        const isAdmin = parseJwt(token).isAdmin;
+        if (!isAdmin) {
+            navigate('/');
+            return;
+        }
         if (isAdminInit) {
             setIsAdminRadio(true);
             setIsUserRadio(false);
         }
     }, []);
 
-    let validCredentials = useMemo(() => {
-        return  username.length >= MIN_USERNAME_LENGTH &&
-                password.length >= MIN_PASSWORD_LENGTH &&
-                email.includes('@');
-    }, [username, password, email]);  
+    useEffect(() => {
+        if (message !== '') {
+            alert(message);
+            dispatch(reset());
+        }
+    }, [isError, message]);
 
+    const formIsValid = useMemo(() => {
+        return username !== '' && password !== '' && confirmPassword !== '' && firstName !== '' && lastName !== '' && email !== '';
+    }, [userData]);
+
+    let validCredentials = useMemo(() => {
+        if (isEdit) {
+            return  username.length >= MIN_USERNAME_LENGTH &&
+                email.includes('@');
+        } else {
+            return  username.length >= MIN_USERNAME_LENGTH &&
+                    password.length >= MIN_PASSWORD_LENGTH &&
+                    email.includes('@');
+        }
+    }, [username, password, email]);  
+   
     const userDataChangedHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUserData(prevUserData => ({
             ...prevUserData,
@@ -84,14 +129,28 @@ const AddUser: React.FC<AddUserProps> = (
     }
 
     const handleShowPassword = () => {
+        setShowChecked(showChecked => !showChecked);
         passwordType === 'password' ? setPasswordType('text') : setPasswordType('password');
     }
 
-    const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleShowOldPassword = () => {
+        oldPasswordType === 'password' ? setOldPasswordType('text') : setOldPasswordType('password');
+    }
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+    }
+
+    const handleClipboardEvent = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+    };
+
+    const submitFormHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const newUser: UserData = {
             username,
+
             password,
             firstName,
             lastName,
@@ -99,21 +158,52 @@ const AddUser: React.FC<AddUserProps> = (
             isAdmin: isAdminRadio
         }
 
-        console.log(newUser);
+        if (isEdit) { 
+            if (password) {
+                const userDataEdit: UserDataEdit = {
+                    id,
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                    passwordOld,
+                    password,
+                    isAdmin: isAdminRadio
+                }  
+                dispatch(editUser(userDataEdit));
+            } else {
+                const userDataEdit: UserDataEdit = {
+                    id,
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                    isAdmin: isAdminRadio,
+                } 
+                dispatch(editUser(userDataEdit))
+                dispatch(getAllUsers());
+            }
+            handleClose();
+            return;
+        }
+        dispatch(commonPassword({password: newUser.password}));
+        if (isCommonPassword) {
+            return;
+        }
+        dispatch(createUser(newUser));
 
         setUserData({
+            id: '',
             username: '',
-            password: '',
+            passwordOld: '',
+            confirmPassword: '',
             firstName: '',
             lastName: '',
             email: '',
         })
+        setPassword('');
         setIsUserRadio(true);
         setIsAdminRadio(false);
-        if (isEdit) {
-            handleClose();
-        }
-        // TODO send data to backend
     }
 
     if (isEdit) {
@@ -128,6 +218,18 @@ const AddUser: React.FC<AddUserProps> = (
                         onChange={userDataChangedHandler}
                     />
                 </Form.Group>
+                
+                <Form.Group className="mb-3" controlId="formBasicOldPassword">
+                    <Form.Label>Old password</Form.Label>
+                    <Form.Control
+                        type={oldPasswordType}
+                        placeholder="Enter old password"   
+                        name='passwordOld'
+                        value={passwordOld}
+                        onChange={userDataChangedHandler}
+                    />
+                    <Form.Check type='checkbox' id='showOldPassword' label='Show password' onClick={handleShowOldPassword} />              
+                </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                     <Form.Label>Password</Form.Label>
@@ -136,15 +238,32 @@ const AddUser: React.FC<AddUserProps> = (
                         placeholder="Enter password"
                         name='password'
                         value={password}
+                        onCopy={handleClipboardEvent}
+                        onChange={handlePasswordChange}
+                        onBlur={checkPasswordLength}
+                        maxLength={128}
+                    />
+                    <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
+                    <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
+                    {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                    {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>Confirm password</Form.Label>
+                    <Form.Control
+                        type='password'
+                        placeholder="Repeat password"
+                        name='confirmPassword'
+                        value={confirmPassword}
                         onChange={userDataChangedHandler}
                         onBlur={checkPasswordLength}
                     />
-                    <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
-                    {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                    {!passwordsMatch && <ValidationError>Passwords don't match</ValidationError>}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicName">
-                    <Form.Label>Name</Form.Label>
+                    <Form.Label>Firstname</Form.Label>
                     <Form.Control
                         placeholder="Enter your name"
                         name='firstName'
@@ -189,7 +308,7 @@ const AddUser: React.FC<AddUserProps> = (
                         onClick={userChangeHandler}
                     />
                 </div>
-                <Button variant="primary" type="submit" disabled={!formIsValid || !validCredentials}>
+                <Button variant="primary" type="submit" disabled={!validCredentials}>
                     Save
                 </Button>
             </Form>
@@ -197,7 +316,7 @@ const AddUser: React.FC<AddUserProps> = (
     }
 
     return (
-        <Card>
+        <Card style={{ marginTop: '1rem' }}>
             <h1 className='text-primary'>Dodajanje uporabnika</h1>
             <Form onSubmit={submitFormHandler}>
                 <Form.Group className="mb-3" controlId="formBasicUserName">
@@ -217,11 +336,28 @@ const AddUser: React.FC<AddUserProps> = (
                         placeholder="Enter password"
                         name='password'
                         value={password}
+                        onCopy={handleClipboardEvent}
+                        onChange={handlePasswordChange}
+                        onBlur={checkPasswordLength}
+                        maxLength={128}
+                    />
+                    <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
+                    <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
+                    {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                    {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}                
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>Confirm password</Form.Label>
+                    <Form.Control
+                        type='password'
+                        placeholder="Repeat password"
+                        name='confirmPassword'
+                        value={confirmPassword}
                         onChange={userDataChangedHandler}
                         onBlur={checkPasswordLength}
                     />
-                    <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
-                    {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
+                    {!passwordsMatch && <ValidationError>Passwords don't match</ValidationError>}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicName">
@@ -270,9 +406,9 @@ const AddUser: React.FC<AddUserProps> = (
                         onChange={userChangeHandler}
                     />
                 </div>
-
+                
                 <Button variant="primary" type="submit" disabled={!formIsValid || !validCredentials}>
-                    Dodaj
+                    Save
                 </Button>
             </Form>
         </Card>

@@ -28,11 +28,11 @@ async function bootstrap() {
   const enableDocs = configService.get<boolean>('DOCS');
   const globalPrefix = configService.get<string>('GLOBAL_PREFIX');
   const port = configService.get<number>('PORT');
-  
+
   // REST global prefix
   if (globalPrefix)
     app.setGlobalPrefix(globalPrefix);
-  
+
   // Middlewares
   app.use(compression());
   app.use(helmet({
@@ -56,9 +56,12 @@ async function bootstrap() {
       .addTag('common-password', 'Common password')
       .addTag('health', 'Healthcheck')
       .addTag('user', 'User')
+      .addTag('project', 'Project')
+      .addTag('story', 'Story')
+      .addTag('user-login', 'User logins')
       .build();
     const document = SwaggerModule.createDocument(app, docConfig);
-    SwaggerModule.setup((globalPrefix) ? `${globalPrefix}/${docPath}`: docPath, app, document, {
+    SwaggerModule.setup((globalPrefix) ? `${globalPrefix}/${docPath}` : docPath, app, document, {
       swaggerOptions: {
         persistAuthorization: true,
       }

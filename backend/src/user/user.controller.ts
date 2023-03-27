@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, InternalServerErrorException, HttpCode, HttpException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -81,9 +81,77 @@ export class UserController {
 
   @ApiOperation({ summary: 'Delete user' })
   @ApiOkResponse()
-  @AdminOnly()
   @Delete(':userId')
-  async deleteUser(@Param('userId', ParseIntPipe) userId: number) {
+  async deleteUser(@Token() token, @Param('userId', ParseIntPipe) userId: number) {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
     await this.userService.deleteUserById(userId);
+  }
+
+  @ApiOperation({ summary: 'Setup 2FA for user '})
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Post(':userId/2fa')
+  async enable2FA(@Token() token, @Param('userId', ParseIntPipe) userId: number): Promise<{ secret: string, url: string }> {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
+    
+    if (await this.userService.hasUser2FA(userId))
+      throw new ForbiddenException('User already has 2FA enabled');
+        
+    try {
+      const secret = this.userService.create2FASecret();
+      const url = this.userService.create2FAURL(token.sub, 'SMRPO', secret);
+
+      await this.userService.set2FASecretForUser(userId, secret);
+
+      return {
+        secret: secret,
+        url: url,
+      };
+    } catch (ex) {
+      throw new InternalServerErrorException(ex.message);
+    }
+  }
+
+  @ApiOperation({ summary: 'Confirm and finally enable 2FA for user '})
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Post(':userId/2fa/:code')
+  async confirm2FA(@Token() token, @Param('userId', ParseIntPipe) userId: number, @Param('code', ParseIntPipe) code: number): Promise<void> {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
+    
+    if (!await this.userService.hasUser2FA(userId, true))
+      throw new ForbiddenException('User has 2FA disabled');
+        
+    try {
+      if (!await this.userService.confirm2FAForUser(userId, code))
+        throw new BadRequestException('Invalid 2FA code');
+    } catch (ex) {
+      if (ex instanceof HttpException)
+        throw ex;
+      throw new InternalServerErrorException(ex.message);
+    }
+  }
+
+  @ApiOperation({ summary: 'Disable 2FA for user '})
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Delete(':userId/2fa')
+  async disable2FA(@Token() token, @Param('userId', ParseIntPipe) userId: number): Promise<void> {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
+    
+    try {
+      await this.userService.remove2FAForUser(userId);
+    } catch (ex) {
+      throw new InternalServerErrorException(ex.message);
+    }
   }
 }
