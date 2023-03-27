@@ -8,7 +8,7 @@ export class Project {
   id: number;
 
   @Column({ length: 128, unique: true })
-  projectname: string;
+  projectName: string;
 
   @Column({ type: 'text', nullable: true })
   projectDescription?: string | null;

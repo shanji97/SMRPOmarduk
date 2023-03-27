@@ -13,9 +13,9 @@ import { AdminOnlyGuard } from 'src/auth/guard/admin-only.guard';
 import { UserService } from 'src/user/user.service';
 
 @ApiTags('project')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
@@ -49,7 +49,7 @@ export class ProjectController {
   @Post()
   async createProject(@Body(new JoiValidationPipe(CreateProjectSchema)) project: CreateProjectDto) {
     try {
-      // Chech if user actullally exist in the database.
+      // Check if user actually exist in the database.
       for (const member of project.members) {
         let user = await this.userService.getUserById(member.userId);
         if (user == null) {

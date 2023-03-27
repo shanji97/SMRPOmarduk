@@ -16,7 +16,7 @@ export class CreateProjectDto {
 
   @ApiProperty({
     example: "This is sample description.",
-    type: String,
+    minLength: 1,
     nullable: true,
     required: false,
   })
@@ -33,7 +33,7 @@ export class CreateProjectDto {
 export const CreateProjectSchema = Joi.object().keys({
   id: Joi.any().strip(),
   projectName: Joi.string().trim().min(1).max(128).required(),
-  projectDescription: Joi.string().trim(),
+  projectDescription: Joi.string().trim().allow(null).allow(''),
   members: Joi.array().items(Joi.object().keys({
     userId: Joi.number().min(1).required(),
     role: Joi.array().items(Joi.number().greater(-1).less(3).required())
