@@ -380,9 +380,11 @@ const AddProject = () => {
             !projectsState.isLoading && (
               <Alert variant={"danger"}>{projectsState.message}</Alert>
             )}
-          {projectsState.isSuccess && !projectsState.isLoading && (
-            <Alert variant={"success"}>Project added successfully!</Alert>
-          )}
+          {invalidFormMessage === "" &&
+            projectsState.isSuccess &&
+            !projectsState.isLoading && (
+              <Alert variant={"success"}>Project added successfully!</Alert>
+            )}
           <Button variant="primary" type="submit" size="lg" disabled={false}>
             Add project
           </Button>
