@@ -9,7 +9,7 @@ import ValidationError from "../components/ValidationError";
 import {UserData, UserDataEdit} from "../classes/userData";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { createUser, editUser, getAllUsers, commonPassword } from "../features/users/userSlice";
+import { createUser, editUser, getAllUsers, commonPassword, reset } from "../features/users/userSlice";
 import { parseJwt} from "../helpers/helpers";
 import {useNavigate} from 'react-router-dom';
 import PasswordStrengthBar from "react-password-strength-bar";
@@ -49,7 +49,7 @@ const AddUser: React.FC<AddUserProps> = (
     
     const dispatch = useAppDispatch();
 
-    const {isCommonPassword} = useAppSelector(state => state.users);
+    const {isCommonPassword, isError, message} = useAppSelector(state => state.users);
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
         id: idInit,
@@ -85,9 +85,17 @@ const AddUser: React.FC<AddUserProps> = (
         }
     }, []);
 
+    useEffect(() => {
+        if (message !== '') {
+            alert(message);
+            dispatch(reset());
+        }
+    }, [isError, message]);
+
     const formIsValid = useMemo(() => {
-        return !Object.values(userData).some(field => field === '');
+        return username !== '' && password !== '' && confirmPassword !== '' && firstName !== '' && lastName !== '' && email !== '';
     }, [userData]);
+
     let validCredentials = useMemo(() => {
         if (isEdit) {
             return  username.length >= MIN_USERNAME_LENGTH &&
@@ -98,7 +106,7 @@ const AddUser: React.FC<AddUserProps> = (
                     email.includes('@');
         }
     }, [username, password, email]);  
-
+   
     const userDataChangedHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUserData(prevUserData => ({
             ...prevUserData,
@@ -133,7 +141,11 @@ const AddUser: React.FC<AddUserProps> = (
         setPassword(e.target.value);
     }
 
-    const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleClipboardEvent = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+    };
+
+    const submitFormHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const newUser: UserData = {
@@ -179,7 +191,6 @@ const AddUser: React.FC<AddUserProps> = (
             return;
         }
         dispatch(createUser(newUser));
-        navigate('/');
 
         setUserData({
             id: '',
@@ -227,8 +238,10 @@ const AddUser: React.FC<AddUserProps> = (
                         placeholder="Enter password"
                         name='password'
                         value={password}
+                        onCopy={handleClipboardEvent}
                         onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
+                        maxLength={128}
                     />
                     <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
@@ -323,8 +336,10 @@ const AddUser: React.FC<AddUserProps> = (
                         placeholder="Enter password"
                         name='password'
                         value={password}
+                        onCopy={handleClipboardEvent}
                         onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
+                        maxLength={128}
                     />
                     <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
@@ -391,7 +406,7 @@ const AddUser: React.FC<AddUserProps> = (
                         onChange={userChangeHandler}
                     />
                 </div>
-
+                
                 <Button variant="primary" type="submit" disabled={!formIsValid || !validCredentials}>
                     Save
                 </Button>

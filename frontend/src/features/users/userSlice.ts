@@ -229,7 +229,23 @@ export const userSlice = createSlice({
                 state.isCommonPassword = true;
                 state.message = '';
             })
+            .addCase(createUser.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(createUser.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = ''
+            })
+            .addCase(createUser.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isSuccess = false
+                state.message = action.payload;
+            })
     }
 })
 
 export default userSlice.reducer;
+export const {reset} = userSlice.actions
