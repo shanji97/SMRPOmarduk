@@ -14,12 +14,15 @@ const Users = () => {
     const dispatch = useAppDispatch(); 
     const navigate = useNavigate();
     let {users, isAdmin} = useAppSelector(state => state.users);
+    const [userId, setUserId]       = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
 
     useEffect(() => {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         const isAdmin = parseJwt(token).isAdmin;
+        const id = parseJwt(token).sid;
+        setUserId(id);
         if (!isAdmin) {
             navigate('/');
             return;
@@ -37,8 +40,12 @@ const Users = () => {
         setShowModal(false);
     }
 
-    const handleDeleteUser = (userId: string) => {
-        dispatch(deleteUser(userId));
+    const handleDeleteUser = (uid: string) => {
+        if (userId === uid) {
+            alert("Can't delete yourself");
+            return;
+        }
+        dispatch(deleteUser(uid));
         dispatch(getAllUsers());
     }
 

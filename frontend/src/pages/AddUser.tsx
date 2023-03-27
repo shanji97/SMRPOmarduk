@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { createUser, editUser, getAllUsers, commonPassword } from "../features/users/userSlice";
 import { parseJwt} from "../helpers/helpers";
 import {useNavigate} from 'react-router-dom';
+import PasswordStrengthBar from "react-password-strength-bar";
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 12;
@@ -228,7 +229,9 @@ const AddUser: React.FC<AddUserProps> = (
                         value={password}
                         onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
+                        maxLength={128}
                     />
+                    <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
                     {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
                     {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}
@@ -323,7 +326,9 @@ const AddUser: React.FC<AddUserProps> = (
                         value={password}
                         onChange={handlePasswordChange}
                         onBlur={checkPasswordLength}
+                        maxLength={128}
                     />
+                    <PasswordStrengthBar password={password} minLength={MIN_PASSWORD_LENGTH} />
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
                     {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
                     {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}                
