@@ -63,7 +63,7 @@ export class ProjectService {
 
   createProjectObject(project: CreateProjectDto): Project {
     let newProject = new Project();
-    newProject.projectname = project.projectName;
+    newProject.projectName = project.projectName;
     newProject.projectDescription = project.projectDescription;
     return newProject;
   }
