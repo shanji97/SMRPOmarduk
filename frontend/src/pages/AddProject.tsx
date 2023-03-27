@@ -13,7 +13,7 @@ import classes from "./AddProject.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
-import { Member, ProjectData } from "../classes/projectData";
+import { ProjectData } from "../classes/projectData";
 import { createProject } from "../features/projects/projectSlice";
 
 const AddProject = () => {
@@ -41,156 +41,159 @@ const AddProject = () => {
   }, [isAdmin]);
 
   const [projectName, setProjectName] = useState("");
-  const [membersArray, setMembersArray] = useState<Member[]>([
-    { userId: "", role: -1 },
-  ]);
+  const [projectDescription, setProjectDescription] = useState("");
+  const [productOwnerID, setProductOwnerID] = useState("");
+  const [scrumMasterID, setScrumMasterID] = useState("");
+  const [developers, setDevelopers] = useState([""]);
 
-  const [nameError, setNameError] = useState(false);
-  const [memberNamesError, setMemberNamesError] = useState([false]);
-  const [memberRolesError, setMemberRolesError] = useState([false]);
+  const [projectNameTouched, setProjectNameTouched] = useState(false);
+  // const [projectDescriptionTouched, setProjectDescriptionTouched] =
+  //   useState(false);
+  const [productOwnerIDTouched, setProductOwnerIDTouched] = useState(false);
+  const [scrumMasterIDTouched, setScrumMasterIDTouched] = useState(false);
+  const [developersTouched, setDevelopersTouched] = useState([false]);
 
-  const [nameTouched, setNameTouched] = useState(false);
-  const [memberNamesTouched, setMemberNamesTouched] = useState([false]);
-  const [memberRolesTouched, setMemberRolesTouched] = useState([false]);
+  const [invalidFormMessage, setInvalidFormMessage] = useState("");
 
-  const wasAnythingTouched =
-    nameTouched ||
-    memberNamesTouched.includes(true) ||
-    memberRolesTouched.includes(true);
+  const enteredNameValid = projectName.trim() !== "";
+  const enteredProjectOwnerValid = productOwnerID.trim() !== "";
+  const enteredScrumMasterValid = scrumMasterID.trim() !== "";
+  const enteredDevelopersValid = developers.map((dev, index) => dev !== "");
 
-  // console.log(wasAnythingTouched);
+  const nameInputInvalid = projectNameTouched && !enteredNameValid;
+  const productOwnerInputInvalid =
+    productOwnerIDTouched && !enteredProjectOwnerValid;
+  const scrumMasterInputInvalid =
+    scrumMasterIDTouched && !enteredScrumMasterValid;
+  const developersInputInvalid = enteredDevelopersValid.map(
+    (devValid, index) => developersTouched[index] && !devValid
+  );
 
   const formIsValid =
-    nameTouched &&
-    !nameError &&
-    !memberNamesError.includes(true) &&
-    !memberNamesTouched.includes(false) &&
-    !memberRolesError.includes(true) &&
-    !memberRolesTouched.includes(false);
+    enteredNameValid &&
+    enteredProjectOwnerValid &&
+    enteredScrumMasterValid &&
+    !enteredDevelopersValid.includes(false);
 
   const addInputHandler = () => {
-    setMembersArray((prevMembersArray) => [
-      ...prevMembersArray,
-      { userId: "", role: -1 },
-    ]);
-    setMemberNamesTouched((prevMemberNamesTouched) => [
-      ...prevMemberNamesTouched,
+    setDevelopers((prevDevelopers) => [...prevDevelopers, ""]);
+    setDevelopersTouched((prevDevelopersTouched) => [
+      ...prevDevelopersTouched,
       false,
     ]);
-    setMemberRolesTouched((prevMemberRolesTouched) => [
-      ...prevMemberRolesTouched,
-      false,
-    ]);
+  };
+
+  const removeDeveloperHandler = (index: any) => {
+    setDevelopers((prevDevelopers) => {
+      const newDevelopers = [...prevDevelopers];
+      newDevelopers.splice(index, 1);
+      return newDevelopers;
+    });
+
+    setDevelopersTouched((prevDevelopersTouched) => {
+      const newDevelopersTouched = [...prevDevelopersTouched];
+      newDevelopersTouched.splice(index, 1);
+      return newDevelopersTouched;
+    });
   };
 
   const projectNameChangedHandler = (e: any) => {
     setProjectName(e.target.value);
   };
 
-  const memberInputChangedHandler = (e: any, index: number) => {
-    setMembersArray((prevMembersArray) => {
-      const newMembersArray = [...prevMembersArray];
+  const projectNameBlurHandler = (e: any) => {
+    setProjectNameTouched(true);
+  };
 
-      newMembersArray[index] = {
-        ...newMembersArray[index],
-        userId: e.target.value,
+  const projectDescriptionChangedHandler = (e: any) => {
+    setProjectDescription(e.target.value);
+  };
 
-      };
-      return newMembersArray;
+  const productOwnerChangedHandler = (e: any) => {
+    setProductOwnerID(e.target.value);
+  };
+
+  const productOwnerBlurHandler = (e: any) => {
+    setProductOwnerIDTouched(true);
+  };
+
+  const scrumMasterChangedHandler = (e: any) => {
+    setScrumMasterID(e.target.value);
+  };
+
+  const scrumMasterBlurHandler = (e: any) => {
+    setScrumMasterIDTouched(true);
+  };
+
+  const developerInputChangedHandler = (e: any, index: number) => {
+    setDevelopers((prevDevelopers) => {
+      const newDevelopers = [...prevDevelopers];
+      newDevelopers[index] = e.target.value;
+      return newDevelopers;
+    });
+    setDevelopersTouched((prevDevelopersTouched) => {
+      const newDevelopersTouched = [...prevDevelopersTouched];
+      newDevelopersTouched[index] = true;
+      return newDevelopersTouched;
     });
   };
 
-  const roleInputChangedHandler = (e: any, index: number) => {
-    setMembersArray((prevMembersArray) => {
-      const newMembersArray = [...prevMembersArray];
-
-      newMembersArray[index] = {
-        ...newMembersArray[index],
-        role: +e.target.value,
-      };
-      return newMembersArray;
+  const developerInputBlurHandler = (index: number) => {
+    setDevelopersTouched((prevDevelopersTouched) => {
+      const newDevelopersTouched = [...prevDevelopersTouched];
+      newDevelopersTouched[index] = true;
+      return newDevelopersTouched;
     });
-  };
-
-  const removeMemberHandler = (index: any) => {
-    setMembersArray((prevMembersArray) => {
-      const newMembersArray = [...prevMembersArray];
-      newMembersArray.splice(index, 1);
-      return newMembersArray;
-    });
-
-    setMemberNamesTouched((prevMemberNamesTouched) => {
-      const newMemberNamesTouched = [...prevMemberNamesTouched];
-      newMemberNamesTouched.splice(index, 1);
-      return newMemberNamesTouched;
-    });
-    
-    setMemberRolesTouched((prevMemberRolesTouched) => {
-      const newMemberRolesTouched = [...prevMemberRolesTouched];
-      newMemberRolesTouched.splice(index, 1);
-      return newMemberRolesTouched;
-    });
-
-    setMemberNamesError((prevMemberNamesError) => {
-      const newMemberNamesError = [...prevMemberNamesError];
-      newMemberNamesError.splice(index, 1);
-      return newMemberNamesError;
-    });
-
-    setMemberRolesError((prevMemberRolesError) => {
-      const newMemberRolesError = [...prevMemberRolesError];
-      newMemberRolesError.splice(index, 1);
-      return newMemberRolesError;
-    });
-  };
-
-  // name validation
-  const checkProjectName = () => {
-    projectName.trim() === "" ? setNameError(true) : setNameError(false);
-    setNameTouched(true);
-  };
-
-  //  checks if a member is selected for all the inputs
-  const checkMemberNameInput = (index: number) => {
-    const inputValue = membersArray[index].userId;
-    const newMemberNamesError = [...memberNamesError];
-    newMemberNamesError[index] = inputValue === "";
-    setMemberNamesError(newMemberNamesError);
-
-    setMemberNamesTouched((prevMemberNamesTouched) => {
-      const newMemberNamesTouched = [...prevMemberNamesTouched];
-      newMemberNamesTouched[index] = true;
-      return newMemberNamesTouched;
-    });
-  };
-
-  //  checks if a role is selected for all the inputs
-  const checkMemberRoleInput = (index: number) => {
-    const inputValue = membersArray[index].role;
-    const newMemberRolesError = [...memberRolesError];
-    newMemberRolesError[index] = inputValue === -1;
-    setMemberRolesError(newMemberRolesError);
-
-    setMemberRolesTouched((prevMemberRolesTouched) => {
-      const newMemberRolesTouched = [...prevMemberRolesTouched];
-      newMemberRolesTouched[index] = true;
-      return newMemberRolesTouched;
-    });
-  };
-
-  const validateForm = () => {
-    // let nameError: boolean = projectName === "";
-    let usersInputError: boolean = membersArray.some((u) => u.userId === "");
-    let roleInputError: boolean = membersArray.some((u) => u.role === -1);
-
-    return nameError || usersInputError || roleInputError;
   };
 
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    setProjectNameTouched(true);
+    setProductOwnerIDTouched(true);
+    setScrumMasterIDTouched(true);
+    setDevelopersTouched((prevDevsTouched) => {
+      const newDevsTouched = [...prevDevsTouched];
+      newDevsTouched.fill(true);
+      return newDevsTouched;
+    });
+
+    // display error msg if form is invalid
+    if (!formIsValid) {
+      setInvalidFormMessage("Make sure to fill out all required fields.");
+      return;
+    }
+    setInvalidFormMessage("");
+
+    const members = [
+      {
+        userId: productOwnerID,
+        role: [2],
+      },
+      {
+        userId: scrumMasterID,
+        role: [1],
+      },
+    ];
+
+    developers.forEach((devID) => {
+      const indexOfExistingMember = members.findIndex(
+        (member) => member.userId === devID
+      );
+      if (indexOfExistingMember !== -1) {
+        members[indexOfExistingMember].role.push(0);
+      } else {
+        members.push({
+          userId: devID,
+          role: [0],
+        });
+      }
+    });
+
     const newProject: ProjectData = {
       projectName: projectName.trim(),
-      members: membersArray,
+      projectDescription: projectDescription.trim(),
+      members,
     };
 
     // console.log(newProject);
@@ -198,18 +201,21 @@ const AddProject = () => {
     dispatch(createProject(newProject));
 
     setProjectName("");
-    setMembersArray([{ userId: "", role: -1 }]);
-    setNameTouched(false);
-    setMemberNamesTouched([false]);
-    setMemberRolesTouched([false]);
+    setProjectDescription("");
+    setDevelopers([""]);
+    setProductOwnerID("");
+    setScrumMasterID("");
+
+    setProjectNameTouched(false);
+    setProductOwnerIDTouched(false);
+    setScrumMasterIDTouched(false);
+    setDevelopersTouched([false]);
   };
 
   return (
     <div className={classes.cardContainer}>
       <Card>
-        <h1 className={`${classes.cardHeading} text-primary`}>
-          Add project title
-        </h1>
+        <h1 className={`${classes.cardHeading} text-primary`}>Add project</h1>
         <Form onSubmit={submitFormHandler}>
           <Form.Group className="mb-3" controlId="form-title">
             <Form.Label>Project name</Form.Label>
@@ -218,133 +224,171 @@ const AddProject = () => {
               name="projectName"
               value={projectName}
               onChange={projectNameChangedHandler}
-              onBlur={checkProjectName}
-              isInvalid={nameError}
+              onBlur={projectNameBlurHandler}
+              isInvalid={nameInputInvalid}
             />
             <Form.Text>Add a unique project name.</Form.Text>
           </Form.Group>
+
+          <Form.Group className="mb-4 mt-3" controlId="form-description">
+            <Form.Label>Description</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={6}
+              placeholder="Add project description"
+              name="projectDescription"
+              value={projectDescription}
+              onChange={projectDescriptionChangedHandler}
+            />
+          </Form.Group>
+
+          <h4 className="text-primary">Team</h4>
+          <Row className="mb-3">
+            <Col>
+              <Form.Group>
+                <Form.Label>Product owner</Form.Label>
+                <Form.Select
+                  name="productOwnerID"
+                  value={productOwnerID}
+                  onChange={productOwnerChangedHandler}
+                  onBlur={productOwnerBlurHandler}
+                  isInvalid={productOwnerInputInvalid}
+                >
+                  <option key={-1} value={""}>
+                    Select product owner
+                  </option>
+                  {users.map(
+                    (user) =>
+                      // check if any users are already developers and don't show them here
+                      !developers.includes(String(user.id)) &&
+                      scrumMasterID !== String(user.id) && (
+                        <option key={user.id} value={user.id}>
+                          {user.username}
+                        </option>
+                      )
+                  )}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group>
+                <Form.Label>Scrum master</Form.Label>
+                <Form.Select
+                  name="scrumMasterID"
+                  value={scrumMasterID}
+                  onChange={scrumMasterChangedHandler}
+                  onBlur={scrumMasterBlurHandler}
+                  isInvalid={scrumMasterInputInvalid}
+                >
+                  <option key={-1} value={""}>
+                    Select scrum master
+                  </option>
+                  {users.map(
+                    (user) =>
+                      String(user.id) !== productOwnerID && (
+                        <option key={user.id} value={user.id}>
+                          {user.username}
+                        </option>
+                      )
+                  )}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
           <Form.Group
             className={`mb-4 ${classes.testsGroup}`}
             controlId="form-tests"
           >
-            <Form.Label>Project members</Form.Label>
             <Form.Group className="mb-3" controlId="form-tests">
-              {membersArray.map((member, index) => (
+              <Form.Label>Developers</Form.Label>
+              {developers.map((member, index) => (
                 <Form.Group key={index}>
-                  <Form.Text className="text-secondary mb-1">{`Member ${
+                  <Form.Text className="text-secondary mb-1">{`Developer ${
                     index + 1
                   }`}</Form.Text>
                   <Container>
-                    <Row className="mb-2">
+                    <Row className="mb-3">
                       <Col>
                         <Form.Select
-                          name="membersArray.userId"
-                          value={membersArray[index].userId}
+                          value={developers[index]}
                           onChange={(e) => {
-                            memberInputChangedHandler(e, index);
+                            developerInputChangedHandler(e, index);
+                            // console.log(index);
                           }}
-                          onBlur={() => checkMemberNameInput(index)}
-                          isInvalid={
-                            memberNamesError[index] && memberNamesTouched[index]
-                          }
+                          onBlur={() => developerInputBlurHandler(index)}
+                          isInvalid={developersInputInvalid[index]}
                         >
                           <option key={-1} value={""}>
-                            Select member
+                            Select developer
                           </option>
-                          {users.map(
-                            (user) =>
-                              // ce je username notr ga ne prikazi
-                              (!membersArray.find(
-                                (u) => u.userId === String(user.id)
-                              ) ||
-                                membersArray[index].userId ===
-                                  "" + String(user.id)) && (
+                          {users.map((user) => {
+                            const isProductOwner =
+                              String(user.id) === productOwnerID;
+                            const isDeveloper = developers.includes(
+                              String(user.id)
+                            );
+                            if (
+                              !isProductOwner &&
+                              (!isDeveloper ||
+                                developers[index] === String(user.id))
+                            ) {
+                              return (
                                 <option key={user.id} value={user.id}>
                                   {user.username}
                                 </option>
-                              )
-                          )}
+                              );
+                            }
+                            return null;
+                          })}
                         </Form.Select>
                       </Col>
                       <Col>
-                        <Form.Select
-                          as="select"
-                          value={membersArray[index].role}
-                          onChange={(e) => {
-                            roleInputChangedHandler(e, index);
-                          }}
-                          name="role"
-                          onBlur={() => checkMemberRoleInput(index)}
-                          isInvalid={
-                            memberRolesError[index] && memberRolesTouched[index]
-                          }
-                          key={index + "s"}
-                        >
-                          <option value="-1">Select role</option>
-                          <option value="0">Developer</option>
-                          {(!membersArray.find((u) => u.role === 1) ||
-                            membersArray[index].role === 1) && (
-                            <option value="1">Scrum master</option>
-                          )}
-                          {/* {(!membersArray.find((u) => u.role === 2) ||
-                          membersArray[index].role === 2) && ( */}
-                          <option value="2">Product owner</option>
-                          {/* )} */}
-                        </Form.Select>
-                      </Col>
-                      <Col>
-                        <Button
-                          variant="link"
-                          type="button"
-                          onClick={() => removeMemberHandler(index)}
-                        >
-                          Remove member
-                        </Button>
+                        {developers.length > 1 && (
+                          <Button
+                            variant="link"
+                            type="button"
+                            onClick={() => removeDeveloperHandler(index)}
+                          >
+                            Remove developer
+                          </Button>
+                        )}
                       </Col>
                     </Row>
                   </Container>
                 </Form.Group>
               ))}
-              <Form.Text>
-                Make sure to fill out all the member and role fields.
-              </Form.Text>
             </Form.Group>
 
             <Button
               variant="outline-primary d-block"
               type="button"
               onClick={addInputHandler}
-              disabled={membersArray.length >= users.length}
+              disabled={developers.length >= users.length}
             >
-              Add another member
+              Add developer
             </Button>
-            {membersArray.length >= users.length && (
+            {developers.length >= users.length && (
               <Form.Text>There are no more users to add.</Form.Text>
             )}
           </Form.Group>
-          {projectsState.isError &&
-            !projectsState.isLoading &&
-            !wasAnythingTouched && (
+          {invalidFormMessage !== "" && (
+            <Alert variant={"danger"}>{invalidFormMessage}</Alert>
+          )}
+          {invalidFormMessage === "" &&
+            projectsState.isError &&
+            !projectsState.isLoading && (
               <Alert variant={"danger"}>{projectsState.message}</Alert>
             )}
-          {projectsState.isSuccess &&
-            !projectsState.isLoading &&
-            !wasAnythingTouched && (
-              <Alert variant={"success"}>Project added successfully!</Alert>
-            )}
-          <Button
-            variant="primary"
-            type="submit"
-            size="lg"
-            disabled={!formIsValid}
-          >
+          {projectsState.isSuccess && !projectsState.isLoading && (
+            <Alert variant={"success"}>Project added successfully!</Alert>
+          )}
+          <Button variant="primary" type="submit" size="lg" disabled={false}>
             Add project
           </Button>
         </Form>
       </Card>
     </div>
-
   );
 };
 

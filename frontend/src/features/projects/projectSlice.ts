@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ProjectData, Member } from "../../classes/projectData";
+import { ProjectData} from "../../classes/projectData";
 import projectService from "./projectService";
 
 
 interface ProjectState {
     projectName: string
-    members: Member[]
+    members: string[]
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
