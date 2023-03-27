@@ -14,17 +14,27 @@ export class CreateProjectDto {
   })
   projectName: string;
 
-
   @ApiProperty({
-    example: [{ userId:3 , role: 1 }, { userId: 1, role: 0}],
+    example: "This is sample description.",
+    type: String,
+    required: true
+  })
+  projectDescription: string;
+  
+  @ApiProperty({
+    example: [{ userId: 3 , role: [2,3] }, { userId: 1, role: [1]}],
     required: true
   })
   members: CreateMemberDto[];
-
+  
 }
 
 export const CreateProjectSchema = Joi.object().keys({
   id: Joi.any().strip(),
   projectName: Joi.string().trim().min(1).max(128).required(),
-  members: Joi.array()
+  projectDescription: Joi.string().trim().required(),
+  members: Joi.array().items(Joi.object().keys({
+    userId: Joi.number().min(1).required(),
+    role: Joi.array().items(Joi.number().greater(-1).less(3).required())
+  }))
 });

@@ -49,11 +49,22 @@ export class ProjectController {
   @Post()
   async createProject(@Body(new JoiValidationPipe(CreateProjectSchema)) project: CreateProjectDto) {
     try {
+      // Chech if user actullally exist in the database.
       for (const member of project.members) {
         let user = await this.userService.getUserById(member.userId);
         if (user == null) {
           throw new NotFoundException(`User by ID ${member.userId} not found in the database.`);
         }
+      }
+      //Check if only one member is product owner and if this member does not have any other roles.
+      if (!this.memberService.hasValidProjectOwner(project.members, 2)) {
+        throw new BadRequestException('There should only be one product owner, which cannot be anything else.');
+      }
+
+
+      // Check if there are all required roles.
+      if (!this.memberService.hasValidScrumMaster(project.members, 1) || !this.memberService.hasAtLeastOneDeveloper(project.members,0)) {
+        throw new BadRequestException('All roles must be included in the project, only one scrum master.');
       }
 
       const row = await this.projectService.createProject(project);

@@ -31,6 +31,6 @@ export class Story {
   @OneToMany(type => Test, test => test.story)
   tests: Test[];
 
-  @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
-  project: Project;
+  // @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  // project: Project;
 }
