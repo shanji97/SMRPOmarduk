@@ -10,8 +10,8 @@ export class Project {
   @Column({ length: 128, unique: true })
   projectname: string;
 
-  @Column({ type: "text" })
-  projectDescription: string;
+  @Column({ type: 'text', nullable: true })
+  projectDescription?: string | null;
 
   @OneToMany(type => Member, member => member.project)
   members: Member[];
