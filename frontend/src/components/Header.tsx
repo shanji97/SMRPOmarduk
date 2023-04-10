@@ -3,7 +3,7 @@ import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar, Journals }
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 
-import { getLastLogin, logout } from '../features/users/userSlice';
+import {getLastLogin, getUser, logout} from '../features/users/userSlice';
 import { Fragment, useEffect, useState } from 'react';
 import { parseDate, parseJwt } from '../helpers/helpers';
 import { useNavigate } from 'react-router-dom';
@@ -38,10 +38,12 @@ function Header() {
         }
     }
 
+    const redirectHome = () => {
+        navigate('/');
+    }
     const redirectToUsers = () => {
         navigate('/users');
     }
-
 
     const redirectToNewSprint = () => {
         navigate('/add-sprint');
@@ -59,10 +61,14 @@ function Header() {
         navigate('/change-password');
     }
 
+    const redirectToEditProfile = () => {
+        navigate('/profile');
+    }
+
     return (
         <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
             <Container >
-                <Navbar.Brand  href="/" className="hstack"><HouseDoorFill className="me-2"></HouseDoorFill> Dashboard</Navbar.Brand>
+                <Navbar.Brand onClick={redirectHome} className="hstack"><HouseDoorFill className="me-2"></HouseDoorFill> Dashboard</Navbar.Brand>
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                 <Navbar.Collapse id="responsive-navbar-nav">
                     <Nav className="ms-auto">
@@ -100,6 +106,9 @@ function Header() {
                     <NavDropdown.Item onClick={handleLoginAndLogout}>{user === null ? 'Log in' : 'Logout'}</NavDropdown.Item>
                     <NavDropdown.Item onClick={redirectToChangePassword}>
                         Change password
+                    </NavDropdown.Item>
+                    <NavDropdown.Item onClick={redirectToEditProfile}>
+                        Edit profile
                     </NavDropdown.Item>
                     {
                         isAdmin && 

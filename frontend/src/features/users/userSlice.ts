@@ -6,6 +6,7 @@ let user = JSON.parse(localStorage.getItem('user')!);
 
 interface UserState {
     user: string | null,
+    userData: UserDataEdit,
     editId?: string
     isAdmin: boolean,
     users: UserData[]
@@ -20,6 +21,7 @@ interface UserState {
 
 const initialState: UserState = {
     user: user ? user : null,
+    userData: {},
     editId: '',
     isAdmin: false,
     users: [],
@@ -69,6 +71,16 @@ export const getAllUsers = createAsyncThunk('auth/getAllUsers', async (_, thunkA
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await userService.getAllUsers(token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getUser = createAsyncThunk('auth/getUser', async (id: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.getUser(id, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -162,6 +174,22 @@ export const userSlice = createSlice({
                 state.message = action.payload
                 state.user = null
             })
+            .addCase(getUser.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getUser.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.userData = action.payload
+            })
+            .addCase(getUser.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+                state.user = null
+            })
             .addCase(deleteUser.pending, (state) => {
                 state.isLoading = true
             })
@@ -171,7 +199,7 @@ export const userSlice = createSlice({
                 state.isError = false;
                 state.message = '';
                 // @ts-ignore
-                state.users = state.users.filter(user => user.id !== action.payload)
+                state.users = state.users.filter(user => user.id !== action.meta.arg)
             })
             .addCase(deleteUser.rejected, (state, action) => {
                 state.isLoading = false

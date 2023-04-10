@@ -13,6 +13,7 @@ import { createUser, editUser, getAllUsers, commonPassword, reset } from "../fea
 import { parseJwt} from "../helpers/helpers";
 import {useNavigate} from 'react-router-dom';
 import PasswordStrengthBar from "react-password-strength-bar";
+import {toast} from "react-toastify";
 
 const MIN_USERNAME_LENGTH = 4;
 const MIN_PASSWORD_LENGTH = 12;
@@ -28,6 +29,7 @@ interface AddUserProps {
     lastNameInit:        string,
     emailInit:           string,
     isAdminInit:         boolean,
+    editProfile?:        boolean,
     handleClose:         () => void
 }
 
@@ -44,7 +46,8 @@ const AddUser: React.FC<AddUserProps> = (
         lastNameInit,
         emailInit,
         isAdminInit,
-        handleClose
+        handleClose,
+        editProfile,
     }) => {
     
     const dispatch = useAppDispatch();
@@ -63,19 +66,19 @@ const AddUser: React.FC<AddUserProps> = (
 
     const {id, username, passwordOld, confirmPassword, firstName, lastName, email} = userData;
 
-    const [isAdminRadio, setIsAdminRadio]       = useState(false);
-    const [showChecked, setShowChecked]         = useState(false);
-    const [isUserRadio, setIsUserRadio]         = useState(true);
-    const [passwordError, setPasswordError]     = useState(false);
+    const [isAdminRadio, setIsAdminRadio]     = useState(false);
+    const [showChecked, setShowChecked]       = useState(false);
+    const [isUserRadio, setIsUserRadio]       = useState(true);
+    const [passwordError, setPasswordError]   = useState(false);
     const [passwordType, setPasswordType]       = useState('password');
     const [oldPasswordType, setOldPasswordType] = useState('password');
     const [password, setPassword]               = useState(passwordInit);
-    const passwordsMatch                        = useMatchingPasswords(password, confirmPassword);
+    const passwordsMatch                      = useMatchingPasswords(password, confirmPassword);
 
     useEffect(() => {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         const isAdmin = parseJwt(token).isAdmin;
-        if (!isAdmin) {
+        if (!isAdmin && !editProfile) {
             navigate('/');
             return;
         }
@@ -179,11 +182,13 @@ const AddUser: React.FC<AddUserProps> = (
                     username,
                     email,
                     isAdmin: isAdminRadio,
-                } 
+                }
+                console.log(userDataEdit);
                 dispatch(editUser(userDataEdit))
                 dispatch(getAllUsers());
             }
             handleClose();
+            toast.success('Profile successfully updated!');
             return;
         }
         dispatch(commonPassword({password: newUser.password}));
@@ -191,6 +196,7 @@ const AddUser: React.FC<AddUserProps> = (
             return;
         }
         dispatch(createUser(newUser));
+        toast.success('User successfully created!')
 
         setUserData({
             id: '',
@@ -231,7 +237,7 @@ const AddUser: React.FC<AddUserProps> = (
                     <Form.Check type='checkbox' id='showOldPassword' label='Show password' onClick={handleShowOldPassword} />              
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-3" controlId="formBasicPassword1">
                     <Form.Label>Password</Form.Label>
                     <Form.Control
                         type={passwordType}
@@ -249,7 +255,7 @@ const AddUser: React.FC<AddUserProps> = (
                     {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-3" controlId="formBasicPassword2">
                     <Form.Label>Confirm password</Form.Label>
                     <Form.Control
                         type='password'
@@ -294,6 +300,7 @@ const AddUser: React.FC<AddUserProps> = (
 
                 <div className={classes.radioButtonContainer}>
                     <Form.Check
+                        disabled={editProfile && !isAdminRadio}
                         type='radio'
                         id='admin'
                         label='Administrator'
@@ -317,7 +324,7 @@ const AddUser: React.FC<AddUserProps> = (
 
     return (
         <Card style={{ marginTop: '1rem' }}>
-            <h1 className='text-primary'>Dodajanje uporabnika</h1>
+            <h1 className='text-primary'>Add a new user</h1>
             <Form onSubmit={submitFormHandler}>
                 <Form.Group className="mb-3" controlId="formBasicUserName">
                     <Form.Label>Username</Form.Label>

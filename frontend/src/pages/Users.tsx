@@ -1,4 +1,4 @@
-import {DropdownButton, Table, Dropdown, Modal} from "react-bootstrap";
+import {DropdownButton, Table, Dropdown, Modal, Form, Button} from "react-bootstrap";
 import {Check, PencilFill, TrashFill, X} from "react-bootstrap-icons";
 import Card from "../components/Card";
 import React, {Fragment, useEffect, useState} from "react";
@@ -9,13 +9,16 @@ import classes from './Users.module.css';
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { deleteUser, getAllUsers } from "../features/users/userSlice";
 import { parseJwt } from "../helpers/helpers";
+import {toast} from "react-toastify";
 
 const Users = () => {
     const dispatch = useAppDispatch(); 
     const navigate = useNavigate();
     let {users, isAdmin} = useAppSelector(state => state.users);
     const [userId, setUserId]       = useState('');
+    const [deleteUserId, setDeleteUserId]  = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [editIndex, setEditIndex] = useState(-1);
 
     useEffect(() => {
@@ -39,14 +42,40 @@ const Users = () => {
     const closeModal = () => {
         setShowModal(false);
     }
-
+    const closeDeleteModal = () => {setShowDeleteModal(false)}
     const handleDeleteUser = (uid: string) => {
+        dispatch(deleteUser(uid));
+        setShowDeleteModal(false);
+        toast.success('User deleted!');
+    }
+
+    const renderDeleteModal = () => {
+        return (
+            <Modal show={showDeleteModal} onHide={closeDeleteModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmation</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <p>Do you really want to delete this user?</p>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeDeleteModal}>No</Button>
+                    <Button variant="primary" onClick={() => {handleDeleteUser(deleteUserId)}}>Yes</Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    const openDeleteModal = (uid: string) => {
+        setShowDeleteModal(true);
+        setDeleteUserId(uid)
         if (userId === uid) {
             alert("Can't delete yourself");
             return;
         }
-        dispatch(deleteUser(uid));
-        dispatch(getAllUsers());
+        renderDeleteModal()
     }
 
     return (
@@ -73,7 +102,7 @@ const Users = () => {
                                         {user.username}
                                         <DropdownButton id='dropdown-basic-button' title=''>
                                             <Dropdown.Item onClick={() => {openEditUserModal(i)}}>Edit <PencilFill className={classes.pencilBtn} /></Dropdown.Item>
-                                            <Dropdown.Item onClick={() => {handleDeleteUser(user.id!)}}>Delete <TrashFill /></Dropdown.Item>
+                                            <Dropdown.Item onClick={() => {openDeleteModal(user.id!)}}>Delete <TrashFill /></Dropdown.Item>
                                         </DropdownButton>
                                     </div>
                                 </td>
@@ -114,6 +143,7 @@ const Users = () => {
                     </Modal.Body>
                 </Modal>}
             </Fragment>
+            {showDeleteModal && renderDeleteModal()}
         </Fragment>
     );
 }
