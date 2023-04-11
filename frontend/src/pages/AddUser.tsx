@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {Button, Form} from "react-bootstrap";
+import {Button, Form, Spinner} from "react-bootstrap";
 import Card from "../components/Card";
 
 import classes from './AddUser.module.css';
@@ -52,7 +52,7 @@ const AddUser: React.FC<AddUserProps> = (
     
     const dispatch = useAppDispatch();
 
-    const {isCommonPassword, isError, message} = useAppSelector(state => state.users);
+    const {isCommonPassword, isError, message, isLoading, isSuccess} = useAppSelector(state => state.users);
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
         id: idInit,
@@ -183,9 +183,7 @@ const AddUser: React.FC<AddUserProps> = (
                     email,
                     isAdmin: isAdminRadio,
                 }
-                console.log(userDataEdit);
-                dispatch(editUser(userDataEdit))
-                dispatch(getAllUsers());
+                dispatch(editUser(userDataEdit));
             }
             handleClose();
             toast.success('Profile successfully updated!');
@@ -197,19 +195,10 @@ const AddUser: React.FC<AddUserProps> = (
         }
         dispatch(createUser(newUser));
         toast.success('User successfully created!')
+    }
 
-        setUserData({
-            id: '',
-            username: '',
-            passwordOld: '',
-            confirmPassword: '',
-            firstName: '',
-            lastName: '',
-            email: '',
-        })
-        setPassword('');
-        setIsUserRadio(true);
-        setIsAdminRadio(false);
+    if (isLoading) {
+        return <Spinner animation="border" />;
     }
 
     if (isEdit) {
@@ -305,14 +294,14 @@ const AddUser: React.FC<AddUserProps> = (
                         id='admin'
                         label='Administrator'
                         checked={isAdminRadio}
-                        onClick={adminChangeHandler}
+                        onChange={adminChangeHandler}
                     />
                     <Form.Check
                         type='radio'
                         id='user'
                         label='User'
                         checked={isUserRadio}
-                        onClick={userChangeHandler}
+                        onChange={userChangeHandler}
                     />
                 </div>
                 <Button variant="primary" type="submit" disabled={!validCredentials}>

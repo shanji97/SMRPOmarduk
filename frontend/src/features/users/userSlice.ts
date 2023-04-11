@@ -272,6 +272,35 @@ export const userSlice = createSlice({
                 state.isSuccess = false
                 state.message = action.payload;
             })
+            .addCase(editUser.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(editUser.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = ''
+                const payloadUser = action.meta.arg;
+                const updatedUser: UserData = {
+                    id: payloadUser.id!,
+                    email: payloadUser.email!,
+                    firstName: payloadUser.firstName!,
+                    lastName: payloadUser.lastName!,
+                    isAdmin: payloadUser.isAdmin!,
+                    password: '',
+                    username: payloadUser.username!
+                }
+                const index = state.users.findIndex(user => user.id === updatedUser.id);
+                const newUsers: UserData[] = [...state.users];
+                newUsers[index] = updatedUser;
+                state.users = newUsers;
+            })
+            .addCase(editUser.rejected, (state, action: any) => {
+                state.isLoading = false
+                state.isError = true
+                state.isSuccess = false
+                state.message = 'User already exists!';
+            })
     }
 })
 
