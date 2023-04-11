@@ -1,6 +1,6 @@
-import { Project } from 'src/project/project.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, Unique } from 'typeorm';
 
+import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
 import { Test } from '../test/test.entity';
 
@@ -35,6 +35,6 @@ export class Story {
   @OneToMany(type => Test, test => test.story)
   tests: Test[];
 
-  // @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
-  // project: Project;
+  @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  project: Project;
 }

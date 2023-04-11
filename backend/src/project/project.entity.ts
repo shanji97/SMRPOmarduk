@@ -17,8 +17,8 @@ export class Project {
   @OneToMany(type => ProjectUserRole, userRole => userRole.project)
   userRoles: ProjectUserRole[];
 
-  // @OneToMany(type => Story, story => story.project)
-  // stories: Story[];
+  @OneToMany(type => Story, story => story.project)
+  stories: Story[];
 }
 
 
