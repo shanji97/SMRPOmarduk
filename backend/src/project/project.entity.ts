@@ -1,6 +1,7 @@
-import { Member } from 'src/member/member.entity';
-import { Story } from 'src/story/story.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+
+import { ProjectUserRole } from './project-user-role.entity';
+import { Story } from '../story/story.entity';
 
 @Entity()
 export class Project {
@@ -13,8 +14,8 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   projectDescription?: string | null;
   
-  @OneToMany(type => Member, member => member.project)
-  members: Member[];
+  @OneToMany(type => ProjectUserRole, userRole => userRole.project)
+  userRoles: ProjectUserRole[];
 
   // @OneToMany(type => Story, story => story.project)
   // stories: Story[];

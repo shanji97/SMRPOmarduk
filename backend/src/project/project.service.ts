@@ -1,11 +1,12 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
+import { InjectEntityManager } from '@nestjs/typeorm';
+import { DeepPartial, EntityManager, In, QueryFailedError } from 'typeorm';
 
-import { Project } from './project.entity';
-import { ValidationException } from '../common/exception/validation.exception';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { Project } from './project.entity';
+import { ProjectUserRole, UserRole } from './project-user-role.entity';
+import { ValidationException } from '../common/exception/validation.exception';
 
 @Injectable()
 export class ProjectService {
@@ -13,26 +14,26 @@ export class ProjectService {
 
   constructor(
     private readonly configService: ConfigService,
-    @InjectRepository(Project)
-    private readonly projectRepository: Repository<Project>,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) { }
 
   async getAllProjects(): Promise<Project[]> {
-    return await this.projectRepository.find();
+    return await this.entityManager.find(Project);
   }
 
   async getProjectCount(): Promise<number> {
-    return await this.projectRepository.count();
+    return await this.entityManager.count(Project);
   }
 
   async getProjectById(projectId: number): Promise<Project> {
-    return await this.projectRepository.findOneBy({ id: projectId });
+    return await this.entityManager.findOneBy(Project, { id: projectId });
   }
 
   async createProject(project: CreateProjectDto): Promise<object> {
     try {
       let newProject = this.createProjectObject(project);
-      const inserted = await this.projectRepository.insert(newProject);
+      const inserted = await this.entityManager.insert(Project, newProject);
       return inserted.identifiers[0];
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
@@ -46,7 +47,7 @@ export class ProjectService {
 
   async updateProjectById(projectId: number, project: DeepPartial<Project>) {
     try {
-      await this.projectRepository.update({ id: projectId }, project);
+      await this.entityManager.update(Project, { id: projectId }, project);
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
@@ -58,7 +59,7 @@ export class ProjectService {
   }
 
   async deleteProjectById(projectId: number) {
-    await this.projectRepository.delete({ id: projectId });
+    await this.entityManager.delete(Project, { id: projectId });
   }
 
   createProjectObject(project: CreateProjectDto): Project {
@@ -66,5 +67,61 @@ export class ProjectService {
     newProject.projectName = project.projectName;
     newProject.projectDescription = project.projectDescription;
     return newProject;
+  }
+
+  async listUsersWithRolesOnProject(projectId: number): Promise<ProjectUserRole[]> {
+    return await this.entityManager.find(ProjectUserRole, {
+      where: { projectId: projectId },
+      relations: ['user']
+    });
+  }
+
+  async addUserToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
+    try {
+      await this.entityManager.insert(ProjectUserRole, {
+        projectId: projectId,
+        userId: userId,
+        role: role,
+      });
+    } catch (ex) {
+      if (ex instanceof QueryFailedError) {
+        switch (ex.driverError.errno) {
+          case 1062: // Duplicate entry
+            throw new ValidationException('User already has same role on project');
+        }
+      }
+    }
+  }
+
+  async removeRoleFromUserOnProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
+    await this.entityManager.delete(ProjectUserRole, {
+      projectId: projectId,
+      userId: userId,
+      role: role,
+    });
+  }
+
+  async removeUserFromProject(projectId: number, userId: number): Promise<void> {
+    await this.entityManager.delete(ProjectUserRole, {
+      projectId: projectId,
+      userId: userId,
+    });
+  }
+
+  async isUserOnProject(projectId: number, userId: number): Promise<boolean> {
+    return await this.entityManager.countBy(ProjectUserRole, {
+      projectId: projectId,
+      userId: userId,
+    }) > 0;
+  }
+
+  async hasUserRoleOnProject(projectId: number, userId: number, roles: UserRole[] | number[] | UserRole | number): Promise<boolean> {
+    if (!Array.isArray(roles)) // Force an array
+      roles = [roles];
+    return await this.entityManager.countBy(ProjectUserRole, {
+      projectId: projectId,
+      userId: userId,
+      role: In(roles),
+    }) > 0;
   }
 }
