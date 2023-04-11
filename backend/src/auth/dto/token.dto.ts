@@ -7,7 +7,7 @@ export interface TokenDto {
 	exp?: number;
 	jti?: string;
 
-	sid: string;
+	sid: number;
 	sub: string;
 }
 

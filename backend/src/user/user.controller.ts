@@ -65,6 +65,8 @@ export class UserController {
       if (!token.isAdmin) { // Non-admin user => chaning own info
         if (token.sid !== userId) // Don't allow normal user to update other users data
           throw new ForbiddenException();
+      }
+      if (user.password && (!token.isAdmin || token.sid === userId)) { // If changing password, user must enter also old one
         const passwordOld: string = await this.userService.getUserPassword(token.sid);
         if (!passwordOld || !await this.userService.comparePassword(user.passwordOld || '', passwordOld))
           throw new BadRequestException('Wrong current password');
