@@ -1,9 +1,8 @@
-import React, {Fragment, useEffect} from "react";
+import React, {Fragment} from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import {ToastContainer} from "react-toastify";
 
 import AddSubtask from "./pages/AddSubtask";
-import Home from "./pages/Home";
 import AddUser from "./pages/AddUser";
 import Login from "./pages/Login";
 import ChangePassword from "./pages/ChangePassword";
@@ -14,7 +13,7 @@ import Header from './components/Header';
 import AddProject from "./pages/AddProject";
 import AddSprint from "./pages/AddSprint";
 import Profile from "./pages/Profile";
-
+import ProjectWall from "./pages/ProjectWall";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -47,6 +46,7 @@ function App() {
           <Route path='/add-project' element={<AddProject />} />
           <Route path='/add-sprint' element={<AddSprint />} />
           <Route path='/profile' element={<Profile />} />
+          <Route path='/project-wall' element={<ProjectWall />} />
         </Routes>
       </Router>
       <ToastContainer autoClose={2000} />

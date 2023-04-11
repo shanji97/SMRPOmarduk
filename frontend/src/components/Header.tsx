@@ -1,5 +1,5 @@
 import {Container, Nav, Navbar, NavDropdown, } from 'react-bootstrap';
-import { HouseDoorFill, PersonCircle, Calendar, Journals } from "react-bootstrap-icons";
+import { HouseDoorFill, PersonCircle, Calendar, Journals, Bricks } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 
@@ -65,6 +65,10 @@ function Header() {
         navigate('/profile');
     }
 
+    const redirectToProjectWall = () => {
+        navigate('/project-wall');
+    }
+
     return (
         <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
             <Container >
@@ -83,6 +87,9 @@ function Header() {
               >
                 <NavDropdown.Item onClick={redirectToNewProject}>
                   + Add Project
+                </NavDropdown.Item>
+                <NavDropdown.Item onClick={redirectToProjectWall}>
+                  <Bricks className='mb-1' /> Project Wall
                 </NavDropdown.Item>
               </NavDropdown>
             )}
