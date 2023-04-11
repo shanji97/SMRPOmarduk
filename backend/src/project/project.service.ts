@@ -115,13 +115,21 @@ export class ProjectService {
     }) > 0;
   }
 
-  async hasUserRoleOnProject(projectId: number, userId: number, roles: UserRole[] | number[] | UserRole | number): Promise<boolean> {
-    if (!Array.isArray(roles)) // Force an array
+  async hasUserRoleOnProject(projectId: number, userId: number, roles: UserRole[] | number[] | UserRole | number | null): Promise<boolean> {
+    if (roles) {
+      if (!Array.isArray(roles)) // Force an array
       roles = [roles];
-    return await this.entityManager.countBy(ProjectUserRole, {
-      projectId: projectId,
-      userId: userId,
-      role: In(roles),
-    }) > 0;
+    
+      return await this.entityManager.countBy(ProjectUserRole, {
+        projectId: projectId,
+        userId: userId,
+        role: In(roles),
+      }) > 0;
+    } else {
+      return await this.entityManager.countBy(ProjectUserRole, {
+        projectId: projectId,
+        userId: userId,
+      }) > 0;
+    }
   }
 }

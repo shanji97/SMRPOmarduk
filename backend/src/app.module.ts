@@ -18,8 +18,7 @@ import { ServeStaticConfigService } from './custom-config/serve-static-config.se
 import { StoryModule } from './story/story.module';
 import { UserModule } from './user/user.module';
 import { TestModule } from './test/test.module';
-import { StoryController } from './story/story.controller';
-import {ProjectModule} from './project/project.module';
+import { TaskModule } from './task/task.module';
 
 @Module({
   imports: [
@@ -40,6 +39,7 @@ import {ProjectModule} from './project/project.module';
     AuthModule,
     ProjectModule,
     StoryModule,
+    TaskModule,
     TestModule,
     UserModule,
   ],

@@ -1,6 +1,7 @@
 import { Project } from 'src/project/project.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, Unique } from 'typeorm';
 
+import { Task } from '../task/task.entity';
 import { Test } from '../test/test.entity';
 
 @Entity()
@@ -27,6 +28,9 @@ export class Story {
 
   @Column({ type: 'tinyint' })
   businessValue: number;
+
+  @OneToMany(type => Task, task => task.story)
+  tasks: Task[];
 
   @OneToMany(type => Test, test => test.story)
   tests: Test[];
