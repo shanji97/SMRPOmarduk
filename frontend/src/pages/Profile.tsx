@@ -21,7 +21,7 @@ const Profile = () => {
         const { id, firstName, lastName, username, email, isAdmin } = userData;
         return (
             <Card style={{ marginTop: '1rem' }}>
-                <h1>Edit profile</h1>
+                <h1 className='text-primary'>Edit profile</h1>
                 {userData && (
                     <AddUser
                         isEdit

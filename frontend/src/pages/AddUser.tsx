@@ -217,6 +217,7 @@ const AddUser: React.FC<AddUserProps> = (
                 <Form.Group className="mb-3" controlId="formBasicOldPassword">
                     <Form.Label>Old password</Form.Label>
                     <Form.Control
+                        disabled={editProfile}
                         type={oldPasswordType}
                         placeholder="Enter old password"   
                         name='passwordOld'
@@ -230,6 +231,7 @@ const AddUser: React.FC<AddUserProps> = (
                     <Form.Label>Password</Form.Label>
                     <Form.Control
                         type={passwordType}
+                        disabled={editProfile}
                         placeholder="Enter password"
                         name='password'
                         value={password}
@@ -248,6 +250,7 @@ const AddUser: React.FC<AddUserProps> = (
                     <Form.Label>Confirm password</Form.Label>
                     <Form.Control
                         type='password'
+                        disabled={editProfile}
                         placeholder="Repeat password"
                         name='confirmPassword'
                         value={confirmPassword}
