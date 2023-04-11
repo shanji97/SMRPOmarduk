@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
-
 import { Member } from './member.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateMemberDto } from './dto/create-member.dto';
+import { array } from 'joi';
 
 
 @Injectable()
@@ -28,19 +28,21 @@ export class MemberService {
 
     async createMember(projectId: number, newMember: CreateMemberDto[]) {
         try {
-            for (let i = 0; i < newMember.length; i++) {
-                let member = new Member();
-                member.projectId = projectId;
-                member.userId = newMember[i].userId;
-                member.role = newMember[i].role;
+            let newMembers: Member[];
 
-                await this.memberRepository.insert(member);
-            }
+            newMember.forEach(member => {
+                member.role.forEach(memberRole => {
+                    newMembers.push(this.createMemberObject(projectId, member.userId, memberRole));
+                })
+            });
+
+            await this.memberRepository.insert(newMembers);
+
         } catch (ex) {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
                     case 1062: // Duplicate entry
-                        throw new ValidationException('Membername already exists');
+                        throw new ValidationException('Member name already exists.');
                 }
             }
         }
@@ -53,7 +55,7 @@ export class MemberService {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
                     case 1062: // Duplicate entry
-                        throw new ValidationException('Member name already exists');
+                        throw new ValidationException('Member name already exists.');
                 }
             }
         }
@@ -63,7 +65,61 @@ export class MemberService {
         await this.memberRepository.delete({ id: memberId });
     }
 
-    async getProjetMember(){
-        await this.memberRepository.findOneBy({})
+    hasValidProjectOwner(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        return this.hasOneRole(projectMembers, roleForCheck) && this.hasOnlyThisRole(projectMembers, roleForCheck);
+    }
+
+    hasValidScrumMaster(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        return this.hasOneRole(projectMembers, roleForCheck);
+    }
+
+    hasAtLeastOneDeveloper(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        return this.hasAtLeastOneRole(projectMembers, roleForCheck);
+    }
+
+    hasOneRole(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        let roleCount: number = 0;
+        projectMembers.forEach(newMember => {
+            newMember.role.forEach(newRole => {
+                if (newRole == roleForCheck) {
+                    roleCount++;
+                }
+            });
+        });
+
+        return roleCount == 1;
+    }
+
+    hasOnlyThisRole(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        let isValid: Boolean = false;
+        projectMembers.forEach(newMember => {
+            if (newMember.role.length == 1) {
+                if (newMember.role[0] == roleForCheck) {
+                    isValid = true;
+                }
+            }
+        });
+        return isValid;
+    }
+
+    hasAtLeastOneRole(projectMembers: CreateMemberDto[], roleForCheck: number): Boolean {
+        let roleCount: number = 0;
+        projectMembers.forEach(newMember => {
+            newMember.role.forEach(newRole => {
+                if (newRole == roleForCheck) {
+                    roleCount++;
+                }
+            });
+        });
+        return roleCount > 0;
+    }
+
+
+    createMemberObject(projectId: number, userId: number, role: number): Member {
+        let newMember = new Member();
+        newMember.projectId = projectId;
+        newMember.userId = userId;
+        newMember.role = role;
+        return newMember;
     }
 }

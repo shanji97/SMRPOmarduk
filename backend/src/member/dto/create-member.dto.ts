@@ -19,11 +19,11 @@ export class CreateMemberDto {
         maximum: 2,
         default: 1
     })
-    role: number
+    role: number[];
 }
 
 export const CreateMemberSchema = Joi.object().keys({
     id: Joi.any().strip(),
     userId: Joi.number().min(1).required(),
-    role: Joi.number().greater(-1).less(3).required().default(0)
+    role: Joi.array().items(Joi.number().greater(-1).less(3).required().default(0))
 });

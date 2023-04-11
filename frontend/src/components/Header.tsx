@@ -1,9 +1,9 @@
 import {Container, Nav, Navbar, NavDropdown, } from 'react-bootstrap';
-import { HouseDoorFill, PersonCircle, Bell, QuestionCircle, Calendar, Journals } from "react-bootstrap-icons";
+import { HouseDoorFill, PersonCircle, Calendar, Journals } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 
-import {getLastLogin, getUser, logout} from '../features/users/userSlice';
+import {getLastLogin, logout} from '../features/users/userSlice';
 import { Fragment, useEffect, useState } from 'react';
 import { parseDate, parseJwt } from '../helpers/helpers';
 import { useNavigate } from 'react-router-dom';
