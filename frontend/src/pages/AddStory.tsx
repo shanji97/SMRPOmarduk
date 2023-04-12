@@ -27,6 +27,8 @@ const AddStory = () => {
 
   const [invalidFormMessage, setInvalidFormMessage] = useState("");
 
+  const [userId, setUserId] = useState(-1);
+
   useEffect(() => {
     if (storyState.isSuccess && !storyState.isLoading) {
       toast.success("Story successfully created!");
@@ -50,6 +52,7 @@ const AddStory = () => {
     if (projectsState.userRoles.length > 0) {
       const token = JSON.parse(localStorage.getItem("user")!).token;
       const uid = parseJwt(token).sid;
+      setUserId(uid);
 
       let userAllowedToAddStories = false;
 
@@ -226,7 +229,7 @@ const AddStory = () => {
     // display error msg if form is invalid
     if (!formIsValid) {
       setInvalidFormMessage("Make sure to fill out all required fields."); // TODO there is no need for this now
-      toast.error("Make sure to fill out all required fields.");
+      toast.error("Make sure to properly fill out all required fields.");
       return;
     }
     setInvalidFormMessage("");
@@ -239,6 +242,7 @@ const AddStory = () => {
       priority: parseInt(priority),
       businessValue: parseInt(businessValue),
       projectID,
+      userId,
     };
 
     console.log(newStory);
