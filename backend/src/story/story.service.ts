@@ -2,6 +2,8 @@ import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
+
+import { ProjectService } from '../project/project.service';
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateStoryDto } from './dto/create-story.dto';
@@ -12,6 +14,7 @@ export class StoryService {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly projectService: ProjectService,
     @InjectRepository(Story)
     private readonly storyRepository: Repository<Story>,
   ) { }
@@ -72,6 +75,13 @@ export class StoryService {
     return this.storyRepository.findOneBy({ title: title });
   }
 
+  async getStoryProjectId(storyId: number): Promise<number | null> {
+    const story = await this.storyRepository.findOneBy({ id: storyId });
+    if (!story)
+      return null;
+    return story.projectId;
+  }
+
   createStoryObject(story: CreateStoryDto, projectId: number): Story {
     let newStory = new Story();
     newStory.projectId = projectId;
@@ -81,5 +91,13 @@ export class StoryService {
     newStory.priority = story.priority;
     newStory.businessValue = story.businessValue;
     return newStory;
+  }
+
+  async hasUserPermissionForStory(userId: number, storyId: number): Promise<boolean> {
+    const projectId = await this.getStoryProjectId(storyId);
+    if (!projectId)
+      return false;
+    
+    return await this.projectService.hasUserRoleOnProject(projectId, userId, null); // If user has any role on project, he can view it
   }
 }
