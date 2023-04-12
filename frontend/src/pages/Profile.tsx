@@ -2,10 +2,8 @@ import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useEffect, useState} from "react";
 import AddUser from "./AddUser";
 import Card from "../components/Card";
-import {UserDataEdit} from "../classes/userData";
 import {parseJwt} from "../helpers/helpers";
 import {getUser} from "../features/users/userSlice";
-import {debug} from "util";
 
 const Profile = () => {
     const dispatch = useAppDispatch();

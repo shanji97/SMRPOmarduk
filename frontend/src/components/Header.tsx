@@ -18,6 +18,7 @@ function Header() {
   const navigate = useNavigate();
 
   const { user, lastLogin, userData } = useAppSelector((state) => state.users);
+  const { sprints } = useAppSelector((state) => state.sprints);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastLoginDate, setLastLoginDate] = useState("");
 
@@ -110,8 +111,9 @@ function Header() {
               <NavDropdown.Item onClick={redirectToNewSprint}>
                 + Add sprint
               </NavDropdown.Item>
-              <NavDropdown.Item>Sprint 1</NavDropdown.Item>
-              <NavDropdown.Item>Sprint 2</NavDropdown.Item>
+              {sprints.map((sprint) => (
+                <NavDropdown.Item>{sprint.name}</NavDropdown.Item>
+              ))}
             </NavDropdown>
 
             <NavDropdown
