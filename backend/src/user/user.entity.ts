@@ -1,5 +1,7 @@
 import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Member } from '../member/member.entity';
+
+import { ProjectUserRole } from '../project/project-user-role.entity';
+import { Task } from '../task/task.entity';
 import { UserLogin } from '../auth/user-login.entity';
 
 @Entity()
@@ -46,6 +48,9 @@ export class User {
   @OneToMany(type => UserLogin, login => login.user)
   logins: UserLogin[];
 
-  @OneToMany(type => Member, member => member.user)
-  members: Member[]
+  @OneToMany(type => ProjectUserRole, userRole => userRole.user)
+  userRoles: ProjectUserRole[]
+
+  @OneToMany(type => Task, task => task.assignedUser)
+  tasks: Task[];
 }

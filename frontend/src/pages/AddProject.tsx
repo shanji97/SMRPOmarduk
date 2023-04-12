@@ -165,26 +165,26 @@ const AddProject = () => {
     }
     setInvalidFormMessage("");
 
-    const members = [
+    const userRoles = [
       {
-        userId: productOwnerID,
+        userId: +productOwnerID,
         role: [2],
       },
       {
-        userId: scrumMasterID,
+        userId: +scrumMasterID,
         role: [1],
       },
     ];
 
     developers.forEach((devID) => {
-      const indexOfExistingMember = members.findIndex(
-        (member) => member.userId === devID
+      const indexOfExistingUserRole = userRoles.findIndex(
+        (role) => role.userId === +devID
       );
-      if (indexOfExistingMember !== -1) {
-        members[indexOfExistingMember].role.push(0);
+      if (indexOfExistingUserRole !== -1) {
+        userRoles[indexOfExistingUserRole].role.push(0);
       } else {
-        members.push({
-          userId: devID,
+        userRoles.push({
+          userId: +devID,
           role: [0],
         });
       }
@@ -193,7 +193,7 @@ const AddProject = () => {
     const newProject: ProjectData = {
       projectName: projectName.trim(),
       projectDescription: projectDescription.trim(),
-      members,
+      userRoles,
     };
 
     // console.log(newProject);

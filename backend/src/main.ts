@@ -58,6 +58,7 @@ async function bootstrap() {
       .addTag('user', 'User')
       .addTag('project', 'Project')
       .addTag('story', 'Story')
+      .addTag('task', 'Task')
       .addTag('user-login', 'User logins')
       .build();
     const document = SwaggerModule.createDocument(app, docConfig);
