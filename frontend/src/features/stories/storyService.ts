@@ -13,7 +13,6 @@ const create = async (storyData: StoryData, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    console.log("PROJECT ID: " + storyData.projectID);
     let projectID = storyData.projectID;
     delete storyData.projectID;
 

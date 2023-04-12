@@ -31,9 +31,21 @@ const getAllProjects = async (token: string) => {
     return response.data;
 }
 
+const getProjectUserRoles = async (id: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${PROJECTS_API_URL}/${id}/user`, config);
+
+    return response.data;
+}
+
 const userService = {
     create,
-    getAllProjects
+    getAllProjects,
+    getProjectUserRoles
 }
 
 export default userService;

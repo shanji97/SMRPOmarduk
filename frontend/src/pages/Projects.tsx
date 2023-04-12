@@ -26,9 +26,22 @@ const Projects = () => {
   let { projects } = useAppSelector((state) => state.projects);
   console.log(projects);
 
+  // store isAdmin in state for now
+  // TODO rewrite this later
+  const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
+    if (localStorage.getItem("user") == null) {
+      navigate("/login");
+      return;
+    }
+
+    const token = JSON.parse(localStorage.getItem("user")!).token;
+    setIsAdmin(parseJwt(token).isAdmin);
+    // console.log(isAdmin);
+
     dispatch(getAllProjects());
-  }, []);
+  }, [isAdmin]);
 
   const redirectToAddStory = (projectID: any) => {
     navigate(`/${projectID}/add-story`);
