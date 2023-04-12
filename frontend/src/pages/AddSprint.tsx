@@ -1,30 +1,22 @@
 import { useState, useMemo } from "react";
 import { Button, Form } from "react-bootstrap";
 import { DateRange } from "react-date-range";
+import { SprintData, DateRangeSpecs, SprintBody } from "../classes/sprintData";
 import Card from "../components/Card";
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
-
-interface SprintData {
-    name: string,
-    velocity: number,
-}
-
-interface DateRange {
-    startDate: Date,
-    endDate: Date,
-    key: string,
-    selection?: any
-}
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 
 const AddSprint = () => {
+    const dispatch = useAppDispatch();
+    const {} = useAppSelector(state => state.sprints);
     const [sprintData, setSprintData] = useState<SprintData>({
         name: '',
         velocity: 0
     });
 
-    const [dateRange, setDateRange] = useState<DateRange>({
+    const [dateRange, setDateRange] = useState<DateRangeSpecs>({
         startDate: new Date(),
         endDate: new Date(),
         key: 'selection',
@@ -48,15 +40,20 @@ const AddSprint = () => {
         }));
     }
 
-    const handleSelect = (ranges: DateRange) => {
+    const handleSelect = (ranges: DateRangeSpecs) => {
         setDateRange(ranges.selection);
     };
 
     const submitNewSprint = (e: React.FormEvent<HTMLFormElement>) => {
-        console.log(name, velocity);
-        console.log(dateRange.startDate, dateRange.endDate);
-        // dispatch()
         e.preventDefault();
+        const sprintBody: SprintBody = {
+            name,
+            velocity,
+            startDate: dateRange.startDate.toString(),
+            endDate: dateRange.endDate.toString()
+        };
+        console.log(sprintBody);
+        // dispatch()
     }
 
     return  (

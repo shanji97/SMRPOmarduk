@@ -16,8 +16,10 @@ import {
   Stack,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
-import { useAppSelector } from "../app/hooks";
+import {useAppDispatch, useAppSelector} from "../app/hooks";
 import { useNavigate } from "react-router-dom";
+import {parseJwt} from "../helpers/helpers";
+import {getUser} from "../features/users/userSlice";
 
 //installed packages:
 //npm install @hello-pangea/dnd --save
@@ -54,14 +56,18 @@ const columnsFromBackend = {
 };
 
 function Dashboard() {
+  const dispatch = useAppDispatch();
   const [columns, setColumns] = useState(columnsFromBackend);
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.users);
 
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
+    } else {
+      const token = JSON.parse(localStorage.getItem('user')!).token;
+      const uid = parseJwt(token).sid;
+      dispatch(getUser(uid));
     }
   }, [user]);
 
@@ -106,7 +112,7 @@ function Dashboard() {
       <DragDropContext onDragEnd={onDragEnd}>
         {Object.entries(columns).map(([columnId, column], index) => {
           return (
-            <div className="col-sm-4 col-md-3 col-xl-3 mt-3">
+            <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={columnId}>
               <Card className="bg-light border-0 " key={columnId}>
                 <div className="pt-3 hstack gap-2 mx-3">
                   <Card.Title className="fs-6 my-0">{column.name}</Card.Title>
@@ -141,6 +147,7 @@ function Dashboard() {
                                   <Card
                                     className="mb-3 mx-3"
                                     ref={provided.innerRef}
+                                    key={Math.random()}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
                                     style={{

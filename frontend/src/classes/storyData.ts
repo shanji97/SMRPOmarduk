@@ -5,5 +5,7 @@ export interface StoryData {
     tests: string[],
     priority:  number,
     businessValue:     number,
-    sequenceNumber: number
+    sequenceNumber: number,
+    projectID: any,
+    userId: number
 }
