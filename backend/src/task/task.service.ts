@@ -29,9 +29,11 @@ export class TaskService {
   }
 
   async createTask(storyId: number, task: DeepPartial<Task>): Promise<void> {
+    task.storyId = storyId;
+    
     if (task.assignedUserId)
       task.category = TaskCategory.ASSIGNED;
-      
+
     await this.taskRepository.insert(task);
   }
 
