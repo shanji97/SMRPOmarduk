@@ -9,7 +9,7 @@ import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { Token } from '../auth/decorator/token.decorator';
 import { Project } from './project.entity';
 import { ProjectService } from './project.service';
-import { UserRole } from './project-user-role.entity';
+import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
@@ -91,16 +91,31 @@ export class ProjectController {
 
   @ApiOperation({ summary: 'List users with roles on the project '})
   @ApiOkResponse()
-  @ApiNotFoundResponse()
+  @ApiForbiddenResponse()
   @Get(':projectId/user')
   async listUsersRolesOnProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
-  ) {
+  ): Promise<ProjectUserRole[]> {
     // Check permissions
     if (!token.isAdmin && !await this.projectService.isUserOnProject(projectId, token.sid))
       throw new ForbiddenException();
     return await this.projectService.listUsersWithRolesOnProject(projectId);
+  }
+
+  @ApiOperation({ summary: 'List users with role on the project' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Get(':projectId/user/role/:role')
+  async listUsersWithRoleOnProject(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('role', ParseIntPipe) role: number,
+  ): Promise<ProjectUserRole[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.projectService.isUserOnProject(projectId, token.sid))
+      throw new ForbiddenException();
+    return await this.projectService.listUsersWithRoleOnProject(projectId, role);
   }
 
   @ApiOperation({ summary: 'Add user to project' })

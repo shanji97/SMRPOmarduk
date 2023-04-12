@@ -72,7 +72,14 @@ export class ProjectService {
   async listUsersWithRolesOnProject(projectId: number): Promise<ProjectUserRole[]> {
     return await this.entityManager.find(ProjectUserRole, {
       where: { projectId: projectId },
-      relations: ['user']
+      relations: ['user'],
+    });
+  }
+
+  async listUsersWithRoleOnProject(projectId: number, role: UserRole | number): Promise<ProjectUserRole[]> {
+    return await this.entityManager.find(ProjectUserRole, {
+      where: { projectId: projectId, role: role },
+      relations: ['user'],
     });
   }
 
@@ -98,6 +105,7 @@ export class ProjectService {
             throw new ValidationException('User already has same role on project');
         }
       }
+      throw ex;
     }
   }
 
