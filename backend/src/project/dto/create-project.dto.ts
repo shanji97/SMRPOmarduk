@@ -25,7 +25,7 @@ export class CreateProjectDto {
   projectDescription?: string | null;
 
   @ApiProperty({
-    example: [{ userId: 3, role: [2, 3] }, { userId: 1, role: [1] }],
+    example: [{ userId: 3, role: [2] }, { userId: 1, role: [1] }],
     required: true
   })
   userRoles: CreateProjectUserRoleDto[];

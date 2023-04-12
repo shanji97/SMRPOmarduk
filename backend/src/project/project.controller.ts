@@ -13,7 +13,7 @@ import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
-import { TokenDto } from 'src/auth/dto/token.dto';
+import { TokenDto } from '../auth/dto/token.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -67,7 +67,6 @@ export class ProjectController {
         if (user == null)
           throw new NotFoundException(`One of users not found in the database.`);
       }
-      
       const row = await this.projectService.createProject(project);
       const projectId = (<any>row).id;
       for (const userRole of project.userRoles)
@@ -99,7 +98,7 @@ export class ProjectController {
   ): Promise<ProjectUserRole[]> {
     // Check permissions
     if (!token.isAdmin && !await this.projectService.isUserOnProject(projectId, token.sid))
-      throw new ForbiddenException();
+      throw new ForbiddenException('Only the admin or the user on a project can view the project members.');
     return await this.projectService.listUsersWithRolesOnProject(projectId);
   }
 
