@@ -52,7 +52,7 @@ const AddUser: React.FC<AddUserProps> = (
     
     const dispatch = useAppDispatch();
 
-    const {isCommonPassword, isError, message, isLoading, isSuccess} = useAppSelector(state => state.users);
+    const {isCommonPassword, isError, message, isLoading} = useAppSelector(state => state.users);
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
         id: idInit,
