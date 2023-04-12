@@ -15,6 +15,7 @@ import { HttpConfigService } from './custom-config/http-config.service';
 import { HttpLoggingInterceptor } from './interceptor/http-logging/http-logging.interceptor';
 import { ProjectModule } from './project/project.module';
 import { ServeStaticConfigService } from './custom-config/serve-static-config.service';
+import { SprintModule } from './sprint/sprint.module';
 import { StoryModule } from './story/story.module';
 import { UserModule } from './user/user.module';
 import { TestModule } from './test/test.module';
@@ -38,6 +39,7 @@ import { TaskModule } from './task/task.module';
     HealthModule,
     AuthModule,
     ProjectModule,
+    SprintModule,
     StoryModule,
     TaskModule,
     TestModule,

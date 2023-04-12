@@ -72,12 +72,27 @@ export class ProjectService {
   async listUsersWithRolesOnProject(projectId: number): Promise<ProjectUserRole[]> {
     return await this.entityManager.find(ProjectUserRole, {
       where: { projectId: projectId },
-      relations: ['user']
+      relations: ['user'],
+    });
+  }
+
+  async listUsersWithRoleOnProject(projectId: number, role: UserRole | number): Promise<ProjectUserRole[]> {
+    return await this.entityManager.find(ProjectUserRole, {
+      where: { projectId: projectId, role: role },
+      relations: ['user'],
     });
   }
 
   async addUserToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
     try {
+      // Check: User can't be project owner if he already has any other role
+      if (role === UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, null))
+        throw new ValidationException('User already has some role and can\'t be also project owner.');
+
+      // Check: User that is ProjectOwner can't be anything else
+      if (role !== UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, UserRole.ProjectOwner))
+        throw new ValidationException('User is project owner');
+      
       await this.entityManager.insert(ProjectUserRole, {
         projectId: projectId,
         userId: userId,
@@ -90,6 +105,7 @@ export class ProjectService {
             throw new ValidationException('User already has same role on project');
         }
       }
+      throw ex;
     }
   }
 
