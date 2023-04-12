@@ -12,24 +12,23 @@ function Header() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const {user, lastLogin} = useAppSelector(state => state.users);
-    const [userName, setUserName] = useState('');
+    const {user, lastLogin, userData} = useAppSelector(state => state.users);
     const [isAdmin, setIsAdmin]   = useState(false);
     const [lastLoginDate, setLastLoginDate] = useState('');
-
     
     useEffect(() => {
         if (user === null) {
             return;
         }
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        const userData = parseJwt(token);
-        setIsAdmin(userData.isAdmin);
-        setUserName(userData.sub);
+        const userData1 = parseJwt(token);
+        setIsAdmin(userData1.isAdmin);
 
-        dispatch(getLastLogin(userData.sid));
+        dispatch(getLastLogin(userData1.sid));
         setLastLoginDate(lastLogin);
     }, [user, lastLogin]);
+
+    useEffect(() => {}, [userData]);
 
     const handleLoginAndLogout = () => {
         if (user !== null) {
@@ -98,7 +97,7 @@ function Header() {
                     <NavDropdown title={user !== null ? 
                                             (   
                                                 <div style={{display: 'inline-flex'}}>
-                                                    <span><PersonCircle className="mb-1"></PersonCircle> {userName}, </span>
+                                                    <span><PersonCircle className="mb-1"></PersonCircle> {userData.username}, </span>
                                                     {lastLoginDate ? <p>Last login: {parseDate(lastLoginDate)}</p> : <p>Last login: First login</p>}
                                                 </div>
                                             ) : 
@@ -111,7 +110,7 @@ function Header() {
                         Edit profile
                     </NavDropdown.Item>
                     {
-                        isAdmin && 
+                        userData.isAdmin && 
                         (   
                             <Fragment>
                                 <NavDropdown.Item onClick={redirectToUsers}>

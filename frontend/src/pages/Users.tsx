@@ -1,4 +1,4 @@
-import {DropdownButton, Table, Dropdown, Modal, Form, Button} from "react-bootstrap";
+import {DropdownButton, Table, Dropdown, Modal, Form, Button, Spinner} from "react-bootstrap";
 import {Check, PencilFill, TrashFill, X} from "react-bootstrap-icons";
 import Card from "../components/Card";
 import React, {Fragment, useEffect, useState} from "react";
@@ -7,14 +7,14 @@ import AddUser from "./AddUser";
 
 import classes from './Users.module.css';
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { deleteUser, getAllUsers } from "../features/users/userSlice";
+import { deleteUser, getAllUsers, getUser } from "../features/users/userSlice";
 import { parseJwt } from "../helpers/helpers";
 import {toast} from "react-toastify";
 
 const Users = () => {
     const dispatch = useAppDispatch(); 
     const navigate = useNavigate();
-    let {users, isAdmin} = useAppSelector(state => state.users);
+    let {users, isAdmin, isLoading, userData} = useAppSelector(state => state.users);
     const [userId, setUserId]       = useState('');
     const [deleteUserId, setDeleteUserId]  = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -26,6 +26,7 @@ const Users = () => {
         const isAdmin = parseJwt(token).isAdmin;
         const id = parseJwt(token).sid;
         setUserId(id);
+        dispatch(getUser(id));
         if (!isAdmin) {
             navigate('/');
             return;
@@ -33,6 +34,12 @@ const Users = () => {
 
         dispatch(getAllUsers());
     }, [isAdmin]);
+
+    useEffect(() => {
+        if (!userData.isAdmin) {
+            navigate('/');
+        }
+    }, []);
 
     const openEditUserModal = (index: number) => {
         setEditIndex(index);
@@ -76,6 +83,10 @@ const Users = () => {
             return;
         }
         renderDeleteModal()
+    }
+
+    if (isLoading) {
+        return <Spinner animation="border" />;
     }
 
     return (
