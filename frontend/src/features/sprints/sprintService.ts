@@ -2,7 +2,7 @@ import axios from "axios";
 import { getBaseUrl } from "../../helpers/helpers";
 import { SprintBody } from "../../classes/sprintData";
 
-const SPRINTS_API_URL = `${getBaseUrl()}/api/sprint`; // TODO
+const SPRINTS_API_URL = `${getBaseUrl()}/api/sprint`;
 
 const createSprint = async (sprintBody: SprintBody, token: string) => {
     const config = {
@@ -11,7 +11,7 @@ const createSprint = async (sprintBody: SprintBody, token: string) => {
         }
     }
 
-    const response = await axios.post(SPRINTS_API_URL, sprintBody, config); // TODO fix endpoint
+    const response = await axios.post(`SPRINTS_API_URL`, sprintBody, config); // TODO fix endpoint
     return response.data;
 }
 
