@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Button } from "react-bootstrap";
 import Card from "../components/Card";
 import { Form } from "react-bootstrap";
@@ -11,12 +11,28 @@ import { createStory } from "../features/stories/storySlice";
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddStory = () => {
   const dispatch = useAppDispatch();
-  let state = useAppSelector((state) => state.stories);
+  let storyState = useAppSelector((state) => state.stories);
+
+  // get id
+  const { projectID } = useParams();
 
   const [invalidFormMessage, setInvalidFormMessage] = useState("");
+
+  useEffect(() => {
+    if (storyState.isSuccess) {
+      toast.success("Story successfully created!");
+      resetInputs();
+    }
+
+    if (storyState.isError) {
+      toast.error(storyState.message);
+    }
+  }, [storyState.isSuccess, storyState.isError]);
 
   const [sequenceNumber, setSequenceNumber] = useState("");
   const [title, setTitle] = useState("");
@@ -40,10 +56,10 @@ const AddStory = () => {
   const enteredDescriptionValid = description.trim() !== "";
   const enteredPriorityValid = priority.trim() !== "";
   const enteredBusinessValueValid =
-    title.trim() !== "" &&
+    businessValue.trim() !== "" &&
     parseInt(businessValue) >= 0 &&
     parseInt(businessValue) <= 10;
-  const enteredTestsValid = tests.map((test) => test !== "");
+  const enteredTestsValid = tests.map((test) => test.trim() !== "");
 
   const titleInvalid = titleTouched && !enteredTitleValid;
   const sequenceNumberInvalid =
@@ -141,6 +157,24 @@ const AddStory = () => {
     setBusinessValueTouched(true);
   };
 
+  const resetInputs = () => {
+    // set inputs to default values
+    setSequenceNumber("");
+    setTitle("");
+    setDescription("");
+    setTests([""]);
+    setPriority("");
+    setBusinessValue("");
+
+    // set touch states values back to default
+    setSequenceNumberTouched(false);
+    setTitleTouched(false);
+    setDescriptionTouched(false);
+    setTestsTouched([false]);
+    setPriorityTouched(false);
+    setBusinessValueTouched(false);
+  };
+
   // handle submit
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -170,28 +204,13 @@ const AddStory = () => {
       tests,
       priority: parseInt(priority),
       businessValue: parseInt(businessValue),
+      projectID,
     };
 
     console.log(newStory);
 
     // send to backend
     dispatch(createStory(newStory));
-
-    // set inputs to default values
-    setSequenceNumber("");
-    setTitle("");
-    setDescription("");
-    setTests([""]);
-    setPriority("");
-    setBusinessValue("");
-
-    // set touch states values back to default
-    setSequenceNumberTouched(false);
-    setTitleTouched(false);
-    setDescriptionTouched(false);
-    setTestsTouched([false]);
-    setPriorityTouched(false);
-    setBusinessValueTouched(false);
   };
 
   return (
@@ -279,13 +298,15 @@ const AddStory = () => {
                       />
                     </Col>
                     <Col xs="12" md="3">
-                      <Button
-                        variant="link"
-                        type="button"
-                        onClick={() => removeInputHandler(index)}
-                      >
-                        Remove test
-                      </Button>
+                      {tests.length > 1 && (
+                        <Button
+                          variant="link"
+                          type="button"
+                          onClick={() => removeInputHandler(index)}
+                        >
+                          Remove test
+                        </Button>
+                      )}
                     </Col>
                   </Row>
                 </Form.Group>
@@ -342,19 +363,18 @@ const AddStory = () => {
               </Form.Group>
             </Col>
           </Row>
-          {invalidFormMessage !== "" && (
+          {/* {invalidFormMessage !== "" && (
             <Alert variant={"danger"}>{invalidFormMessage}</Alert>
           )}
-          {/* {invalidFormMessage === "" &&
-            projectsState.isError &&
-            !projectsState.isLoading && (
-              <Alert variant={"danger"}>{projectsState.message}</Alert>
-            )} */}
-          {/* {invalidFormMessage === "" &&
-            projectsState.isSuccess &&
-            !projectsState.isLoading && (
-              <Alert variant={"success"}>Project added successfully!</Alert>
-            )} */}
+          {invalidFormMessage === "" &&
+            storyState.isError &&
+            !storyState.isLoading && (
+              <Alert variant={"danger"}>{storyState.message}</Alert>
+            )}
+          {invalidFormMessage === "" &&
+            storyState.isSuccess &&
+            !storyState.isLoading &&
+            <Alert variant={"success"}>{storyState.message}</Alert>} */}
           <Button variant="primary" type="submit" size="lg">
             Add story
           </Button>
