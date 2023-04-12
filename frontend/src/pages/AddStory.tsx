@@ -54,7 +54,7 @@ const AddStory = () => {
       let userAllowedToAddStories = false;
 
       projectsState.userRoles.forEach((user) => {
-        if (parseInt(user.userId) == uid && user.role > 0) {
+        if (user.userId === uid && user.role > 0) {
           userAllowedToAddStories = true;
           // console.log("userAllowedToAddStories");
         }
