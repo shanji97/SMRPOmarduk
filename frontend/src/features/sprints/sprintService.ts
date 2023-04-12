@@ -11,12 +11,24 @@ const createSprint = async (sprintBody: SprintBody, token: string) => {
         }
     }
 
-    const response = await axios.post(SPRINTS_API_URL, sprintBody, config);
+    const response = await axios.post(SPRINTS_API_URL, sprintBody, config); // TODO fix endpoint
+    return response.data;
+}
+
+const getAllSprints = async (token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(SPRINTS_API_URL, config); // TODO fix endpoint
     return response.data;
 }
 
 const sprintService = {
     createSprint,
+    getAllSprints,
 }
 
 export default sprintService;

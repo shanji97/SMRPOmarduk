@@ -28,7 +28,17 @@ export const createSprint = createAsyncThunk('sprint/create', async (sprintBody:
     }  
 });
 
-export const projectSlice = createSlice({
+export const getAllSprints = createAsyncThunk('sprint/getAll', async (_, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.getAllSprints(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const sprintSlice = createSlice({
     name: 'sprints',
     initialState,
     reducers: {
@@ -57,5 +67,23 @@ export const projectSlice = createSlice({
             state.isError = true
             state.message = action.payload
         })
+        .addCase(getAllSprints.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getAllSprints.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.sprints = action.payload;
+        })
+        .addCase(getAllSprints.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
     }
 });
+
+export default sprintSlice.reducer;

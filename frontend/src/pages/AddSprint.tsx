@@ -6,8 +6,11 @@ import Card from "../components/Card";
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 
 const AddSprint = () => {
+    const dispatch = useAppDispatch();
+    const {} = useAppSelector(state => state.sprints);
     const [sprintData, setSprintData] = useState<SprintData>({
         name: '',
         velocity: 0
