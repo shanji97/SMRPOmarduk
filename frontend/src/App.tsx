@@ -54,7 +54,7 @@ function App() {
           <Route path="/:projectID/add-story" element={<AddStory />} />
         </Routes>
       </Router>
-      <ToastContainer autoClose={2000} />
+      <ToastContainer position="top-center" autoClose={2000} />
     </Fragment>
   );
 }

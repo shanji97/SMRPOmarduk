@@ -9,7 +9,7 @@ import ValidationError from "../components/ValidationError";
 import {UserData, UserDataEdit} from "../classes/userData";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { createUser, editUser, getAllUsers, commonPassword, reset } from "../features/users/userSlice";
+import { createUser, editUser, getAllUsers, commonPassword, reset, getUser } from "../features/users/userSlice";
 import { parseJwt} from "../helpers/helpers";
 import {useNavigate} from 'react-router-dom';
 import PasswordStrengthBar from "react-password-strength-bar";
@@ -153,14 +153,12 @@ const AddUser: React.FC<AddUserProps> = (
 
         const newUser: UserData = {
             username,
-
             password,
             firstName,
             lastName,
             email,
             isAdmin: isAdminRadio
         }
-
         if (isEdit) { 
             if (password) {
                 const userDataEdit: UserDataEdit = {
@@ -183,9 +181,13 @@ const AddUser: React.FC<AddUserProps> = (
                     email,
                     isAdmin: isAdminRadio,
                 }
+                if (!isAdminInit && isAdminRadio) {
+                    return toast.error("Can't set yourself as admin!");
+                }
                 dispatch(editUser(userDataEdit));
             }
             handleClose();
+            dispatch(getUser(id!));
             toast.success('Profile successfully updated!');
             return;
         }
@@ -214,6 +216,7 @@ const AddUser: React.FC<AddUserProps> = (
                     />
                 </Form.Group>
                 
+                {!editProfile && (
                 <Form.Group className="mb-3" controlId="formBasicOldPassword">
                     <Form.Label>Old password</Form.Label>
                     <Form.Control
@@ -225,8 +228,9 @@ const AddUser: React.FC<AddUserProps> = (
                         onChange={userDataChangedHandler}
                     />
                     <Form.Check type='checkbox' id='showOldPassword' label='Show password' onClick={handleShowOldPassword} />              
-                </Form.Group>
+                </Form.Group>)}
 
+                {!editProfile && (
                 <Form.Group className="mb-3" controlId="formBasicPassword1">
                     <Form.Label>Password</Form.Label>
                     <Form.Control
@@ -244,9 +248,10 @@ const AddUser: React.FC<AddUserProps> = (
                     <Form.Check type='checkbox' id='showPassword' label='Show password' onClick={handleShowPassword} />
                     {passwordError && <ValidationError>Password must be at least 12 characters long</ValidationError>}
                     {isCommonPassword && <ValidationError>Password is common, please choose a different one!</ValidationError>}
-                </Form.Group>
+                </Form.Group>)}
 
-                <Form.Group className="mb-3" controlId="formBasicPassword2">
+                {!editProfile && 
+                (<Form.Group className="mb-3" controlId="formBasicPassword2">
                     <Form.Label>Confirm password</Form.Label>
                     <Form.Control
                         type='password'
@@ -259,6 +264,7 @@ const AddUser: React.FC<AddUserProps> = (
                     />
                     {!passwordsMatch && <ValidationError>Passwords don't match</ValidationError>}
                 </Form.Group>
+                )}
 
                 <Form.Group className="mb-3" controlId="formBasicName">
                     <Form.Label>Firstname</Form.Label>
@@ -292,7 +298,6 @@ const AddUser: React.FC<AddUserProps> = (
 
                 <div className={classes.radioButtonContainer}>
                     <Form.Check
-                        disabled={editProfile && !isAdminRadio}
                         type='radio'
                         id='admin'
                         label='Administrator'
