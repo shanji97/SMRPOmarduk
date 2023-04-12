@@ -53,6 +53,7 @@ const Projects = () => {
         <Table striped bordered hover>
           <thead>
             <tr>
+              <th>#</th>
               <th>Project name</th>
             </tr>
           </thead>
@@ -60,13 +61,21 @@ const Projects = () => {
             {projects.map((project, i) => {
               return (
                 <tr key={i}>
+                  <td>{project.id}</td>
                   <td>
                     <div className={classes.usernameContainer}>
                       {project.projectName}
-                      <button onClick={() => redirectToAddStory(project.id)}>
+                      {/* <button onClick={() => redirectToAddStory(project.id)}>
                         {" "}
                         Add story
-                      </button>
+                      </button> */}
+                      <Button
+                        variant="primary"
+                        type="button"
+                        onClick={() => redirectToAddStory(project.id)}
+                      >
+                        Add story
+                      </Button>
                     </div>
                   </td>
                 </tr>

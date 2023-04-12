@@ -167,24 +167,24 @@ const AddProject = () => {
 
     const userRoles = [
       {
-        userId: productOwnerID,
+        userId: +productOwnerID,
         role: [2],
       },
       {
-        userId: scrumMasterID,
+        userId: +scrumMasterID,
         role: [1],
       },
     ];
 
     developers.forEach((devID) => {
-      const indexOfExistingMember = userRoles.findIndex(
-        (userRole) => userRole.userId === devID
+      const indexOfExistingUserRole = userRoles.findIndex(
+        (role) => role.userId === +devID
       );
-      if (indexOfExistingMember !== -1) {
-        userRoles[indexOfExistingMember].role.push(0);
+      if (indexOfExistingUserRole !== -1) {
+        userRoles[indexOfExistingUserRole].role.push(0);
       } else {
         userRoles.push({
-          userId: devID,
+          userId: +devID,
           role: [0],
         });
       }
