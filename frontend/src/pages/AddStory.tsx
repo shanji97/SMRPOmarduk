@@ -11,12 +11,16 @@ import { createStory } from "../features/stories/storySlice";
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { getProject } from "../features/projects/projectSlice";
+import { parseJwt } from "../helpers/helpers";
 
 const AddStory = () => {
   const dispatch = useAppDispatch();
   let storyState = useAppSelector((state) => state.stories);
+  let projectsState = useAppSelector((state) => state.projects);
+  const navigate = useNavigate();
 
   // get id
   const { projectID } = useParams();
@@ -24,15 +28,44 @@ const AddStory = () => {
   const [invalidFormMessage, setInvalidFormMessage] = useState("");
 
   useEffect(() => {
-    if (storyState.isSuccess) {
+    if (storyState.isSuccess && !storyState.isLoading) {
       toast.success("Story successfully created!");
       resetInputs();
     }
-
-    if (storyState.isError) {
+    if (storyState.isError && !storyState.isLoading) {
       toast.error(storyState.message);
     }
-  }, [storyState.isSuccess, storyState.isError]);
+  }, [storyState.isSuccess, storyState.isError, storyState.isLoading]);
+
+  useEffect(() => {
+    if (projectID !== undefined) {
+      dispatch(getProject(projectID));
+    }
+  }, [projectID]);
+
+  // TODO
+  // this is temporary - checks if user is product owner or scrum master
+  // if not, it redirects them to '/'
+  useEffect(() => {
+    if (projectsState.userRoles.length > 0) {
+      const token = JSON.parse(localStorage.getItem("user")!).token;
+      const uid = parseJwt(token).sid;
+
+      let userAllowedToAddStories = false;
+
+      projectsState.userRoles.forEach((user) => {
+        if (parseInt(user.userId) == uid && user.role > 0) {
+          userAllowedToAddStories = true;
+          // console.log("userAllowedToAddStories");
+        }
+      });
+
+      if (!userAllowedToAddStories) {
+        navigate("/");
+        return;
+      }
+    }
+  }, [projectsState.userRoles]);
 
   const [sequenceNumber, setSequenceNumber] = useState("");
   const [title, setTitle] = useState("");
@@ -192,7 +225,8 @@ const AddStory = () => {
 
     // display error msg if form is invalid
     if (!formIsValid) {
-      setInvalidFormMessage("Make sure to fill out all required fields.");
+      setInvalidFormMessage("Make sure to fill out all required fields."); // TODO there is no need for this now
+      toast.error("Make sure to fill out all required fields.");
       return;
     }
     setInvalidFormMessage("");
@@ -290,7 +324,6 @@ const AddStory = () => {
                         value={input}
                         placeholder="Add test"
                         onChange={(e) => {
-                          console.log();
                           testChangedHandler(e, index);
                         }}
                         onBlur={() => testBlurHandler(index)}

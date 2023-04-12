@@ -165,7 +165,7 @@ const AddProject = () => {
     }
     setInvalidFormMessage("");
 
-    const members = [
+    const userRoles = [
       {
         userId: productOwnerID,
         role: [2],
@@ -177,13 +177,13 @@ const AddProject = () => {
     ];
 
     developers.forEach((devID) => {
-      const indexOfExistingMember = members.findIndex(
-        (member) => member.userId === devID
+      const indexOfExistingMember = userRoles.findIndex(
+        (userRole) => userRole.userId === devID
       );
       if (indexOfExistingMember !== -1) {
-        members[indexOfExistingMember].role.push(0);
+        userRoles[indexOfExistingMember].role.push(0);
       } else {
-        members.push({
+        userRoles.push({
           userId: devID,
           role: [0],
         });
@@ -193,7 +193,7 @@ const AddProject = () => {
     const newProject: ProjectData = {
       projectName: projectName.trim(),
       projectDescription: projectDescription.trim(),
-      members,
+      userRoles,
     };
 
     // console.log(newProject);
