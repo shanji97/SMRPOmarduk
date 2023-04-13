@@ -47,6 +47,10 @@ const Projects = () => {
     navigate(`/${projectID}/add-story`);
   };
 
+  const redirectToAddSprint = (projectID: any) => {
+    navigate(`/${projectID}/add-sprint`);
+  };
+
   return (
     <Fragment>
       <Card style={{ width: "70%", marginTop: "1rem" }}>
@@ -75,6 +79,13 @@ const Projects = () => {
                         onClick={() => redirectToAddStory(project.id)}
                       >
                         Add story
+                      </Button>
+                      <Button
+                        variant="primary"
+                        type="button"
+                        onClick={() => redirectToAddSprint(project.id)}
+                      >
+                        Add sprint
                       </Button>
                     </div>
                   </td>

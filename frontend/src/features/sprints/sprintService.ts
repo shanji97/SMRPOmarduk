@@ -11,7 +11,14 @@ const createSprint = async (sprintBody: SprintBody, token: string) => {
         }
     }
 
-    const response = await axios.post(`SPRINTS_API_URL`, sprintBody, config); // TODO fix endpoint
+    const a = {
+        name: sprintBody.name,
+        velocity: sprintBody.velocity,
+        startDate: sprintBody.startDate,
+        endDate: sprintBody.endDate
+    }
+
+    const response = await axios.post(`${SPRINTS_API_URL}/${sprintBody.projectId}`, a, config); // TODO fix endpoint
     return response.data;
 }
 

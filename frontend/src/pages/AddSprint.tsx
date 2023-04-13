@@ -1,14 +1,17 @@
 import { useState, useMemo } from "react";
 import { Button, Form } from "react-bootstrap";
 import { DateRange } from "react-date-range";
+import {useParams} from 'react-router-dom';
 import { SprintData, DateRangeSpecs, SprintBody } from "../classes/sprintData";
 import Card from "../components/Card";
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { createSprint } from "../features/sprints/sprintSlice";
 
 const AddSprint = () => {
+    const params = useParams();
     const dispatch = useAppDispatch();
     const {} = useAppSelector(state => state.sprints);
     const [sprintData, setSprintData] = useState<SprintData>({
@@ -21,7 +24,6 @@ const AddSprint = () => {
         endDate: new Date(),
         key: 'selection',
     });
-
     const {name, velocity} = sprintData;
 
     const formIsValid = useMemo(() => {
@@ -47,13 +49,14 @@ const AddSprint = () => {
     const submitNewSprint = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const sprintBody: SprintBody = {
+            projectId: params.projectID!,
             name,
             velocity,
             startDate: dateRange.startDate.toString(),
             endDate: dateRange.endDate.toString()
         };
         console.log(sprintBody);
-        // dispatch()
+        dispatch(createSprint(sprintBody));
     }
 
     return  (
