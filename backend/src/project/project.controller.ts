@@ -132,22 +132,23 @@ export class ProjectController {
       throw new ForbiddenException('Only the administrator and the scrum master are allowed to add the developer.');
 
     // Get every user on the project and remove the project owner.
-    let userOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId)).filter(u => u.role != UserRole.ProjectOwner);
+    let allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId)).filter(u => u.role != UserRole.ProjectOwner);
 
     // Check if scrum master is also a developer.
-    let scrumMaster: ProjectUserRole[] = userOnProject.filter(sm => sm.role < UserRole.ProjectOwner);
+    let scrumMaster: ProjectUserRole[] = allUsersOnProject.filter(sm => sm.role < UserRole.ProjectOwner);
     // If yes set up a flag
     let isScrumMasterAndDeveloper: Boolean = scrumMaster.length == 2;
 
     // Check if the passed user id corresponds with the id passed in
-    if (isScrumMasterAndDeveloper && scrumMaster.filter(smd => smd.userId == userId).length == 1) {
+    if (isScrumMasterAndDeveloper && scrumMaster.filter(smd => smd.userId == userId).length == 1)
       throw new BadRequestException('The scrum master is already a developer!');
-    }
 
-    let role: UserRole = UserRole.Developer;
+    // Check if the user is maybe a project owner
+    if (allUsersOnProject.filter(au => au.role == UserRole.ProjectOwner && au.userId == userId).length == 1)
+      throw new BadRequestException('The project owner cannot be a developer.');
 
     try {
-      await this.projectService.addUserToProject(projectId, userId, role);
+      await this.projectService.addUserToProject(projectId, userId, UserRole.Developer);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
