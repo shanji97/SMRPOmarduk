@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
@@ -12,8 +12,8 @@ import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
-import { TokenDto } from '../auth/dto/token.dto';
-import { throwError } from 'rxjs';
+import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
+import { UpdateProjectSchema } from './dto/update-project.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -78,6 +78,53 @@ export class ProjectController {
       throw ex;
     }
   }
+
+  @ApiOperation({ summary: "Update project name and description." })
+  @ApiOkResponse()
+  @Patch(':projectId')
+  async updateProject(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(UpdateProjectSchema)) project: UpdateProjectDto) {
+    try {
+
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster)) {
+        throw new ForbiddenException('User must be either an administrator or a scrum master to have any permission.');
+      }
+
+      let existingProject: Project = await this.projectService.getProjectById(projectId);
+      if (existingProject == null) {
+        throw new NotFoundException('Project with the given ID not found.');
+      }
+
+      existingProject.projectName = project.projectName;
+      existingProject.projectDescription = project.projectDescription == null ? existingProject.projectDescription : project.projectDescription;
+
+      await this.projectService.updateProjectById(projectId, existingProject);
+    }
+    catch (ex) {
+      if (ex instanceof ConflictException) {
+        throw new ConflictException(ex.message);
+      }
+      else if (ex instanceof NotFoundException) {
+        throw new NotFoundException(ex.message);
+      }
+      else {
+        throw new BadRequestException(ex.message);
+      }
+    }
+  }
+
+  @ApiOperation({summary: 'Update the project owner with the new project owner'})
+  @ApiOkResponse()
+  @Patch(':/projectId/newProjectOwner/:userId')
+  async changeProjectOwner(@Token() token, @Param('projectId', ParseIntPipe) projectId: number,@Param('userId', ParseIntPipe) userId: number){
+    if (!token.isAdmin) {
+      throw new ForbiddenException('Only the administrator can change the project owner.');
+    }
+
+    
+
+  }
+
+
 
   @ApiOperation({ summary: 'Delete project' })
   @ApiOkResponse()
@@ -154,21 +201,6 @@ export class ProjectController {
         throw new BadRequestException(ex.message);
       throw ex;
     }
-  }
-
-  @ApiOperation({ summary: 'Remove role from user on project' })
-  @ApiOkResponse()
-  @Delete(':projectId/user/:userId/:role')
-  async removeUserRoleFromProject(
-    @Token() token: TokenDto,
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('userId', ParseIntPipe) userId: number,
-    @Param('role', ParseIntPipe) role: number,
-  ) {
-    // Check permissions
-    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException();
-    await this.projectService.removeRoleFromUserOnProject(projectId, userId, role);
   }
 
   @ApiOperation({ summary: 'Remove developer from project' })

@@ -7,6 +7,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { Project } from './project.entity';
 import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class ProjectService {
@@ -92,7 +93,7 @@ export class ProjectService {
       // Check: User that is ProjectOwner can't be anything else
       if (role !== UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, UserRole.ProjectOwner))
         throw new ValidationException('User is project owner');
-      
+
       await this.entityManager.insert(ProjectUserRole, {
         projectId: projectId,
         userId: userId,
@@ -117,6 +118,11 @@ export class ProjectService {
     });
   }
 
+  async overwriteUserRoleOnProject(projectId: number, userId: number, role: UserRole.ProjectOwner | UserRole.ScrumMaster): Promise<void> {
+    await this.entityManager.update(ProjectUserRole, { projectId, userId: userId, role: role }, { userId, role });
+  }
+
+
   async removeUserFromProject(projectId: number, userId: number): Promise<void> {
     await this.entityManager.delete(ProjectUserRole, {
       projectId: projectId,
@@ -134,8 +140,8 @@ export class ProjectService {
   async hasUserRoleOnProject(projectId: number, userId: number, roles: UserRole[] | number[] | UserRole | number | null): Promise<boolean> {
     if (roles) {
       if (!Array.isArray(roles)) // Force an array
-      roles = [roles];
-    
+        roles = [roles];
+
       return await this.entityManager.countBy(ProjectUserRole, {
         projectId: projectId,
         userId: userId,
