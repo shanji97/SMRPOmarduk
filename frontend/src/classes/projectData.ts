@@ -1,5 +1,5 @@
-export interface Member {
-    userId: string,
+export interface UserRole {
+    userId: number,
     role: number[]
 }
 
@@ -7,5 +7,5 @@ export interface ProjectData {
     id?:       string,
     projectName: string,
     projectDescription: string,
-    members: Member[],
+    userRoles: UserRole[],
 }

@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
-import { CreateMemberDto } from 'src/member/dto/create-member.dto';
+
+
+import { CreateProjectUserRoleDto, CreateProjectUserRoleSchema } from './create-project-user-role.dto';
 
 
 export class CreateProjectDto {
@@ -23,10 +25,10 @@ export class CreateProjectDto {
   projectDescription?: string | null;
 
   @ApiProperty({
-    example: [{ userId: 3, role: [2, 3] }, { userId: 1, role: [1] }],
+    example: [{ userId: 3, role: [2] }, { userId: 1, role: [1] }],
     required: true
   })
-  members: CreateMemberDto[];
+  userRoles: CreateProjectUserRoleDto[];
   
 }
 
@@ -34,8 +36,5 @@ export const CreateProjectSchema = Joi.object().keys({
   id: Joi.any().strip(),
   projectName: Joi.string().trim().min(1).max(128).required(),
   projectDescription: Joi.string().trim().allow(null).allow(''),
-  members: Joi.array().items(Joi.object().keys({
-    userId: Joi.number().min(1).required(),
-    role: Joi.array().items(Joi.number().greater(-1).less(3).required())
-  }))
+  userRoles: Joi.array().items(CreateProjectUserRoleSchema),
 });

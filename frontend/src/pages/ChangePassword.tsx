@@ -7,6 +7,7 @@ import { UserDataEdit } from "../classes/userData";
 import { useAppDispatch } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import { useNavigate } from "react-router-dom";
+import {toast} from "react-toastify";
 
 const MIN_PASSWORD_LENGTH = 12;
 
@@ -31,8 +32,7 @@ const ChangePassword = () => {
     
     const formIsValid = useMemo(() => {
         return newPassword.length >= MIN_PASSWORD_LENGTH && 
-                                     repeatNewPassword.length >= 12 && 
-                                     oldPassword.length >= 12;
+                                     repeatNewPassword.length >= 12
     }, [newPassword, repeatNewPassword, oldPassword.length]);
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,6 +66,7 @@ const ChangePassword = () => {
             passwordOld: oldPassword
         }
         dispatch(editUser(editBody));
+        toast.success('Password changed');
         setPasswords({
             newPassword: '',
             oldPassword: '',
@@ -78,7 +79,7 @@ const ChangePassword = () => {
         <Card>
             <h1>Change password</h1>
             <Form onSubmit={submitFormHandler}>
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-3" controlId="formBasicPassword1">
                     <Form.Label>Current password</Form.Label>
                     <Form.Control 
                         type={currentPassType}
@@ -89,7 +90,7 @@ const ChangePassword = () => {
                     <Form.Check type='checkbox' id='showPassword1' label='Show password' onClick={handleShowCurrPassword} />
                 </Form.Group>
                 <hr/>
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-3" controlId="formBasicPassword2">
                     <Form.Label>New password</Form.Label>
                     <Form.Control 
                         type={newPassType}
@@ -99,7 +100,7 @@ const ChangePassword = () => {
                     />
                     <Form.Check type='checkbox' id='showPassword2' label='Show password' onClick={handleShowNewPassword} />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-3" controlId="formBasicPassword3">
                     <Form.Label>Repeat password</Form.Label>
                     <Form.Control 
                         type='password'
