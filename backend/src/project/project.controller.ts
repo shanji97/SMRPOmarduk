@@ -1,7 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
 import { CreateProjectDto, CreateProjectSchema } from './dto/create-project.dto';
 import { hasNewProjectDevelopers, hasNewProjectProjectOwner, hasNewProjectScrumMaster } from './dto/create-project-user-role.dto';
@@ -14,6 +13,7 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
 import { TokenDto } from '../auth/dto/token.dto';
+import { throwError } from 'rxjs';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -88,7 +88,7 @@ export class ProjectController {
   }
 
 
-  @ApiOperation({ summary: 'List users with roles on the project '})
+  @ApiOperation({ summary: 'List users with roles on the project ' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Get(':projectId/user')
@@ -121,16 +121,31 @@ export class ProjectController {
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @HttpCode(200)
-  @Post(':projectId/user/:userId/:role')
+  @Post(':projectId/addDeveloper/:userId')
   async addUserToProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
     @Param('userId', ParseIntPipe) userId: number,
-    @Param('role', ParseIntPipe) role: number,
   ) {
     // Check permissions
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException();
+      throw new ForbiddenException('Only the administrator and the scrum master are allowed to add the developer.');
+
+    // Get every user on the project and remove the project owner.
+    let userOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId)).filter(u => u.role != UserRole.ProjectOwner);
+
+    // Check if scrum master is also a developer.
+    let scrumMaster: ProjectUserRole[] = userOnProject.filter(sm => sm.role < UserRole.ProjectOwner);
+    // If yes set up a flag
+    let isScrumMasterAndDeveloper: Boolean = scrumMaster.length == 2;
+
+    // Check if the passed user id corresponds with the id passed in
+    if (isScrumMasterAndDeveloper && scrumMaster.filter(smd => smd.userId == userId).length == 1) {
+      throw new BadRequestException('The scrum master is already a developer!');
+    }
+
+    let role: UserRole = UserRole.Developer;
+
     try {
       await this.projectService.addUserToProject(projectId, userId, role);
     } catch (ex) {
@@ -155,17 +170,26 @@ export class ProjectController {
     await this.projectService.removeRoleFromUserOnProject(projectId, userId, role);
   }
 
-  @ApiOperation({ summary: 'Remove user from project' })
+  @ApiOperation({ summary: 'Remove developer from project' })
   @ApiOkResponse()
-  @Delete(':projectId/user/:userId')
-  async removeUserFromProject(
+  @Delete(':projectId/removeDeveloper/:userId')
+  async removeDeveloperFromProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ) {
+
     // Check permissions
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException();
-    await this.projectService.removeUserFromProject(projectId, userId);
+      throw new ForbiddenException('Only the administrator and the scrum master are allowed to remove the developer.');
+
+    let role: UserRole = UserRole.Developer;
+    let developers: ProjectUserRole[] = await this.projectService.listUsersWithRoleOnProject(projectId, role);
+
+    // Check if developer count in the project. 
+    if (developers.length == 1)
+      throw new BadRequestException('You cannot remove the only developer on a project.');
+
+    await this.projectService.removeRoleFromUserOnProject(projectId, userId, role);
   }
 }
