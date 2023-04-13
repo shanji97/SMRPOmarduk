@@ -7,13 +7,14 @@ import Card from "../components/Card";
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { useAppDispatch } from "../app/hooks";
 import { createSprint } from "../features/sprints/sprintSlice";
+import {getCestDate} from "../helpers/helpers";
+import {toast} from "react-toastify";
 
 const AddSprint = () => {
     const params = useParams();
     const dispatch = useAppDispatch();
-    const {} = useAppSelector(state => state.sprints);
     const [sprintData, setSprintData] = useState<SprintData>({
         name: '',
         velocity: 0
@@ -52,16 +53,17 @@ const AddSprint = () => {
             projectId: params.projectID!,
             name,
             velocity,
-            startDate: dateRange.startDate.toString(),
-            endDate: dateRange.endDate.toString()
+            startDate: getCestDate(dateRange.startDate.toString()),
+            endDate: getCestDate(dateRange.endDate.toString()),
         };
-        console.log(sprintBody);
+
         dispatch(createSprint(sprintBody));
+        toast.success('Sprint created!');
     }
 
     return  (
         <Card style={{ marginTop: '3rem' }}>
-            <h2>Add a new sprint</h2>
+            <h2 className='text-primary'>Add a new sprint</h2>
             <Form onSubmit={submitNewSprint}>
                 <Form.Group className="mb-3" controlId="formBasicName">
                     <Form.Label>Name</Form.Label>
@@ -84,8 +86,8 @@ const AddSprint = () => {
                     />
                 </Form.Group>
 
-                <div>
-                    <p>Select date range</p>
+                <div style={{ textAlign: 'center' }}>
+                    <p>Select date range:</p>
                     <DateRange
                         ranges={[dateRange]}
                         onChange={handleSelect}
