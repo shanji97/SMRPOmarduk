@@ -6,5 +6,6 @@ export interface StoryData {
     priority:  number,
     businessValue:     number,
     sequenceNumber: number,
-    projectID: any
+    projectID: any,
+    userId: number
 }
