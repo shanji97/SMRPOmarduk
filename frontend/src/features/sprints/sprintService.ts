@@ -18,18 +18,18 @@ const createSprint = async (sprintBody: SprintBody, token: string) => {
         endDate: sprintBody.endDate
     }
 
-    const response = await axios.post(`${SPRINTS_API_URL}/${sprintBody.projectId}`, a, config); // TODO fix endpoint
+    const response = await axios.post(`${SPRINTS_API_URL}/${sprintBody.projectId}`, a, config);
     return response.data;
 }
 
-const getAllSprints = async (token: string) => {
+const getAllSprints = async (projectId: string, token: string) => {
     const config = {
         headers: {
             Authorization: `JWT ${token}`
         }
     }
 
-    const response = await axios.get(SPRINTS_API_URL, config); // TODO fix endpoint
+    const response = await axios.get(`${SPRINTS_API_URL}/project/${projectId}`, config); // TODO fix endpoint
     return response.data;
 }
 

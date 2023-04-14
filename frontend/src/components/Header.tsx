@@ -12,6 +12,7 @@ import { getLastLogin, logout } from "../features/users/userSlice";
 import { Fragment, useEffect, useState } from "react";
 import { parseDate, parseJwt } from "../helpers/helpers";
 import { useNavigate } from "react-router-dom";
+import {getAllSprints} from "../features/sprints/sprintSlice";
 
 function Header() {
   const dispatch = useAppDispatch();
@@ -19,6 +20,8 @@ function Header() {
 
   const { user, lastLogin, userData } = useAppSelector((state) => state.users);
   const { sprints } = useAppSelector((state) => state.sprints);
+  const {activeProject} = useAppSelector(state => state.projects);
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastLoginDate, setLastLoginDate] = useState("");
 
@@ -34,6 +37,12 @@ function Header() {
     setLastLoginDate(lastLogin);
   }, [user, lastLogin]);
 
+  useEffect(() => {
+    if (activeProject.id !== '') {
+      dispatch(getAllSprints(activeProject.id!));
+    }
+  }, [activeProject, dispatch]);
+
   useEffect(() => {}, [userData]);
 
   const handleLoginAndLogout = () => {
@@ -48,10 +57,6 @@ function Header() {
   };
   const redirectToUsers = () => {
     navigate("/users");
-  };
-
-  const redirectToNewSprint = () => {
-    navigate("/add-sprint");
   };
 
   const redirectToProjectList = () => {
@@ -108,9 +113,6 @@ function Header() {
                 </span>
               }
             >
-              <NavDropdown.Item onClick={redirectToNewSprint}>
-                + Add sprint
-              </NavDropdown.Item>
               {sprints.map((sprint) => (
                 <NavDropdown.Item>{sprint.name}</NavDropdown.Item>
               ))}

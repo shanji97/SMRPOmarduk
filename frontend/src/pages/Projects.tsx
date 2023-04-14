@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
-import { getAllProjects } from "../features/projects/projectSlice";
+import {getAllProjects, setActiveProject} from "../features/projects/projectSlice";
 
 const Projects = () => {
   const dispatch = useAppDispatch();
@@ -37,6 +37,10 @@ const Projects = () => {
 
     dispatch(getAllProjects());
   }, [isAdmin]);
+
+  const activateProject = (projectID: string) => {
+    dispatch(setActiveProject(projectID))
+  }
 
   const redirectToAddStory = (projectID: any) => {
     navigate(`/${projectID}/add-story`);
@@ -67,25 +71,13 @@ const Projects = () => {
                       {/* <button onClick={() => redirectToAddStory(project.id)}>
                         {" "}
                         Add story
-                      </button> */}
-                      <div className={classes.btnGroup}>
-                        <Button
-                          variant="primary"
-                          type="button"
-                          onClick={() => redirectToAddStory(project.id)}
-                          className={classes.btn}
-                        >
-                          Add story
-                        </Button>
-                        <Button
-                          variant="primary"
-                          type="button"
-                          onClick={() => redirectToAddSprint(project.id)}
-                          className={classes.btn}
-                        >
-                          Add sprint
-                        </Button>
-                      </div>
+                      </button> */
+                      }
+                      <DropdownButton id="dropdown-basic-button" title="Options">
+                        <Dropdown.Item onClick={() => activateProject(project.id!)}>Make active</Dropdown.Item>
+                        <Dropdown.Item onClick={() => redirectToAddStory(project.id)}>Add story</Dropdown.Item>
+                        <Dropdown.Item onClick={() => redirectToAddSprint(project.id)}>Add sprint</Dropdown.Item>
+                      </DropdownButton>
                     </div>
                   </td>
                 </tr>
