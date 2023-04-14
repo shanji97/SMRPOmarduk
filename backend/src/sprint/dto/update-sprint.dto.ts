@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 
-export class CreateSprintDto {
+export class UpdateSprintDto {
   @ApiProperty({
     example: 'Sample sprint',
     minLength: 1,
     maxLength: 255,
     nullable: false,
-    required: true
+    required: false,
   })
   name: string;
 
@@ -15,7 +15,7 @@ export class CreateSprintDto {
     example: 1,
     minimum: 0,
     nullable: false,
-    required: true,
+    required: false,
   })
   velocity: number;
 
@@ -23,7 +23,7 @@ export class CreateSprintDto {
     example: '2023-01-01',
     format: 'date',
     nullable: false,
-    required: true
+    required: false,
   })
   startDate: string;
 
@@ -31,17 +31,17 @@ export class CreateSprintDto {
     example: '2023-01-02',
     format: 'date',
     nullable: false,
-    required: true
+    required: false,
   })
   endDate: string;
 }
 
-export const CreateSprintSchema = Joi.object().keys({
+export const UpdateSprintSchema = Joi.object().keys({
   id: Joi.any().strip(),
-  name: Joi.string().max(255).required(),
-  velocity: Joi.number().min(0).required(),
-  startDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).required(),
-  endDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).required(),
+  name: Joi.string().max(255),
+  velocity: Joi.number().min(0),
+  startDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   projectId: Joi.any().strip(),
   project: Joi.any().strip(),
 });
