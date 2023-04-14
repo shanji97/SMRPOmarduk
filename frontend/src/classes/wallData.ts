@@ -1,5 +1,6 @@
-export interface Post {
+export interface PostData {
   postContent: string,
   author: string,
-  created: number,
+  created: string,
+  comments?: string[]
 }

@@ -1,23 +1,26 @@
 import Card from "../components/Card";
-import {useState} from "react";
+import React, {useState} from "react";
 import {Button, Form} from "react-bootstrap";
-import {Post} from "../classes/wallData";
+import Post from "../components/Post";
+import {PostData} from '../classes/wallData'
 
-const DUMMY_POSTS: Post[] = [
+const DUMMY_POSTS: PostData[] = [
   {
     postContent: 'Izgradnja novega tobogana',
     author: 'tinec',
-    created: Date.now()
+    created: Date.now().toString(),
+    comments: [],
   },
   {
     postContent: 'Nov park',
     author: 'mlapajne',
-    created: Date.now()
+    created: Date.now().toString(),
+    comments: ['kr neki']
   },
   {
     postContent: 'Izgradnja novega igrisca',
     author: 'simonk',
-    created: Date.now()
+    created: Date.now().toString()
   }
 ];
 
@@ -35,6 +38,16 @@ const ProjectWall = () => {
   return (
     <Card style={{ marginTop: '1rem' }}>
       <h1 className='text-primary'>Project Wall</h1>
+
+      {DUMMY_POSTS.map((post, i) => {
+        return <Post
+                  key={i}
+                  content={post.postContent}
+                  author={post.author}
+                  created={post.created}
+                  comments={post.comments}
+              />
+      })}
 
       <Form.Group className="mb-3" controlId="postContent" onSubmit={submitNewPost}>
         <Form.Label className='text-secondary'>Write a new post</Form.Label>
