@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button } from "react-bootstrap";
 import Card from "../components/Card";
 import { Form } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";

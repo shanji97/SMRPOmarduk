@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import sprintService from "./sprintService";
 import { SprintBody } from "../../classes/sprintData";
+import {de} from "date-fns/locale";
+import {userSlice} from "../users/userSlice";
 
 interface SprintState {
     sprints: SprintBody[]
@@ -28,10 +30,10 @@ export const createSprint = createAsyncThunk('sprint/create', async (sprintBody:
     }  
 });
 
-export const getAllSprints = createAsyncThunk('sprint/getAll', async (_, thunkAPI: any) => {
+export const getAllSprints = createAsyncThunk('sprint/getAll', async (projectId: string, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await sprintService.getAllSprints(token);
+        return await sprintService.getAllSprints(projectId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -72,7 +74,7 @@ export const sprintSlice = createSlice({
         })
         .addCase(getAllSprints.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = true;
+            state.isSuccess = false;
             state.isError = false;
             state.message = '';
             state.sprints = action.payload;
@@ -87,3 +89,4 @@ export const sprintSlice = createSlice({
 });
 
 export default sprintSlice.reducer;
+export const {reset} = sprintSlice.actions;

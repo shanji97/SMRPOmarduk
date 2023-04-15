@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ProjectData} from "../../classes/projectData";
+import {ProjectData, UserRole} from "../../classes/projectData";
 import projectService from "./projectService";
-
 
 interface ProjectState {
     projectName: string
@@ -11,6 +10,7 @@ interface ProjectState {
     isError: boolean
     message: any
     projects: ProjectData[]
+    activeProject: ProjectData
 }
 
 const initialState: ProjectState = {
@@ -20,7 +20,13 @@ const initialState: ProjectState = {
     isSuccess: false,
     isError: false,
     message: '',
-    projects: []
+    projects: [],
+    activeProject: {
+        id: '',
+        projectName: '',
+        projectDescription: '',
+        userRoles: [],
+    }
 }
 
 export const createProject = createAsyncThunk('project/create', async (projectData: ProjectData, thunkAPI: any) => {
@@ -63,6 +69,10 @@ export const projectSlice = createSlice({
             state.isError = false
             state.isSuccess = false
             state.message = ''
+        },
+        setActiveProject: (state, action) => {
+            const project: ProjectData | undefined = state.projects.find(project => project.id === action.payload);
+            state.activeProject = project!;
         }
     },
     extraReducers: builder => {
@@ -118,3 +128,4 @@ export const projectSlice = createSlice({
 })
 
 export default projectSlice.reducer;
+export const {reset, setActiveProject} = projectSlice.actions

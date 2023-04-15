@@ -26,7 +26,6 @@ const getAllProjects = async (token: string) => {
         }
     }
     const response = await axios.get(`${PROJECTS_API_URL}`, config);
-    console.log(response.data)
 
     return response.data;
 }

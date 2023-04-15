@@ -6,25 +6,21 @@ import {
   Form,
   Button,
 } from "react-bootstrap";
-import { Check, PencilFill, TrashFill, X } from "react-bootstrap-icons";
 import Card from "../components/Card";
 import React, { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AddUser from "./AddUser";
 
 import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { deleteUser, getAllUsers } from "../features/users/userSlice";
 import { parseJwt } from "../helpers/helpers";
-import { toast } from "react-toastify";
-import { getAllProjects } from "../features/projects/projectSlice";
+import {getAllProjects, setActiveProject} from "../features/projects/projectSlice";
+import {toast} from "react-toastify";
 
 const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  let { projects } = useAppSelector((state) => state.projects);
-  console.log(projects);
+  let { projects , activeProject} = useAppSelector((state) => state.projects);
 
   // store isAdmin in state for now
   // TODO rewrite this later
@@ -43,9 +39,22 @@ const Projects = () => {
     dispatch(getAllProjects());
   }, [isAdmin]);
 
+  const activateProject = (projectID: string) => {
+    dispatch(setActiveProject(projectID))
+  }
+
   const redirectToAddStory = (projectID: any) => {
     navigate(`/${projectID}/add-story`);
   };
+
+  const redirectToAddSprint = (projectID: any) => {
+    navigate(`/${projectID}/add-sprint`);
+  };
+
+  const handleActivateSprint = (projectId: string) => {
+    activateProject(projectId!);
+    toast.info('Sprint active');
+  }
 
   return (
     <Fragment>
@@ -64,18 +73,21 @@ const Projects = () => {
                   <td>{project.id}</td>
                   <td>
                     <div className={classes.usernameContainer}>
-                      {project.projectName}
+                      {project.id === activeProject.id ?
+                        <b>{project.projectName}</b> :
+                        project.projectName
+                      }
+
                       {/* <button onClick={() => redirectToAddStory(project.id)}>
                         {" "}
                         Add story
-                      </button> */}
-                      <Button
-                        variant="primary"
-                        type="button"
-                        onClick={() => redirectToAddStory(project.id)}
-                      >
-                        Add story
-                      </Button>
+                      </button> */
+                      }
+                      <DropdownButton id="dropdown-basic-button" title="Options">
+                        <Dropdown.Item onClick={() => handleActivateSprint(project.id!)}>Make active</Dropdown.Item>
+                        <Dropdown.Item onClick={() => redirectToAddStory(project.id)}>Add story</Dropdown.Item>
+                        <Dropdown.Item onClick={() => redirectToAddSprint(project.id)}>Add sprint</Dropdown.Item>
+                      </DropdownButton>
                     </div>
                   </td>
                 </tr>

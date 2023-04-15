@@ -65,7 +65,13 @@ export class UserController {
       if (!token.isAdmin) { // Non-admin user => chaning own info
         if (token.sid !== userId) // Don't allow normal user to update other users data
           throw new ForbiddenException();
+        const oldUser = await this.userService.getUserById(userId);
+        if (oldUser.username !== user.username) // Only admin can change user's username
+          throw new ForbiddenException('Only admininstrator can change username of a user');
+        if (!oldUser.isAdmin && user.isAdmin)
+          throw new ForbiddenException('Can\'t elevate permissions');
       }
+      
       if (user.password && (!token.isAdmin || token.sid === userId)) { // If changing password, user must enter also old one
         const passwordOld: string = await this.userService.getUserPassword(token.sid);
         if (!passwordOld || !await this.userService.comparePassword(user.passwordOld || '', passwordOld))

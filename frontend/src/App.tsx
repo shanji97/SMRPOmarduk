@@ -48,7 +48,7 @@ function App() {
           <Route path="/add-subtask" element={<AddSubtask />} />
           <Route path="/users" element={<Users />} />
           <Route path="/add-project" element={<AddProject />} />
-          <Route path="/add-sprint" element={<AddSprint />} />
+          <Route path="/:projectID/add-sprint" element={<AddSprint />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
