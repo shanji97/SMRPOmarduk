@@ -23,7 +23,14 @@ const AddSprint = () => {
         } else if (isSuccess && !isError && message === '') {
             toast.success('Sprint created!');
         }
-    }, [message, isError, isSuccess])
+    }, [message, isError, isSuccess]);
+
+    useEffect(() => {
+        setSprintData({
+            name: `Sprint ${sprints.length + 1}`,
+            velocity: 0,
+        })
+    }, [sprints.length])
 
     const [sprintData, setSprintData] = useState<SprintData>({
         name: `Sprint ${sprints.length}`,

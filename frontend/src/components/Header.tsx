@@ -41,7 +41,7 @@ function Header() {
     if (activeProject.id !== '') {
       dispatch(getAllSprints(activeProject.id!));
     }
-  }, [activeProject, dispatch]);
+  }, [activeProject, dispatch, sprints.length]);
 
   useEffect(() => {}, [userData]);
 
