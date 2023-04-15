@@ -19,9 +19,9 @@ import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-ro
 import { ProjectDto } from './dto/project.dto';
 
 @ApiTags('project')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
