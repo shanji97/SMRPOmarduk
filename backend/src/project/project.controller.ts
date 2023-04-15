@@ -227,13 +227,15 @@ export class ProjectController {
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the administrator and the scrum master are allowed to remove the developer.');
 
-    let role: UserRole = UserRole.Developer;
-    let developers: ProjectUserRole[] = await this.projectService.listUsersWithRoleOnProject(projectId, role);
+    let developers: ProjectUserRole[] = await this.projectService.listUsersWithRoleOnProject(projectId, UserRole.Developer);
 
     // Check if developer count in the project. 
     if (developers.length == 1)
       throw new BadRequestException('You cannot remove the only developer on a project.');
 
-    await this.projectService.removeRoleFromUserOnProject(projectId, userId, role);
+    if (developers.filter(dev => dev.userId == userId).length == 0)
+      throw new BadRequestException('The user is not developer. Try again with a new user.');
+
+    await this.projectService.removeRoleFromUserOnProject(projectId, userId, UserRole.Developer);
   }
 }
