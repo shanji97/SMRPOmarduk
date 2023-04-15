@@ -13,7 +13,9 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
 import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
-import { UpdateProjectSchema } from './dto/update-project.dto';
+import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
+import { throwError } from 'rxjs';
+import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -112,16 +114,19 @@ export class ProjectController {
     }
   }
 
-  @ApiOperation({summary: 'Update the project owner with the new project owner'})
+  @ApiOperation({ summary: 'Update the scrum master / product owner.' })
   @ApiOkResponse()
-  @Patch(':/projectId/newProjectOwner/:userId')
-  async changeProjectOwner(@Token() token, @Param('projectId', ParseIntPipe) projectId: number,@Param('userId', ParseIntPipe) userId: number){
+  @Patch(':projectId/changeUser/role/:role')
+  async changeProjectOwner(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('role', ParseIntPipe) role: number, @Body(new JoiValidationPipe(UpdateSuperiorUserSchema)) newUser: UpdateSuperiorUser) {
     if (!token.isAdmin) {
       throw new ForbiddenException('Only the administrator can change the project owner.');
     }
 
-    
+    if (role == null || role < UserRole.ScrumMaster || role > UserRole.ProjectOwner) {
+      throw new BadRequestException('Only the scrum master and the product owner can be changed.');
+    }
 
+    await this.projectService.overwriteUserRoleOnProject(projectId, newUser.newUserId, role);
   }
 
 

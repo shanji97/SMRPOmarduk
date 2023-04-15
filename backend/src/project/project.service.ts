@@ -7,7 +7,9 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { Project } from './project.entity';
 import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { User } from 'src/user/user.entity';
+import { User } from '../user/user.entity';
+import { getRandomValues } from 'crypto';
+import { hasNewProjectDevelopers } from './dto/create-project-user-role.dto';
 
 @Injectable()
 export class ProjectService {
@@ -118,10 +120,9 @@ export class ProjectService {
     });
   }
 
-  async overwriteUserRoleOnProject(projectId: number, userId: number, role: UserRole.ProjectOwner | UserRole.ScrumMaster): Promise<void> {
-    await this.entityManager.update(ProjectUserRole, { projectId, userId: userId, role: role }, { userId, role });
+  async overwriteUserRoleOnProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
+    await this.entityManager.update(ProjectUserRole, { projectId, role: role }, { userId });
   }
-
 
   async removeUserFromProject(projectId: number, userId: number): Promise<void> {
     await this.entityManager.delete(ProjectUserRole, {
@@ -154,4 +155,15 @@ export class ProjectService {
       }) > 0;
     }
   }
+
+  getRole(role: number): UserRole {
+    const roleMap = {
+      0: UserRole.Developer,
+      1: UserRole.ScrumMaster,
+      2: UserRole.ProjectOwner,
+      default: null
+    }
+    return roleMap[role] || roleMap.default;
+  }
+
 }
