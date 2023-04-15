@@ -14,12 +14,13 @@ import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import {getAllProjects, setActiveProject} from "../features/projects/projectSlice";
+import {toast} from "react-toastify";
 
 const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  let { projects } = useAppSelector((state) => state.projects);
+  let { projects , activeProject} = useAppSelector((state) => state.projects);
 
   // store isAdmin in state for now
   // TODO rewrite this later
@@ -50,6 +51,11 @@ const Projects = () => {
     navigate(`/${projectID}/add-sprint`);
   };
 
+  const handleActivateSprint = (projectId: string) => {
+    activateProject(projectId!);
+    toast.info('Sprint active');
+  }
+
   return (
     <Fragment>
       <Card style={{ width: "70%", marginTop: "1rem" }}>
@@ -67,14 +73,18 @@ const Projects = () => {
                   <td>{project.id}</td>
                   <td>
                     <div className={classes.usernameContainer}>
-                      {project.projectName}
+                      {project.id === activeProject.id ?
+                        <b>{project.projectName}</b> :
+                        project.projectName
+                      }
+
                       {/* <button onClick={() => redirectToAddStory(project.id)}>
                         {" "}
                         Add story
                       </button> */
                       }
                       <DropdownButton id="dropdown-basic-button" title="Options">
-                        <Dropdown.Item onClick={() => activateProject(project.id!)}>Make active</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleActivateSprint(project.id!)}>Make active</Dropdown.Item>
                         <Dropdown.Item onClick={() => redirectToAddStory(project.id)}>Add story</Dropdown.Item>
                         <Dropdown.Item onClick={() => redirectToAddSprint(project.id)}>Add sprint</Dropdown.Item>
                       </DropdownButton>

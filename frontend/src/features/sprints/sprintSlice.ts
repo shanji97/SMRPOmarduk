@@ -74,7 +74,7 @@ export const sprintSlice = createSlice({
         })
         .addCase(getAllSprints.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = true;
+            state.isSuccess = false;
             state.isError = false;
             state.message = '';
             state.sprints = action.payload;
@@ -89,3 +89,4 @@ export const sprintSlice = createSlice({
 });
 
 export default sprintSlice.reducer;
+export const {reset} = sprintSlice.actions;
