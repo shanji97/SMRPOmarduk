@@ -187,7 +187,7 @@ export class ProjectController {
     let allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId)).filter(u => u.role != UserRole.ProjectOwner);
 
     // Check if scrum master is also a developer.
-    let scrumMaster: ProjectUserRole[] = allUsersOnProject.filter(sm => sm.role < UserRole.ProjectOwner);
+    let scrumMaster: ProjectUserRole[] = allUsersOnProject.filter(sm => sm.role == UserRole.ScrumMaster);
     // If yes set up a flag
     let isScrumMasterAndDeveloper: Boolean = scrumMaster.length == 2;
 
