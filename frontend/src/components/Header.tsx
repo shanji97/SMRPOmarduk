@@ -113,9 +113,9 @@ function Header() {
                 </span>
               }
             >
-              {sprints.map((sprint) => (
+              {sprints.length > 0 ? sprints.map((sprint) => (
                 <NavDropdown.Item>{sprint.name}</NavDropdown.Item>
-              ))}
+              )) : <p className='text-secondary'>No active project</p>}
             </NavDropdown>
 
             <NavDropdown
