@@ -16,6 +16,7 @@ import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
 import { throwError } from 'rxjs';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
+import { ProjectDto } from './dto/project.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -34,6 +35,14 @@ export class ProjectController {
   async listProjects(): Promise<Project[]> {
     return await this.projectService.getAllProjects();
   }
+
+  @ApiOperation({ summary: 'List projects with user data' })
+  @ApiOkResponse()
+  @Get('/withData')
+  async listProjectsAndUserData(): Promise<ProjectDto[]> {
+    return await this.projectService.getAllProjectsWithUserData();
+  }
+
 
   @ApiOperation({ summary: 'Get project by ID' })
   @ApiOkResponse()
@@ -122,14 +131,12 @@ export class ProjectController {
       throw new ForbiddenException('Only the administrator can change the project owner.');
     }
 
-    if (role == null || role < UserRole.ScrumMaster || role > UserRole.ProjectOwner) {
+    if (role != UserRole.ScrumMaster && role != UserRole.ProjectOwner) {
       throw new BadRequestException('Only the scrum master and the product owner can be changed.');
     }
 
     await this.projectService.overwriteUserRoleOnProject(projectId, newUser.newUserId, role);
   }
-
-
 
   @ApiOperation({ summary: 'Delete project' })
   @ApiOkResponse()
@@ -179,25 +186,24 @@ export class ProjectController {
     @Param('projectId', ParseIntPipe) projectId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ) {
-    // Check permissions
+
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the administrator and the scrum master are allowed to add the developer.');
 
     // Get every user on the project and remove the project owner.
-    let allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId)).filter(u => u.role != UserRole.ProjectOwner);
+    let allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId));
 
-    // Check if scrum master is also a developer.
-    let scrumMaster: ProjectUserRole[] = allUsersOnProject.filter(sm => sm.role == UserRole.ScrumMaster);
-    // If yes set up a flag
-    let isScrumMasterAndDeveloper: Boolean = scrumMaster.length == 2;
+    // Check if we would like to add the dev role to the product owner.
+    if (allUsersOnProject.filter(po => po.role == UserRole.ProjectOwner && po.userId == userId).length == 1)
+      throw new BadRequestException('Product owner cannot also be a developer.');
 
-    // Check if the passed user id corresponds with the id passed in
-    if (isScrumMasterAndDeveloper && scrumMaster.filter(smd => smd.userId == userId).length == 1)
-      throw new BadRequestException('The scrum master is already a developer!');
+    // Check if Scrum master already has a developer role.
+    if (allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster && sc.userId == userId).length == 1)
+      throw new BadRequestException('The scrum master is already a developer.');
 
-    // Check if the user is maybe a project owner
-    if (allUsersOnProject.filter(au => au.role == UserRole.ProjectOwner && au.userId == userId).length == 1)
-      throw new BadRequestException('The project owner cannot be a developer.');
+    // Check if the target user already has the developer role.
+    if (allUsersOnProject.filter(dev => dev.role == UserRole.Developer && dev.userId == userId).length == 1)
+      throw new BadRequestException('The user is already a developer');
 
     try {
       await this.projectService.addUserToProject(projectId, userId, UserRole.Developer);

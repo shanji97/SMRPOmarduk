@@ -10,6 +10,7 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { User } from '../user/user.entity';
 import { getRandomValues } from 'crypto';
 import { hasNewProjectDevelopers } from './dto/create-project-user-role.dto';
+import { ProjectDto } from './dto/project.dto';
 
 @Injectable()
 export class ProjectService {
@@ -25,6 +26,45 @@ export class ProjectService {
     return await this.entityManager.find(Project);
   }
 
+  async getAllProjectsWithUserData(): Promise<ProjectDto[]> {
+    const projectData = await this.entityManager.createQueryBuilder(Project, "project")
+      .innerJoinAndSelect("project.userRoles", "userRole").getRawMany();
+
+    // return projectData.map((project) => {
+    //   const userRoles = [];
+    //   if (project.userRoles) {
+    //     for (const userRole of project.userRoles) {
+    //       userRoles.push({
+    //         userId: userRole.userId,
+    //         role: userRole.role,
+    //       });
+    //     }
+    //   }
+
+    //   const projectWithData: ProjectDto = {
+    //     id: project.id,
+    //     projectName: project.projectName,
+    //     projectDescription: project.projectDescription,
+    //     userRoles: userRoles,
+    //   };
+
+    return projectData.map((project) => {
+      const projectWithData: ProjectDto = {
+        id: project.id,
+        projectName: project.projectName,
+        projectDescription: project.projectDescription,
+        userRoles: project.userRoles.map((userRole) => {
+            userId: userRole.userId
+            role: userRole.role
+        }
+        
+        )
+      };
+      return projectWithData;
+    });
+
+    // });
+  }
   async getProjectCount(): Promise<number> {
     return await this.entityManager.count(Project);
   }
@@ -154,16 +194,6 @@ export class ProjectService {
         userId: userId,
       }) > 0;
     }
-  }
-
-  getRole(role: number): UserRole {
-    const roleMap = {
-      0: UserRole.Developer,
-      1: UserRole.ScrumMaster,
-      2: UserRole.ProjectOwner,
-      default: null
-    }
-    return roleMap[role] || roleMap.default;
   }
 
 }
