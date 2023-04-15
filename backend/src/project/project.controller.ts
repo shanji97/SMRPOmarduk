@@ -19,9 +19,9 @@ import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-ro
 import { ProjectDto } from './dto/project.dto';
 
 @ApiTags('project')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
@@ -203,7 +203,7 @@ export class ProjectController {
 
     // Check if the target user already has the developer role.
     if (allUsersOnProject.filter(dev => dev.role == UserRole.Developer && dev.userId == userId).length == 1)
-      throw new BadRequestException('The user is already a developer');
+      throw new BadRequestException('The user is already a developer.');
 
     try {
       await this.projectService.addUserToProject(projectId, userId, UserRole.Developer);

@@ -28,7 +28,36 @@ export class ProjectService {
 
   async getAllProjectsWithUserData(): Promise<ProjectDto[]> {
     const projectData = await this.entityManager.createQueryBuilder(Project, "project")
-      .innerJoinAndSelect("project.userRoles", "userRole").getRawMany();
+      .innerJoinAndSelect("project.userRoles", "userRole")
+      .select([
+        "project.id",
+        "project.projectName",
+        "project.projectDescription",
+        "userRole.userId",
+        "userRole.role"
+      ]).getRawMany();
+
+    const projectMap = projectData.reduce((map, raw) => {
+      const projectId = raw.project_id;
+      const userRole = {
+        userId: raw.userRole_userId,
+        role: raw.userRole_role
+      };
+      if (map.has(projectId)) {
+        map.get(projectId).userRoles.push(userRole);
+      } else {
+        map.set(projectId, {
+          id: projectId,
+          projectName: raw.project_projectName,
+          projectDescription: raw.project_projectDescription,
+          userRoles: [userRole]
+        });
+      }
+      return map;
+    }, new Map<number, ProjectDto>());
+
+    const projectDtoList = Array.from(projectMap.values()) as ProjectDto[];
+    return projectDtoList;
 
     // return projectData.map((project) => {
     //   const userRoles = [];
@@ -48,20 +77,20 @@ export class ProjectService {
     //     userRoles: userRoles,
     //   };
 
-    return projectData.map((project) => {
-      const projectWithData: ProjectDto = {
-        id: project.id,
-        projectName: project.projectName,
-        projectDescription: project.projectDescription,
-        userRoles: project.userRoles.map((userRole) => {
-            userId: userRole.userId
-            role: userRole.role
-        }
-        
-        )
-      };
-      return projectWithData;
-    });
+    // return projectData.map((project) => {
+    //   const projectWithData: ProjectDto = {
+    //     id: project.id,
+    //     projectName: project.projectName,
+    //     projectDescription: project.projectDescription,
+    //     userRoles: project.userRoles.map((userRole) => {
+    //         userId: userRole.userId
+    //         role: userRole.role
+    //     }
+
+    //     )
+    //   };
+    //   return projectWithData;
+    // });
 
     // });
   }
