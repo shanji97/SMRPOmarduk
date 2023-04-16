@@ -38,6 +38,7 @@ const Sprints = () => {
           <tr>
             <th>#</th>
             <th>Sprint name</th>
+            <th>Velocity</th>
             <th>Date range</th>
           </tr>
           </thead>
@@ -46,9 +47,8 @@ const Sprints = () => {
             return (
               <tr key={i}>
                 <td>{sprint.id}</td>
-                <td>
-                    {sprint.name}
-                </td>
+                <td>{sprint.name}</td>
+                <td>{sprint.velocity}</td>
                 <td>
                   <div className={classes.usernameContainer}>
                     {`${sprint.startDate} - ${sprint.endDate}`}

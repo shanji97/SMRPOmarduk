@@ -8,7 +8,7 @@ import Card from "../components/Card";
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
 import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {createSprint, reset, updateSprint} from "../features/sprints/sprintSlice";
+import {createSprint, reset, setActiveSprint, updateSprint} from "../features/sprints/sprintSlice";
 import {getCestDate} from "../helpers/helpers";
 import {toast} from "react-toastify";
 
@@ -35,7 +35,11 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
         } else if (isSuccess && !isError && message === '') {
             toast.success('Sprint created!');
         }
-    }, [message, isError, isSuccess]);
+        
+        return () => {
+            dispatch(reset())
+        }
+    }, [message, isError, isSuccess, dispatch]);
 
     useEffect(() => {
         if (isEdit) {
@@ -99,6 +103,14 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
             startDate: getCestDate(dateRange.startDate.toString()),
             endDate: getCestDate(dateRange.endDate.toString()),
         };
+        const today = new Date();
+        if (dateRange.startDate.getFullYear() === today.getFullYear() &&
+              dateRange.startDate.getMonth() === today.getMonth() &&
+              dateRange.startDate.getDate() === today.getDate()) {
+
+            // dispatch(setActiveSprint(sprintBody))
+        }
+
         if (isEdit) {
             dispatch(updateSprint(sprintBody))
         } else {

@@ -4,6 +4,7 @@ import {SprintBody} from "../../classes/sprintData";
 
 interface SprintState {
     sprints: SprintBody[]
+    activeSprint: SprintBody | undefined
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -12,6 +13,7 @@ interface SprintState {
 
 const initialState: SprintState = {
     sprints: [],
+    activeSprint: undefined,
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -67,6 +69,9 @@ export const sprintSlice = createSlice({
             state.isError = false
             state.isSuccess = false
             state.message = ''
+        },
+        setActiveSprint: (state, action) => {
+            state.activeSprint = action.payload;
         }
     },
     extraReducers: builder => {
@@ -98,6 +103,7 @@ export const sprintSlice = createSlice({
 
             const payloadSprint = action.meta.arg;
             const updatedSprint: SprintBody = {
+                id: payloadSprint.id,
                 projectId: payloadSprint.projectId,
                 name: payloadSprint.name,
                 velocity: payloadSprint.velocity,
@@ -151,4 +157,4 @@ export const sprintSlice = createSlice({
 });
 
 export default sprintSlice.reducer;
-export const {reset} = sprintSlice.actions;
+export const {reset, setActiveSprint} = sprintSlice.actions;
