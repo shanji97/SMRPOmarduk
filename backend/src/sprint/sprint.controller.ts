@@ -109,8 +109,12 @@ export class SprintController {
   async addStoryToSprint(@Token() token, @Param('sprintId', ParseIntPipe) sprintId, @Param('storyId', ParseIntPipe) storyId) {
 
     let story = await this.storyService.getStoryById(storyId);
-    if (story = null)
+    if (story == null)
       throw new BadRequestException('No story with the given ID exists');
+
+    let sprint = await this.sprintService.getSprintById(sprintId);
+    if(sprint == null)
+      throw new BadRequestException('No sprint with the given ID exists in the ')
 
     if(!await this.projectService.hasUserRoleOnProject(story.projectId,token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the scrum master can add the story to sprint.');
