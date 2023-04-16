@@ -3,6 +3,7 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, Unique } 
 import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
 import { Test } from '../test/test.entity';
+import { SprintStory } from '../sprint/sprint-story.entity';
 
 @Entity()
 @Unique(['title', 'projectId'])
@@ -32,9 +33,16 @@ export class Story {
   @OneToMany(type => Task, task => task.story)
   tasks: Task[];
 
+  @Column({ type: 'boolean',default:false})
+  isRealized: boolean = false;
+
   @OneToMany(type => Test, test => test.story)
   tests: Test[];
 
+  @OneToMany(type=> SprintStory, sprint => sprint.story)
+  sprints: SprintStory[];
+
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;
+
 }

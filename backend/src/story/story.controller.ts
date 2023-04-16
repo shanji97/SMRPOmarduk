@@ -11,6 +11,7 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { Token } from '../auth/decorator/token.decorator';
 import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
+import { async } from 'rxjs';
 
 @ApiTags('story')
 @ApiBearerAuth()
@@ -65,12 +66,23 @@ export class StoryController {
     }
   }
 
-
-  @ApiOperation({ summary: 'Update story' })
+  @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
-  @Patch(':storyId')
-  async updateStory(@Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
+  @Patch('/:projectId/update-story/:storyId')
+  async updateStory(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
     try {
+
+      let usersOnProject = await this.projectService.listUsersWithRolesOnProject(projectId);
+      let isProjectOwnerOrScrumMaster = usersOnProject.filter(user => user.role != UserRole.Developer && user.userId == token.sid).length == 1;
+      if (!isProjectOwnerOrScrumMaster)
+        throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
+
+
+      let checkStory = await this.storyService.getStoryById(storyId);
+      if (checkStory.isRealized)
+        throw new BadRequestException('The story is already realized, so it cannot be updated.');
+
+
       await this.storyService.updateStoryById(storyId, story);
     } catch (ex) {
       if (ex instanceof ValidationException)
@@ -82,7 +94,13 @@ export class StoryController {
   @ApiOperation({ summary: 'Delete story' })
   @ApiOkResponse()
   @Delete(':storyId')
-  async deleteStory(@Param('storyId', ParseIntPipe) storyId: number) {
+  async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
+    const story: Story = await this.getStory(storyId);
+
+    if (story.isRealized) {
+      throw new BadRequestException('A realized story cannot be deleted.');
+    }
+
     await this.storyService.deleteStoryById(storyId);
   }
 }

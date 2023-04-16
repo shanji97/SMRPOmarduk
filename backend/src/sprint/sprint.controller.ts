@@ -8,10 +8,12 @@ import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
 import { SprintService } from './sprint.service';
 import { Token } from '../auth/decorator/token.decorator';
-import { TokenDto } from '../auth/dto/token.dto';
+import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { StoryService } from '../story/story.service';
+import { inflateRaw } from 'zlib';
 
 @ApiTags('sprint')
 @ApiBearerAuth()
@@ -22,8 +24,9 @@ export class SprintController {
   constructor(
     private readonly projectService: ProjectService,
     private readonly sprintService: SprintService,
-  ) {}
-  
+    private readonly storyService: StoryService
+  ) { }
+
   @ApiOperation({ summary: 'List sprints for project' })
   @ApiOkResponse()
   @Get('project/:projectId')
@@ -90,14 +93,29 @@ export class SprintController {
     // Check permissions
     if (!token.isAdmin && !await this.sprintService.hasUserEditPermissionForSprint(token.sid, sprintId))
       throw new ForbiddenException();
-    
+
     try {
-      await this.sprintService.updateSprintById(sprintId, sprint); 
+      await this.sprintService.updateSprintById(sprintId, sprint);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
       throw ex;
     }
+  }
+
+  @ApiOperation({ summary: 'Add story to sprint.' })
+  @ApiOkResponse()
+  @Patch(':sprintId/add-story/:storyId')
+  async addStoryToSprint(@Token() token, @Param('sprintId', ParseIntPipe) sprintId, @Param('storyId', ParseIntPipe) storyId) {
+
+    let story = await this.storyService.getStoryById(storyId);
+    if (story = null)
+      throw new BadRequestException('No story with the given ID exists');
+
+    if(!await this.projectService.hasUserRoleOnProject(story.projectId,token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException('Only the scrum master can add the story to sprint.');
+    
+    await this.sprintService.addStoryToSprint(sprintId,storyId);
   }
 
   @ApiOperation({ summary: 'Delete sprint' })

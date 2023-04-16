@@ -7,6 +7,7 @@ import { ProjectService } from '../project/project.service';
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateStoryDto } from './dto/create-story.dto';
+import { UpdateStoryDto } from './dto/update-story.dto';
 
 @Injectable()
 export class StoryService {
@@ -46,14 +47,15 @@ export class StoryService {
     }
   }
 
-  async updateStoryById(storyId, story) {
+  async updateStoryById(storyId: number, story: UpdateStoryDto) {
     try {
-      await this.storyRepository.update({ id: storyId }, story);
+      let existingStory = await this.getStoryById(storyId);
+      await this.storyRepository.update({ id: storyId }, await this.updateStoryData(story, existingStory));
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Storyname already exists');
+            throw new ValidationException('Story name already exists');
         }
       }
     }
@@ -93,11 +95,22 @@ export class StoryService {
     return newStory;
   }
 
+  async updateStoryData(story: UpdateStoryDto, existingStory: Story): Promise<Story> {
+    existingStory.title = story.title;
+    existingStory.description = story.description;
+    existingStory.sequenceNumber = story.sequenceNumber;
+    existingStory.priority = story.priority;
+    existingStory.businessValue = story.businessValue;
+
+    return existingStory;
+  }
+
+
   async hasUserPermissionForStory(userId: number, storyId: number): Promise<boolean> {
     const projectId = await this.getStoryProjectId(storyId);
     if (!projectId)
       return false;
-    
+
     return await this.projectService.hasUserRoleOnProject(projectId, userId, null); // If user has any role on project, he can view it
   }
 }

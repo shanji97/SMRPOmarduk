@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
-import { string } from 'joi';
 
 export class UpdateStoryDto {
   @ApiProperty({
@@ -18,6 +17,14 @@ export class UpdateStoryDto {
     required: true
   })
   description: string;
+
+  @ApiProperty({
+    example: 1,
+    minimum: 1,
+    default: 1,
+    required: true
+  })
+  sequenceNumber: number;
 
   @ApiProperty({
     example: ["Test1", "Test2"],
@@ -52,7 +59,8 @@ export const UpdateStorySchema = Joi.object().keys({
   id: Joi.any().strip(),
   title: Joi.string().trim().min(1).max(128).required(),
   description: Joi.string().trim().min(5).required(),
-  tests: Joi.any,
+  sequenceNumber: Joi.number().greater(0).min(1).required().default(1),
+  tests: Joi.array().items(Joi.string()),
   priority: Joi.number().required().default(3),
   businessValue: Joi.number().greater(-1).less(11).required().default(5)
 });
