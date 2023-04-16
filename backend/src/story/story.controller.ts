@@ -11,7 +11,9 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { Token } from '../auth/decorator/token.decorator';
 import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
-import { async } from 'rxjs';
+import { InjectEntityManager } from '@nestjs/typeorm';
+import { EntityManager } from 'typeorm';
+import { SprintStory } from 'src/sprint/sprint-story.entity';
 
 @ApiTags('story')
 @ApiBearerAuth()
@@ -22,7 +24,9 @@ export class StoryController {
   constructor(
     private readonly storyService: StoryService,
     private readonly testService: TestService,
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager
   ) { }
 
   @ApiOperation({ summary: 'List stories' })
@@ -48,9 +52,8 @@ export class StoryController {
   async createStory(@Token() token, @Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto, @Param('projectId', ParseIntPipe) projectId: number) {
     try {
       let hasValidRole: boolean = await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]);
-      if (!hasValidRole) {
+      if (!hasValidRole)
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner.');
-      }
 
       const row = await this.storyService.createStory(story, projectId);
       const storyId = row["id"];
@@ -77,10 +80,16 @@ export class StoryController {
       if (!isProjectOwnerOrScrumMaster)
         throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
 
-
       let checkStory = await this.storyService.getStoryById(storyId);
       if (checkStory.isRealized)
         throw new BadRequestException('The story is already realized, so it cannot be updated.');
+
+      let storySprint = await this.entityManager.count(SprintStory, {
+        where: { storyId: storyId }
+      });
+
+      if (storySprint > 0)
+      throw new BadRequestException('The story has been already added to sprint.');
 
 
       await this.storyService.updateStoryById(storyId, story);
@@ -97,9 +106,15 @@ export class StoryController {
   async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     const story: Story = await this.getStory(storyId);
 
-    if (story.isRealized) {
+    if (story.isRealized)
       throw new BadRequestException('A realized story cannot be deleted.');
-    }
+
+    let storySprint = await this.entityManager.count(SprintStory, {
+      where: { storyId: storyId }
+    });
+
+    if (storySprint > 0)
+      throw new BadRequestException('The story has been already added to sprint.');
 
     await this.storyService.deleteStoryById(storyId);
   }
