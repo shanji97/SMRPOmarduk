@@ -47,7 +47,6 @@ const editUser = async (userData: UserDataEdit, token: string) => {
     }
 
     const response = await axios.patch(`${USERS_API_URL}/${userData.id}`, userData, config);
-
     return response.data;
 }
 
@@ -62,6 +61,17 @@ const getAllUsers = async (token: string) => {
         }
     }
     const response = await axios.get(`${USERS_API_URL}`, config);
+
+    return response.data;
+}
+
+const getUser = async (id: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${USERS_API_URL}/${id}`, config);
 
     return response.data;
 }
@@ -119,6 +129,7 @@ const userService = {
     commonPassword,
     setUp2FA,
     getLastLogin,
+    getUser,
 }
 
 export default userService;

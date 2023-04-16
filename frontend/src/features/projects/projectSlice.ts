@@ -5,20 +5,22 @@ import projectService from "./projectService";
 
 interface ProjectState {
     projectName: string
-    members: string[]
+    userRoles: any[] // TODO fix this !!!
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
     message: any
+    projects: ProjectData[]
 }
 
 const initialState: ProjectState = {
     projectName: '',
-    members: [],
+    userRoles: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
     message: '',
+    projects: []
 }
 
 export const createProject = createAsyncThunk('project/create', async (projectData: ProjectData, thunkAPI: any) => {
@@ -29,6 +31,27 @@ export const createProject = createAsyncThunk('project/create', async (projectDa
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
     }  
+});
+
+
+export const getAllProjects = createAsyncThunk('project/getAllProjects', async (_, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await projectService.getAllProjects(token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getProject = createAsyncThunk('project/getProject', async (id: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await projectService.getProjectUserRoles(id, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
 });
 
 export const projectSlice = createSlice({
@@ -54,6 +77,38 @@ export const projectSlice = createSlice({
             state.message = '';
         })
         .addCase(createProject.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getAllProjects.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getAllProjects.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.projects = action.payload;
+        })
+        .addCase(getAllProjects.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getProject.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getProject.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.userRoles = action.payload;
+        })
+        .addCase(getProject.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

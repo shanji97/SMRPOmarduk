@@ -117,7 +117,7 @@ const Login = () => {
                         value={password}
                         onChange={handleInputChange}
                     />
-                    {message !== '' && <ValidationError>Invalid credentials</ValidationError>}
+                    {message === 'Unauthorized' && <ValidationError>Invalid credentials</ValidationError>}
                 </Form.Group>
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>

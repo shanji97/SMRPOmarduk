@@ -21,13 +21,12 @@ const initialState: StoryState = {
 }
 
 
-export const createStory = createAsyncThunk('story/create', async (storyData: StoryData, thunkAPI: any) => { // auth/create ?????
+export const createStory = createAsyncThunk('story/create', async (storyData: StoryData, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.create(storyData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-        console.log(message);
         return thunkAPI.rejectWithValue(message)
     }  
 });
