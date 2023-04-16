@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import sprintService from "./sprintService";
-import { SprintBody } from "../../classes/sprintData";
-import {de} from "date-fns/locale";
-import {userSlice} from "../users/userSlice";
+import {SprintBody} from "../../classes/sprintData";
 
 interface SprintState {
     sprints: SprintBody[]
@@ -30,6 +28,16 @@ export const createSprint = createAsyncThunk('sprint/create', async (sprintBody:
     }  
 });
 
+export const updateSprint = createAsyncThunk('sprint/update', async (sprintBody: SprintBody, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.updateSprint(sprintBody, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 export const getAllSprints = createAsyncThunk('sprint/getAll', async (projectId: string, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -38,6 +46,16 @@ export const getAllSprints = createAsyncThunk('sprint/getAll', async (projectId:
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
     }  
+});
+
+export const deleteSprint = createAsyncThunk('sprint/delete', async (sprintId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.deleteSprint(sprintId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
 });
 
 export const sprintSlice = createSlice({
@@ -69,6 +87,34 @@ export const sprintSlice = createSlice({
             state.isError = true
             state.message = action.payload
         })
+        .addCase(updateSprint.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(updateSprint.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+
+            const payloadSprint = action.meta.arg;
+            const updatedSprint: SprintBody = {
+                projectId: payloadSprint.projectId,
+                name: payloadSprint.name,
+                velocity: payloadSprint.velocity,
+                startDate: payloadSprint.startDate,
+                endDate: payloadSprint.endDate
+            }
+            const index = state.sprints.findIndex(sprint => sprint.id === payloadSprint.id);
+            const newSprints: SprintBody[] = [...state.sprints];
+            newSprints[index] = updatedSprint;
+            state.sprints = newSprints;
+        })
+        .addCase(updateSprint.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
         .addCase(getAllSprints.pending, (state) => {
             state.isLoading = true
         })
@@ -80,6 +126,22 @@ export const sprintSlice = createSlice({
             state.sprints = action.payload;
         })
         .addCase(getAllSprints.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(deleteSprint.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(deleteSprint.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = false;
+            state.message = '';
+            state.sprints = state.sprints.filter(sprint => sprint.id !== action.meta.arg);
+        })
+        .addCase(deleteSprint.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

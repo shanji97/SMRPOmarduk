@@ -113,9 +113,10 @@ function Header() {
                 </span>
               }
             >
+              {sprints.length > 0 && <NavDropdown.Item onClick={() => navigate(`/projects/${activeProject.id}/sprints`)}>Sprint list</NavDropdown.Item>}
               {sprints.length > 0 ? sprints.map((sprint) => (
                 <NavDropdown.Item>{sprint.name}</NavDropdown.Item>
-              )) : <p className='text-secondary'>No active project</p>}
+              )) : <p className='text-secondary' style={{marginLeft: '1rem'}}>No active project</p>}
             </NavDropdown>
 
             <NavDropdown

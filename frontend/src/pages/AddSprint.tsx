@@ -8,11 +8,23 @@ import Card from "../components/Card";
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css'; 
 import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {createSprint, reset} from "../features/sprints/sprintSlice";
+import {createSprint, reset, updateSprint} from "../features/sprints/sprintSlice";
 import {getCestDate} from "../helpers/helpers";
 import {toast} from "react-toastify";
 
-const AddSprint = () => {
+interface AddSprintProps {
+    isEdit: boolean,
+    sprintId: string,
+    nameInit: string,
+    velocityInit: number,
+    dateRangeInit: {
+        startDate: Date,
+        endDate: Date,
+        key: string
+    }
+}
+
+const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, velocityInit, dateRangeInit}) => {
     const params = useParams();
     const dispatch = useAppDispatch();
     const {message, isError, isSuccess, sprints} = useAppSelector(state => state.sprints);
@@ -26,22 +38,26 @@ const AddSprint = () => {
     }, [message, isError, isSuccess]);
 
     useEffect(() => {
-        setSprintData({
-            name: `Sprint ${sprints.length + 1}`,
-            velocity: 0,
-        })
+        if (isEdit) {
+            setSprintData({
+                name: nameInit,
+                velocity: velocityInit,
+            })
+        } else {
+            setSprintData({
+                name: `Sprint ${sprints.length + 1}`,
+                velocity: velocityInit,
+            })
+        }
+
     }, [sprints.length])
 
     const [sprintData, setSprintData] = useState<SprintData>({
         name: `Sprint ${sprints.length}`,
-        velocity: 0
+        velocity: velocityInit
     });
 
-    const [dateRange, setDateRange] = useState<DateRangeSpecs>({
-        startDate: new Date(),
-        endDate: new Date(),
-        key: 'selection',
-    });
+    const [dateRange, setDateRange] = useState<DateRangeSpecs>(dateRangeInit);
     const {name, velocity} = sprintData;
 
     const formIsValid = useMemo(() => {
@@ -76,18 +92,23 @@ const AddSprint = () => {
     const submitNewSprint = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const sprintBody: SprintBody = {
+            id: sprintId,
             projectId: params.projectID!,
             name,
             velocity,
             startDate: getCestDate(dateRange.startDate.toString()),
             endDate: getCestDate(dateRange.endDate.toString()),
         };
-        dispatch(createSprint(sprintBody));
+        if (isEdit) {
+            dispatch(updateSprint(sprintBody))
+        } else {
+            dispatch(createSprint(sprintBody));
+        }
     }
 
     return  (
-        <Card style={{ marginTop: '3rem' }}>
-            <h2 className='text-primary'>Add a new sprint</h2>
+        <Card style={{ marginTop: '2rem', width: '90%' }}>
+            <h2 className='text-primary'>{isEdit ? 'Edit sprint' : 'Add a new sprint'}</h2>
             <Form onSubmit={submitNewSprint}>
                 <Form.Group className="mb-3" controlId="formBasicName">
                     <Form.Label>Name</Form.Label>

@@ -15,6 +15,7 @@ import AddProject from "./pages/AddProject";
 import AddSprint from "./pages/AddSprint";
 import Profile from "./pages/Profile";
 import Projects from "./pages/Projects";
+import Sprints from "./pages/Sprints";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -48,10 +49,22 @@ function App() {
           <Route path="/add-subtask" element={<AddSubtask />} />
           <Route path="/users" element={<Users />} />
           <Route path="/add-project" element={<AddProject />} />
-          <Route path="/:projectID/add-sprint" element={<AddSprint />} />
+          <Route path="/:projectID/add-sprint" element={<AddSprint
+            isEdit={false}
+            sprintId=''
+            nameInit=''
+            velocityInit={0}
+            dateRangeInit={{
+              startDate: new Date(),
+              endDate: new Date(),
+              key: 'selection'
+            }}
+          />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:projectID/sprints" element={<Sprints />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
+
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />
