@@ -68,9 +68,9 @@ export class SprintService {
     return await this.sprintRepository.createQueryBuilder('sprint')
       .select()
       .where(`sprint.projectId = :projectId ${(excludeSprints.length > 0) ? 'AND sprint.id NOT IN (:...sprintIds)' : ''}`, { projectId: projectId, sprintIds: excludeSprints })
-      .andWhere(`(sprint.startDate <= :startDate AND sprint.endDate >= :endDate) OR
+      .andWhere(`((sprint.startDate <= :startDate AND sprint.endDate >= :endDate) OR
               (sprint.startDate >= :startDate AND sprint.startDate <= :endDate) OR
-              (sprint.endDate >= :startDate AND sprint.endDate <= :endDate)`,
+              (sprint.endDate >= :startDate AND sprint.endDate <= :endDate))`,
               { startDate: startDate, endDate: endDate })
       .getOne();
   }
