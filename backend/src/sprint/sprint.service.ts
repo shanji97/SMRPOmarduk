@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, QueryFailedError, Repository } from 'typeorm';
+import * as moment from 'moment';
 
-import { UserRole } from '../project/project-user-role.entity';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
+import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
 
@@ -13,6 +15,7 @@ export class SprintService {
   private readonly logger: Logger = new Logger(SprintService.name);
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
     @InjectRepository(Sprint)
     private readonly sprintRepository: Repository<Sprint>,
@@ -33,6 +36,22 @@ export class SprintService {
     if (sprint.endDate < sprint.startDate)
       throw new ValidationException('End date is before start date');
 
+    // Start date can't be in the past
+    if (moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment()))
+      throw new ValidationException('Can\'t start sprint in the past');
+
+    // Check if velocity to high for the sprint
+    let sprintDurationDays: number = moment(sprint.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate, 'YYYY-MM-DD'), 'd') + 1;
+    if (sprintDurationDays > 6) {
+      const weekends = sprintDurationDays / 7; // Calculate weekends TODO: improve
+      sprintDurationDays -= (2 * weekends); // substract weekends from working days
+    }
+    const personHoursPerDay: number = this.configService.get<number>('PERSON_HOURS_PER_DAY');
+    const personMaxLoadFactor: number = this.configService.get<number>('PERSON_MAX_LOAD_FACTOR');
+    const peopleCount: number = await this.projectService.countUsersWithRoleOnProject(sprint.projectId, [UserRole.Developer, UserRole.ScrumMaster]);
+    if (sprint.velocity > sprintDurationDays * peopleCount * personHoursPerDay * personMaxLoadFactor)
+      throw new ValidationException('Irregular sprint velocity');
+    
     // Only one sprint can be at same time
     if (await this.getOverlapingSprint(projectId, sprint.startDate, sprint.endDate) !== null)
       throw new ValidationException('Sprint date overlaps with one of other sprints');
