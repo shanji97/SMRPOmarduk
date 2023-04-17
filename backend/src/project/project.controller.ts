@@ -14,7 +14,6 @@ import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
 import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
-import { throwError } from 'rxjs';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 import { ProjectDto } from './dto/project.dto';
 
@@ -125,7 +124,7 @@ export class ProjectController {
 
   @ApiOperation({ summary: 'Update the scrum master / product owner.' })
   @ApiOkResponse()
-  @Patch(':projectId/changeUser/role/:role')
+  @Patch(':projectId/change-user/role/:role')
   async changeProjectOwner(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('role', ParseIntPipe) role: number, @Body(new JoiValidationPipe(UpdateSuperiorUserSchema)) newUser: UpdateSuperiorUser) {
     if (!token.isAdmin) {
       throw new ForbiddenException('Only the administrator can change the project owner.');
@@ -180,7 +179,7 @@ export class ProjectController {
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @HttpCode(200)
-  @Post(':projectId/addDeveloper/:userId')
+  @Post(':projectId/add-developer/:userId')
   async addUserToProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
@@ -198,8 +197,10 @@ export class ProjectController {
       throw new BadRequestException('Product owner cannot also be a developer.');
 
     // Check if Scrum master already has a developer role.
-    // if (allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster && sc.userId == userId).length == 1)
-    //   throw new BadRequestException('The scrum master is already a developer.');
+    let scrumMaster: ProjectUserRole = allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster && sc.userId == userId)[0];
+
+    if (allUsersOnProject.filter(usersRoles => usersRoles.userId == scrumMaster.userId).length == 2)
+      throw new BadRequestException('The scrum master is already a developer.');
 
     // Check if the target user already has the developer role.
     if (allUsersOnProject.filter(dev => dev.role == UserRole.Developer && dev.userId == userId).length == 1)
@@ -216,7 +217,7 @@ export class ProjectController {
 
   @ApiOperation({ summary: 'Remove developer from project' })
   @ApiOkResponse()
-  @Delete(':projectId/removeDeveloper/:userId')
+  @Delete(':projectId/remove-developer/:userId')
   async removeDeveloperFromProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
