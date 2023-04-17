@@ -27,10 +27,13 @@ interface AddSprintProps {
 const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, velocityInit, dateRangeInit}) => {
     const params = useParams();
     const dispatch = useAppDispatch();
-    const {message, isError, isSuccess, sprints} = useAppSelector(state => state.sprints);
+    const {message, isError, isUpdated, isSuccess, sprints} = useAppSelector(state => state.sprints);
 
     useEffect(() => {
-        if (isError && !isSuccess && message !== '') {
+        if (isUpdated) {
+            toast.success('Sprint updated!');
+        }
+        else if (isError && !isSuccess && message !== '') {
             toast.error(message);
         } else if (isSuccess && !isError && message === '') {
             toast.success('Sprint created!');
@@ -39,7 +42,7 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
         return () => {
             dispatch(reset())
         }
-    }, [message, isError, isSuccess, dispatch]);
+    }, [message, isError, isSuccess, dispatch, isUpdated]);
 
     useEffect(() => {
         if (isEdit) {
@@ -112,7 +115,7 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
         }
 
         if (isEdit) {
-            dispatch(updateSprint(sprintBody))
+            dispatch(updateSprint(sprintBody));
         } else {
             dispatch(createSprint(sprintBody));
         }

@@ -5,6 +5,7 @@ import {SprintBody} from "../../classes/sprintData";
 interface SprintState {
     sprints: SprintBody[]
     activeSprint: SprintBody | undefined
+    isUpdated: boolean
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -14,6 +15,7 @@ interface SprintState {
 const initialState: SprintState = {
     sprints: [],
     activeSprint: undefined,
+    isUpdated: false,
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -69,6 +71,7 @@ export const sprintSlice = createSlice({
             state.isError = false
             state.isSuccess = false
             state.message = ''
+            state.isUpdated = false;
         },
         setActiveSprint: (state, action) => {
             state.activeSprint = action.payload;
@@ -96,8 +99,8 @@ export const sprintSlice = createSlice({
             state.isLoading = true
         })
         .addCase(updateSprint.fulfilled, (state, action) => {
+            state.isUpdated = true;
             state.isLoading = false;
-            state.isSuccess = true;
             state.isError = false;
             state.message = '';
 
