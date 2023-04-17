@@ -56,43 +56,7 @@ export class ProjectService {
       return map;
     }, new Map<number, ProjectDto>());
 
-    const projectDtoList = Array.from(projectMap.values()) as ProjectDto[];
-    return projectDtoList;
-
-    // return projectData.map((project) => {
-    //   const userRoles = [];
-    //   if (project.userRoles) {
-    //     for (const userRole of project.userRoles) {
-    //       userRoles.push({
-    //         userId: userRole.userId,
-    //         role: userRole.role,
-    //       });
-    //     }
-    //   }
-
-    //   const projectWithData: ProjectDto = {
-    //     id: project.id,
-    //     projectName: project.projectName,
-    //     projectDescription: project.projectDescription,
-    //     userRoles: userRoles,
-    //   };
-
-    // return projectData.map((project) => {
-    //   const projectWithData: ProjectDto = {
-    //     id: project.id,
-    //     projectName: project.projectName,
-    //     projectDescription: project.projectDescription,
-    //     userRoles: project.userRoles.map((userRole) => {
-    //         userId: userRole.userId
-    //         role: userRole.role
-    //     }
-
-    //     )
-    //   };
-    //   return projectWithData;
-    // });
-
-    // });
+    return Array.from(projectMap.values()) as ProjectDto[];
   }
   async getProjectCount(): Promise<number> {
     return await this.entityManager.count(Project);
