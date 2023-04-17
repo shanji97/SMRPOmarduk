@@ -22,7 +22,7 @@ export class SprintService {
   ) {}
 
   async listSprintsForProject(projectId: number): Promise<Sprint[]> {
-    return await this.sprintRepository.find({ where: { projectId: projectId }, order: { startDate: 'DESC' } });
+    return await this.sprintRepository.find({ where: { projectId: projectId }, order: { startDate: 'ASC' } });
   }
 
   async getSprintById(sprintId: number): Promise<Sprint> {
