@@ -60,17 +60,43 @@ export class SprintService {
   }
 
   async updateSprintById(sprintId: number, sprint: DeepPartial<Sprint>): Promise<void> {
+    const sprintRecord = await this.sprintRepository.findOneBy({ id: sprintId });
+    if (!sprintRecord)
+      throw new ValidationException('Invalid sprint ID');
+
+    // Can't edit sprints that have already started
+    if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment()))
+      throw new ValidationException('Sprint has already started');
+
     // Check if end is after start
     if (sprint.startDate || sprint.endDate) {
-      const sprintRecord = await this.sprintRepository.findOneBy({ id: sprintId });
-      if (!sprintRecord)
-        throw new ValidationException('Invalid sprint ID');
       if ((sprint.endDate || sprintRecord.endDate) < (sprint.startDate || sprintRecord.startDate))
         throw new ValidationException('End date is before start date');
+
+      // Start date can't be in the past
+      if (sprint.startDate && moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment()))
+        throw new ValidationException('Can\'t start sprint in the past');
+
+      // End date can't be in the past
+      if (sprint.endDate && moment(sprint.endDate, 'YYYY-MM-DD').isBefore(moment()))
+        throw new ValidationException('Can\'t end sprint in the past');
 
       // Only one sprint can be at same time
       if (await this.getOverlapingSprint(sprintRecord.projectId, sprint.startDate || sprintRecord.startDate, sprint.endDate || sprintRecord.endDate, sprintId) !== null)
         throw new ValidationException('Sprint date overlaps with one of other sprints');
+    }
+
+    if (sprint.startDate || sprint.endDate || sprint.velocity) {
+      let sprintDurationDays: number = moment(sprint.endDate || sprintRecord.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate || sprintRecord.startDate, 'YYYY-MM-DD'), 'd') + 1;
+      if (sprintDurationDays > 6) {
+        const weekends = sprintDurationDays / 7; // Calculate weekends TODO: improve
+        sprintDurationDays -= (2 * weekends); // substract weekends from working days
+      }
+      const personHoursPerDay: number = this.configService.get<number>('PERSON_HOURS_PER_DAY');
+      const personMaxLoadFactor: number = this.configService.get<number>('PERSON_MAX_LOAD_FACTOR');
+      const peopleCount: number = await this.projectService.countUsersWithRoleOnProject(sprint.projectId || sprintRecord.projectId, [UserRole.Developer, UserRole.ScrumMaster]);
+      if (sprint.velocity > sprintDurationDays * peopleCount * personHoursPerDay * personMaxLoadFactor)
+        throw new ValidationException('Irregular sprint velocity');
     }
     
     await this.sprintRepository.update({ id: sprintId }, sprint);
