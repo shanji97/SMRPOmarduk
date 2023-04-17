@@ -3,11 +3,12 @@ import { Button, Form, Modal } from "react-bootstrap";
 import { BoxArrowInRight } from "react-bootstrap-icons";
 import React, {Fragment, useEffect, useState} from "react";
 import ValidationError from "../components/ValidationError";
+import QRCode from "react-qr-code";
 import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
 
-import { login, setUp2FA } from "../features/users/userSlice";
+import { confirm2FA, login, setUp2FA } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
 
 import classes from './Login.module.css';
@@ -16,13 +17,13 @@ import { parseJwt } from "../helpers/helpers";
 const Login = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const {user, isError, message, isSuccess} = useAppSelector(state => state.users);
+    const {user, isError, message, isSuccess, loginSuccess, qrUrl, twofaConfirmed} = useAppSelector(state => state.users);
+    const [userId, setUserId] = useState('');
     const [userData, setUserData] = useState<LoginData>({
         username: '',
         password: ''
     });
 
-    const [url, setUrl] = useState('');
     const [codeText, setCodeText]   = useState('');
     const [showModal, setShowModal] = useState(false);
     const formIsValid               = useValidateForm(userData);
@@ -30,10 +31,29 @@ const Login = () => {
     const {username, password} = userData;
 
     useEffect(() => {
-        if (isSuccess || user !== null) {
-            navigate('/');
-        } 
+
     }, [isError, navigate, user, isSuccess]);
+
+    useEffect(() => {
+        if (loginSuccess) {
+            setShowModal(true);
+            const userToken = user;
+            const uid = parseJwt(userToken!).sid;
+            setUserId(uid);
+            dispatch(setUp2FA(uid));
+        }
+    }, [loginSuccess]);
+
+    useEffect(() => {
+        
+    }, [qrUrl]);
+
+    useEffect(() => {
+        if (twofaConfirmed) {
+            console.log('2FA success');
+            // login
+        }
+    }, [twofaConfirmed]);
 
     const closeModal = () => {setShowModal(false)};
 
@@ -48,11 +68,14 @@ const Login = () => {
         setCodeText(e.target.value);
     }
 
-    const handle2FALogin = () => {
+    const confirm2FALogin = () => {
         // TODO send to backend
+        const confirmData = {
+            userId,
+            code: codeText
+        }
 
-        dispatch(login(userData));
-        console.log(userData, codeText);
+        dispatch(confirm2FA(confirmData));
     }
 
     const renderModal = () => {
@@ -63,10 +86,19 @@ const Login = () => {
                 </Modal.Header>
 
                 <Modal.Body>
-                    <p>Please enter your 6 digit code which was sent to your email</p>
+                    <div style={{ height: "auto", margin: "0 auto", maxWidth: 128, width: "100%" }}>
+                        <QRCode
+                            size={256}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            value={qrUrl}
+                            viewBox={`0 0 256 256`}
+                        />
+                    </div>
+
+                    <p>Please enter your 6 digit code from Google authenticator</p>
                     <Form.Group className="mb-3" controlId="formBasicUserName">
                         <Form.Control
-                            placeholder="Code on your email"
+                            placeholder="Code on your authenticator"
                             name="codeText"
                             value={codeText}
                             onChange={handleCodeInputChange}
@@ -74,10 +106,10 @@ const Login = () => {
                         />
                     </Form.Group>
                 </Modal.Body>
-
+                
                 <Modal.Footer>
                     <Button variant="secondary" onClick={closeModal}>Close</Button>
-                    <Button variant="primary" onClick={handle2FALogin}>Login</Button>
+                    <Button variant="primary" onClick={confirm2FALogin}>Login</Button>
                 </Modal.Footer>
             </Modal>
         );
@@ -86,8 +118,6 @@ const Login = () => {
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         dispatch(login(userData));
-
-        setShowModal(true);
     }
     
     return (
@@ -123,7 +153,7 @@ const Login = () => {
             </Form>
             <Fragment>
                 {/* NOTE TO SELF: SET false BACK TO showModal WHEN BACKEND 2FA IS IMPLEMENTED */}
-                {false && renderModal()}
+                {showModal && renderModal()}
             </Fragment>
         </Card>
     );

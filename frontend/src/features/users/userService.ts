@@ -108,6 +108,16 @@ const setUp2FA = async (userId: string, token: string) => {
     return response.data;
 }
 
+const confirm2FA = async (confirmData: {userId: string, code: string}, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.post(`${USERS_API_URL}/${confirmData.userId}/2fa/${confirmData.code}`, {}, config);
+    return response.data;
+}
+
 const getLastLogin = async (userId: string, token: string) => {
     const config = {
         headers: {
@@ -130,6 +140,7 @@ const userService = {
     setUp2FA,
     getLastLogin,
     getUser,
+    confirm2FA,
 }
 
 export default userService;

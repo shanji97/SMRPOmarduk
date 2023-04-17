@@ -17,6 +17,8 @@ interface UserState {
     message: any
     qrUrl: string
     lastLogin: string
+    loginSuccess: boolean
+    twofaConfirmed: boolean
 }
 
 const initialState: UserState = {
@@ -32,6 +34,8 @@ const initialState: UserState = {
     isCommonPassword: false,
     qrUrl: '',
     lastLogin: '',
+    loginSuccess: false,
+    twofaConfirmed: false
 }
 
 export const login = createAsyncThunk('auth/login', async (userData: LoginData, thunkAPI) => {
@@ -117,6 +121,16 @@ export const setUp2FA = createAsyncThunk('/auth/setUp2FA', async (userId: string
     }
 });
 
+export const confirm2FA = createAsyncThunk('/auth/confirm2FA', async (confirmData: {userId: string, code: string}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.confirm2FA(confirmData, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 export const getLastLogin = createAsyncThunk('/auth/lastLogin', async (userId: string, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -150,8 +164,25 @@ export const userSlice = createSlice({
                 state.isError = false;
                 state.message = '';
                 state.user = action.payload.token
+                state.loginSuccess = true; // tukej popraviti
             })
             .addCase(login.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+                state.user = null
+            })
+            .addCase(confirm2FA.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(confirm2FA.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.twofaConfirmed = true;
+            })
+            .addCase(confirm2FA.rejected, (state, action) => {
                 state.isLoading = false
                 state.isError = true
                 state.message = action.payload
