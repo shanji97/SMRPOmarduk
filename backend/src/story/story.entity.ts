@@ -40,7 +40,7 @@ export class Story {
   tests: Test[];
 
   @OneToMany(type=> SprintStory, sprint => sprint.story)
-  sprints: SprintStory[];
+  sprintStories: SprintStory[];
 
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;

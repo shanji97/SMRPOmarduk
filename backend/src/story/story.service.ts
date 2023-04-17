@@ -1,13 +1,14 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError } from 'typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { Repository, QueryFailedError, EntityManager } from 'typeorm';
 
 import { ProjectService } from '../project/project.service';
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
+import { SprintStory } from '../sprint/sprint-story.entity';
 
 @Injectable()
 export class StoryService {
@@ -18,6 +19,8 @@ export class StoryService {
     private readonly projectService: ProjectService,
     @InjectRepository(Story)
     private readonly storyRepository: Repository<Story>,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) { }
 
   async getAllStories(): Promise<Story[]> {
@@ -84,6 +87,12 @@ export class StoryService {
     return story.projectId;
   }
 
+  async isStoryInSprint(storyId: number): Promise<boolean> {
+    return await this.entityManager.count(SprintStory, {
+      where: { storyId: storyId }
+    }) > 0;
+  }
+
   createStoryObject(story: CreateStoryDto, projectId: number): Story {
     let newStory = new Story();
     newStory.projectId = projectId;
@@ -101,7 +110,6 @@ export class StoryService {
     existingStory.sequenceNumber = story.sequenceNumber;
     existingStory.priority = story.priority;
     existingStory.businessValue = story.businessValue;
-
     return existingStory;
   }
 

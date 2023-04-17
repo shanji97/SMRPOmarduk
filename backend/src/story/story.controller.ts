@@ -11,22 +11,17 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { Token } from '../auth/decorator/token.decorator';
 import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
-import { InjectEntityManager } from '@nestjs/typeorm';
-import { EntityManager } from 'typeorm';
-import { SprintStory } from 'src/sprint/sprint-story.entity';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
     private readonly storyService: StoryService,
     private readonly testService: TestService,
     private readonly projectService: ProjectService,
-    @InjectEntityManager()
-    private readonly entityManager: EntityManager
   ) { }
 
   @ApiOperation({ summary: 'List stories' })
@@ -84,13 +79,8 @@ export class StoryController {
       if (checkStory.isRealized)
         throw new BadRequestException('The story is already realized, so it cannot be updated.');
 
-      let storySprint = await this.entityManager.count(SprintStory, {
-        where: { storyId: storyId }
-      });
-
-      if (storySprint > 0)
-      throw new BadRequestException('The story has been already added to sprint.');
-
+      if (await this.storyService.isStoryInSprint(storyId))
+        throw new BadRequestException('The story has been already added to sprint.');
 
       await this.storyService.updateStoryById(storyId, story);
     } catch (ex) {
@@ -109,11 +99,7 @@ export class StoryController {
     if (story.isRealized)
       throw new BadRequestException('A realized story cannot be deleted.');
 
-    let storySprint = await this.entityManager.count(SprintStory, {
-      where: { storyId: storyId }
-    });
-
-    if (storySprint > 0)
+    if (await this.storyService.isStoryInSprint(storyId))
       throw new BadRequestException('The story has been already added to sprint.');
 
     await this.storyService.deleteStoryById(storyId);

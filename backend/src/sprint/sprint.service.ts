@@ -7,7 +7,6 @@ import { Sprint } from './sprint.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { SprintStory } from './sprint-story.entity';
 
-
 @Injectable()
 export class SprintService {
   private readonly logger: Logger = new Logger(SprintService.name);
