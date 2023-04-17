@@ -139,6 +139,7 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
                     <Form.Label>Velocity</Form.Label>
                     <Form.Control 
                         type='number'
+                        placeholder="velocity in hours"
                         min={1}
                         name='velocity'
                         value={velocity}
