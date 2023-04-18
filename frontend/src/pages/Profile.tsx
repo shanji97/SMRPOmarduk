@@ -6,9 +6,9 @@ import {parseJwt} from "../helpers/helpers";
 import { toast } from "react-toastify";
 import {disable2fa, getUser, setUp2FA, confirm2FA, get2faStatus} from "../features/users/userSlice";
 import { Button, Form, Modal } from "react-bootstrap";
+import QRCode from "react-qr-code";
 
 import classes from './Profile.module.css';
-import QRCode from "react-qr-code";
 
 const Profile = () => {
     const dispatch = useAppDispatch();
