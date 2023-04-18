@@ -28,42 +28,57 @@ interface ProjectProps {
   idInit?: string;
   projectNameInit: string;
   projectDescriptionInit?: string;
-  projectState: ProjectState;
-  handleSubmitForm: () => void;
+  closeModal: () => void;
 }
 
 const ProjectDataForm: React.FC<ProjectProps> = ({
   idInit,
   projectNameInit,
   projectDescriptionInit,
-  projectState,
-  handleSubmitForm,
+  closeModal,
 }) => {
   const dispatch = useAppDispatch();
 
+  const { isLoading, isError, isEditSuccess, message } = useAppSelector(
+    (state) => state.projects
+  );
+
   useEffect(() => {
-    if (projectState.isSuccess && !projectState.isLoading && formIsValid) {
-      toast.success("Project successfully created!");
+    if (isEditSuccess && !isLoading && formIsValid) {
+      toast.success("Changes successfully saved!");
       dispatch(reset());
-      // dispatch(getAllProjects());
+      dispatch(getAllProjects());
+      closeModal();
     }
-    if (projectState.isError && !projectState.isLoading) {
-      toast.error(projectState.message);
+    if (isError && !isLoading) {
+      toast.error(message);
       dispatch(reset());
-      // dispatch(getAllProjects());
+      dispatch(getAllProjects());
     }
-  }, [projectState.isSuccess, projectState.isError, projectState.isLoading]);
+  }, [isEditSuccess, isError, isLoading]);
+
+  console.log(projectNameInit, projectDescriptionInit);
+
+  useEffect(() => {
+    console.log("USE EFF");
+    if (projectName !== projectNameInit) {
+      setProjectName(projectNameInit);
+    }
+    if (projectDescription !== projectDescriptionInit) {
+      setProjectDescription(
+        projectDescriptionInit ? projectDescriptionInit : ""
+      );
+    }
+  }, [isError]);
 
   const [projectName, setProjectName] = useState(projectNameInit);
   const [projectDescription, setProjectDescription] = useState(
     projectDescriptionInit ? projectDescriptionInit : ""
   );
 
-  const [projectNameTouched, setProjectNameTouched] = useState(false);
-  // const [projectDescriptionTouched, setProjectDescriptionTouched] =
-  //   useState(false);
+  console.log(projectName, projectDescription);
 
-  const [invalidFormMessage, setInvalidFormMessage] = useState("");
+  const [projectNameTouched, setProjectNameTouched] = useState(false);
 
   const enteredNameValid = projectName.trim() !== "";
 

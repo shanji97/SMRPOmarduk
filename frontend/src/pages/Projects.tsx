@@ -157,16 +157,20 @@ const Projects = () => {
                         >
                           Add sprint
                         </Dropdown.Item>
-                        <Dropdown.Item
-                          onClick={() => openEditProjectModal(index)}
-                        >
-                          Edit project data
-                        </Dropdown.Item>
-                        <Dropdown.Item
-                          onClick={() => openEditRolesModal(index)}
-                        >
-                          Edit project roles
-                        </Dropdown.Item>
+                        {(isAdmin || isUserScrumMaster(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => openEditProjectModal(index)}
+                          >
+                            Edit project data
+                          </Dropdown.Item>
+                        )}
+                        {(isAdmin || isUserScrumMaster(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => openEditRolesModal(index)}
+                          >
+                            Edit project roles
+                          </Dropdown.Item>
+                        )}
                       </DropdownButton>
                     </div>
                   </td>
@@ -185,8 +189,7 @@ const Projects = () => {
               projectDescriptionInit={
                 projects[editIndexProject].projectDescription
               }
-              projectState={projectState}
-              handleSubmitForm={submitAddProject}
+              closeModal={hideEditProjectModal}
             />
           </Modal.Body>
         </Modal>

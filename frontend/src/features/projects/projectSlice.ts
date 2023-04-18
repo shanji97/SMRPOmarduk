@@ -8,6 +8,7 @@ export interface ProjectState {
     userRoles: any[] // TODO fix this !!!
     isLoading: boolean
     isSuccess: boolean
+    isEditSuccess: boolean
     isError: boolean
     message: any
     projects: ProjectData[]
@@ -19,6 +20,7 @@ const initialState: ProjectState = {
     userRoles: [],
     isLoading: false,
     isSuccess: false,
+    isEditSuccess: false,
     isError: false,
     message: '',
     projects: [],
@@ -80,6 +82,7 @@ export const projectSlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isEditSuccess = false
             state.message = ''
         },
         setActiveProject: (state, action) => {
@@ -141,7 +144,7 @@ export const projectSlice = createSlice({
         })
         .addCase(editProject.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = true;
+            state.isEditSuccess = true;
             state.isError = false;
             state.message = '';
             state.userRoles = action.payload;
