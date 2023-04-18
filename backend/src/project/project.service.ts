@@ -121,13 +121,14 @@ export class ProjectService {
 
   async addUserToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
     try {
+      console.log(userId)
       // Check: User can't be project owner if he already has any other role
       if (role === UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, null))
         throw new ValidationException('User already has some role and can\'t be also project owner.');
 
       // Check: User that is ProjectOwner can't be anything else
       if (role !== UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, UserRole.ProjectOwner))
-        throw new ValidationException('User is project owner');
+        throw new ValidationException('User is project owner.');
 
       await this.entityManager.insert(ProjectUserRole, {
         projectId: projectId,

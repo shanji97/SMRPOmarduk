@@ -197,7 +197,7 @@ export class ProjectController {
       throw new BadRequestException('Product owner cannot also be a developer.');
 
     // Check if Scrum master already has a developer role.
-    let scrumMaster: ProjectUserRole = allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster && sc.userId == userId)[0];
+    let scrumMaster: ProjectUserRole = allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster)[0];
 
     if (allUsersOnProject.filter(usersRoles => usersRoles.userId == scrumMaster.userId).length == 2)
       throw new BadRequestException('The scrum master is already a developer.');
