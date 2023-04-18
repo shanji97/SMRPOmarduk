@@ -3,16 +3,11 @@ import { Button, Form, Modal } from "react-bootstrap";
 import { BoxArrowInRight } from "react-bootstrap-icons";
 import React, {Fragment, useEffect, useState} from "react";
 import ValidationError from "../components/ValidationError";
-import QRCode from "react-qr-code";
-import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
-
-import { confirm2FA, disable2fa, login, login2fa, reset, setUp2FA, setUserAs2faAuthenticated } from "../features/users/userSlice";
+import { login, reset } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
-
 import classes from './Login.module.css';
-import { parseJwt } from "../helpers/helpers";
 import { toast } from "react-toastify";
 
 const Login = () => {
@@ -23,29 +18,21 @@ const Login = () => {
         isError, 
         message, 
         isSuccess, 
-        firstLogin, 
-        qrUrl, 
-        twofaConfirmed, 
-        finalLogin,
-        twofaDisabled,
     } = useAppSelector(state => state.users);
-    const [userId, setUserId] = useState('');
     const [userData, setUserData] = useState<LoginData>({
         username: '',
-        password: ''
+        password: '',
+        twoFa: ''
     });
 
-    const [codeText, setCodeText]   = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const formIsValid               = useValidateForm(userData);
-
-    const {username, password} = userData;
+    const {username, password, twoFa} = userData;
+    const formIsValid                 = username !== '' && password !== '';
 
     useEffect(() => {
         if (isError) {
             toast.error(message);
         }
-        if (twofaDisabled && (user !== null || isSuccess)) {
+        if (user !== null || isSuccess) {
             navigate('/');
             return () => {
                 dispatch(reset());
@@ -53,98 +40,11 @@ const Login = () => {
         }
     }, [isError, navigate, user, isSuccess]);
 
-    useEffect(() => {
-        if (firstLogin && !twofaDisabled) {
-            setShowModal(true);
-            const userToken = user;
-            const uid = parseJwt(userToken!).sid;
-            setUserId(uid);
-            dispatch(setUp2FA(uid));
-        }
-    }, [firstLogin]);
-
-    useEffect(() => {}, [qrUrl]);
-
-    useEffect(() => {
-        if (twofaConfirmed) {
-            const loginData: LoginData = {
-                username,
-                password,
-                twoFa: codeText
-            }
-            console.log(loginData);
-            dispatch(login2fa(loginData));
-        }
-    }, [twofaConfirmed]);
-
-    useEffect(() => {
-        console.log(user, finalLogin, firstLogin)
-        if (finalLogin) {
-            closeModal();
-            dispatch(disable2fa(userId));
-            dispatch(setUserAs2faAuthenticated(userId));
-            navigate('/');
-        }
-    }, [finalLogin]);
-
-    const closeModal = () => {setShowModal(false)};
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUserData(prevData => ({
             ...prevData,
             [e.target.name]: e.target.value
         }));
-    }
-
-    const handleCodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCodeText(e.target.value);
-    }
-
-    const confirm2FALogin = () => {
-        // TODO send to backend
-        const confirmData = {
-            userId,
-            code: codeText
-        }
-
-        dispatch(confirm2FA(confirmData));
-    }
-
-    const renderModal = () => {
-        return (
-            <Modal show={showModal} onHide={closeModal}>
-                <Modal.Header closeButton>
-                    <Modal.Title>2 Step Authentication</Modal.Title>
-                </Modal.Header>
-
-                <Modal.Body>
-                    <div style={{ height: "auto", margin: "0 auto", maxWidth: 128, width: "100%" }}>
-                        <QRCode
-                            size={256}
-                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                            value={qrUrl}
-                            viewBox={`0 0 256 256`}
-                        />
-                    </div>
-
-                    <p>Please scan the QR and enter your 6 digit code from Google authenticator</p>
-                    <Form.Group className="mb-3" controlId="formBasicUserName">
-                        <Form.Control
-                            placeholder="Code on your authenticator"
-                            name="codeText"
-                            value={codeText}
-                            onChange={handleCodeInputChange}
-                            maxLength={6}
-                        />
-                    </Form.Group>
-                </Modal.Body>
-                
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={closeModal}>Close</Button>
-                    <Button variant="primary" onClick={confirm2FALogin}>Login</Button>
-                </Modal.Footer>
-            </Modal>
-        );
     }
 
     const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
@@ -181,12 +81,18 @@ const Login = () => {
                     />
                     {message === 'Unauthorized' && <ValidationError>Invalid credentials</ValidationError>}
                 </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>2-Factor Authentication code</Form.Label>
+                    <Form.Control
+                        name='twoFa'
+                        placeholder="Enter your code"
+                        value={twoFa}
+                        onChange={handleInputChange}
+                    />
+                </Form.Group>
                 <Button variant="primary" type="submit" disabled={!formIsValid}>Login</Button>
             </Form>
-            <Fragment>
-                {/* NOTE TO SELF: SET false BACK TO showModal WHEN BACKEND 2FA IS IMPLEMENTED */}
-                {showModal && renderModal()}
-            </Fragment>
         </Card>
     );
 }
