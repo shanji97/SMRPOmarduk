@@ -178,7 +178,7 @@ export class ProjectController {
   @ApiBadRequestResponse()
   @HttpCode(200)
   @Post(':projectId/add-developer/:userId')
-  async addUserToProject(
+  async addDeveloperToProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
     @Param('userId', ParseIntPipe) userId: number,
