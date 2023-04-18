@@ -13,6 +13,7 @@ import { TokenDto } from '../auth/dto/token.dto';
 import { UpdateTaskDto, UpdateTaskSchema } from './dto/update-task.dto';
 import { UserRole } from '../project/project-user-role.entity';
 
+
 @ApiTags('task')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse()
