@@ -8,15 +8,6 @@ const USERS_API_URL = `${getBaseUrl()}/api/user`;
 const COMMON_PASSWORD_API_URL = `${getBaseUrl()}/api/common-password`;
 const USER_LOGIN_URL = `${getBaseUrl()}/api/user-login`;
 
-//const  = `${window.location.protocol}//${window.location.hostname}/api/user`;
-//const  = `${window.location.protocol}//${window.location.hostname}/api/common-password`;
-//const  = `${window.location.protocol}//${window.location.hostname}/api/user-login`;
-
-// const AUTH_API_URL = `http://localhost:3000/api/auth`;
-// const USERS_API_URL = `http://localhost:3000/api/user`;
-// const COMMON_PASSWORD_API_URL = `http://localhost:3000/api/common-password`;
-// const USER_LOGIN_URL = `http://localhost:3000/api/user-login`;
-
 const login = async (userData: LoginData) => {
     const response = await axios.post(`${AUTH_API_URL}/login`, userData);
 
@@ -118,6 +109,16 @@ const confirm2FA = async (confirmData: {userId: string, code: string}, token: st
     return response.data;
 }
 
+const disable2fa = async (userId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.delete(`${USERS_API_URL}/${userId}/2fa`, config);
+    return response.data;
+}
+
 const getLastLogin = async (userId: string, token: string) => {
     const config = {
         headers: {
@@ -141,6 +142,7 @@ const userService = {
     getLastLogin,
     getUser,
     confirm2FA,
+    disable2fa,
 }
 
 export default userService;

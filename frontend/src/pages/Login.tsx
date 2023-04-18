@@ -8,16 +8,27 @@ import useValidateForm from "../hooks/useValidateForm";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {useNavigate} from "react-router-dom";
 
-import { confirm2FA, login, setUp2FA } from "../features/users/userSlice";
+import { confirm2FA, disable2fa, login, login2fa, reset, setUp2FA, setUserAs2faAuthenticated } from "../features/users/userSlice";
 import { LoginData } from "../classes/userData";
 
 import classes from './Login.module.css';
 import { parseJwt } from "../helpers/helpers";
+import { toast } from "react-toastify";
 
 const Login = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const {user, isError, message, isSuccess, loginSuccess, qrUrl, twofaConfirmed} = useAppSelector(state => state.users);
+    const {
+        user, 
+        isError, 
+        message, 
+        isSuccess, 
+        firstLogin, 
+        qrUrl, 
+        twofaConfirmed, 
+        finalLogin,
+        twofaDisabled,
+    } = useAppSelector(state => state.users);
     const [userId, setUserId] = useState('');
     const [userData, setUserData] = useState<LoginData>({
         username: '',
@@ -31,29 +42,50 @@ const Login = () => {
     const {username, password} = userData;
 
     useEffect(() => {
-
+        if (isError) {
+            toast.error(message);
+        }
+        if (twofaDisabled && (user !== null || isSuccess)) {
+            navigate('/');
+            return () => {
+                dispatch(reset());
+            }
+        }
     }, [isError, navigate, user, isSuccess]);
 
     useEffect(() => {
-        if (loginSuccess) {
+        if (firstLogin && !twofaDisabled) {
             setShowModal(true);
             const userToken = user;
             const uid = parseJwt(userToken!).sid;
             setUserId(uid);
             dispatch(setUp2FA(uid));
         }
-    }, [loginSuccess]);
+    }, [firstLogin]);
 
-    useEffect(() => {
-        
-    }, [qrUrl]);
+    useEffect(() => {}, [qrUrl]);
 
     useEffect(() => {
         if (twofaConfirmed) {
-            console.log('2FA success');
-            // login
+            const loginData: LoginData = {
+                username,
+                password,
+                twoFa: codeText
+            }
+            console.log(loginData);
+            dispatch(login2fa(loginData));
         }
     }, [twofaConfirmed]);
+
+    useEffect(() => {
+        console.log(user, finalLogin, firstLogin)
+        if (finalLogin) {
+            closeModal();
+            dispatch(disable2fa(userId));
+            dispatch(setUserAs2faAuthenticated(userId));
+            navigate('/');
+        }
+    }, [finalLogin]);
 
     const closeModal = () => {setShowModal(false)};
 
@@ -95,7 +127,7 @@ const Login = () => {
                         />
                     </div>
 
-                    <p>Please enter your 6 digit code from Google authenticator</p>
+                    <p>Please scan the QR and enter your 6 digit code from Google authenticator</p>
                     <Form.Group className="mb-3" controlId="formBasicUserName">
                         <Form.Control
                             placeholder="Code on your authenticator"

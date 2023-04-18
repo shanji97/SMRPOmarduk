@@ -48,7 +48,7 @@ function Header() {
   const handleLoginAndLogout = () => {
     if (user !== null) {
       dispatch(logout());
-      window.location.replace("/login");
+      navigate("/login");
     }
   };
 
