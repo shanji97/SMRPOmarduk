@@ -5,9 +5,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { CreateSprintDto, CreateSprintSchema } from './dto/create-sprint.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { ProjectService } from '../project/project.service';
+import { Sprint } from './sprint.entity';
 import { SprintService } from './sprint.service';
 import { Token } from '../auth/decorator/token.decorator';
 import { TokenDto } from '../auth/dto/token.dto';
+import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
@@ -22,6 +24,37 @@ export class SprintController {
     private readonly sprintService: SprintService,
   ) {}
   
+  @ApiOperation({ summary: 'List sprints for project' })
+  @ApiOkResponse()
+  @Get('project/:projectId')
+  async listSprintsForProject(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<Sprint[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, null))
+      throw new ForbiddenException();
+
+    return await this.sprintService.listSprintsForProject(projectId);
+  }
+
+  @ApiOperation({ summary: 'Get sprint by ID' })
+  @ApiOkResponse()
+  @Get(':sprintId')
+  async getSprintById(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<Sprint> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    const sprint = await this.sprintService.getSprintById(sprintId);
+    if (!sprint)
+      throw new NotFoundException();
+    return sprint;
+  }
+
   @ApiOperation({ summary: 'Create new sprint' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
@@ -42,5 +75,43 @@ export class SprintController {
         throw new BadRequestException(ex.message);
       throw ex;
     }
+  }
+
+  @ApiOperation({ summary: 'Update sprint' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @Patch(':sprintId')
+  async updateSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+    @Body(new JoiValidationPipe(UpdateSprintSchema)) sprint: UpdateSprintDto,
+  ): Promise<void> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserEditPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+    
+    try {
+      await this.sprintService.updateSprintById(sprintId, sprint); 
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Delete sprint' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Delete(':sprintId')
+  async deleteSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<void> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserEditPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    await this.sprintService.deleteSprintById(sprintId);
   }
 }
