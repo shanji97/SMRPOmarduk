@@ -19,6 +19,7 @@ import Projects from "./pages/Projects";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+import ProjectDataForm from "./components/ProjectDataForm";
 
 function App() {
   return (

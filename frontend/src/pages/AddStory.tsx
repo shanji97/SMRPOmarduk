@@ -245,7 +245,7 @@ const AddStory = () => {
       userId,
     };
 
-    console.log(newStory);
+    // console.log(newStory);
 
     // send to backend
     dispatch(createStory(newStory));

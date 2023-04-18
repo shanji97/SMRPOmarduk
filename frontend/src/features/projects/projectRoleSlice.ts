@@ -1,32 +1,34 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { ProjectData, ProjectDataEdit} from "../../classes/projectData";
 import projectService from "./projectService";
+import projectRoleService from "./projectRoleService";
 
 
-export interface ProjectState {
+export interface ProjectRoleState {
     projectName: string
     userRoles: any[] // TODO fix this !!!
     isLoading: boolean
     isSuccess: boolean
+    isSuccessAdd: boolean
     isError: boolean
     message: any
-    projects: ProjectData[]
 }
 
-const initialState: ProjectState = {
+const initialState: ProjectRoleState = {
     projectName: '',
     userRoles: [],
     isLoading: false,
     isSuccess: false,
+    isSuccessAdd: false,
     isError: false,
     message: '',
-    projects: []
 }
 
-export const createProject = createAsyncThunk('project/create', async (projectData: ProjectData, thunkAPI: any) => {
+// this is for updating product owner and scrum master roles
+export const updateProjectRoles = createAsyncThunk('projectRole/editProjectRoles', async (projectRoleData: any, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await projectService.create(projectData, token);
+        return await projectRoleService.updateProjectRoles(projectRoleData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -34,30 +36,21 @@ export const createProject = createAsyncThunk('project/create', async (projectDa
 });
 
 
-export const getAllProjects = createAsyncThunk('project/getAllProjects', async (_, thunkAPI: any) => {
+export const addDeveloper = createAsyncThunk('projectRole/addDeveloper', async (addDeveloperData: any, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await projectService.getAllProjects(token!);
+        return await projectRoleService.addDeveloper(addDeveloperData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
-    }
+    }  
 });
 
-export const getProject = createAsyncThunk('project/getProject', async (id: string, thunkAPI: any) => {
+export const removeDeveloper = createAsyncThunk('projectRole/removeDeveloper', async (removeDeveloperData: any, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await projectService.getProjectUserRoles(id, token!);
-    } catch (error: any) {
-        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-        return thunkAPI.rejectWithValue(message)
-    }
-});
-
-export const editProject = createAsyncThunk('project/editProject', async (projectData: ProjectDataEdit, thunkAPI: any) => {
-    try {
-        const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await projectService.editProject(projectData, token);
+        console.log("remove dev")
+        return await projectRoleService.removeDeveloper(removeDeveloperData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -65,77 +58,64 @@ export const editProject = createAsyncThunk('project/editProject', async (projec
 });
 
 
-export const projectSlice = createSlice({
-    name: 'projects',
+
+export const projectRoleSlice = createSlice({
+    name: 'projectRole',
     initialState,
     reducers: {
         reset: (state) => {
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isSuccessAdd = false
             state.message = ''
         }
     },
     extraReducers: builder => {
         builder
-        .addCase(createProject.pending, (state) => {
+        .addCase(updateProjectRoles.pending, (state) => {
             state.isLoading = true
         })
-        .addCase(createProject.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
-            state.message = '';
-        })
-        .addCase(createProject.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
-            state.message = action.payload
-        })
-        .addCase(getAllProjects.pending, (state) => {
-            state.isLoading = true
-        })
-        .addCase(getAllProjects.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
-            state.message = '';
-            state.projects = action.payload;
-        })
-        .addCase(getAllProjects.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
-            state.message = action.payload
-        })
-        .addCase(getProject.pending, (state) => {
-            state.isLoading = true
-        })
-        .addCase(getProject.fulfilled, (state, action) => {
+        .addCase(updateProjectRoles.fulfilled, (state, action) => {
             state.isLoading = false;
             state.isSuccess = true;
             state.isError = false;
             state.message = '';
             state.userRoles = action.payload;
         })
-        .addCase(getProject.rejected, (state, action) => {
+        .addCase(updateProjectRoles.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
             state.message = action.payload
         })
-        .addCase(editProject.pending, (state) => {
+        .addCase(addDeveloper.pending, (state) => {
             state.isLoading = true
         })
-        .addCase(editProject.fulfilled, (state, action) => {
+        .addCase(addDeveloper.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccessAdd = true;
+            state.isError = false;
+            state.message = '';
+            state.userRoles = action.payload;
+        })
+        .addCase(addDeveloper.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(removeDeveloper.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(removeDeveloper.fulfilled, (state, action) => {
             state.isLoading = false;
             state.isSuccess = true;
             state.isError = false;
             state.message = '';
             state.userRoles = action.payload;
         })
-        .addCase(editProject.rejected, (state, action) => {
+        .addCase(removeDeveloper.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
@@ -144,5 +124,5 @@ export const projectSlice = createSlice({
     }
 })
 
-export default projectSlice.reducer;
-export const {reset} = projectSlice.actions
+export default projectRoleSlice.reducer;
+export const {reset} = projectRoleSlice.actions
