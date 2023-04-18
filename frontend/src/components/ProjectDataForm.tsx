@@ -8,7 +8,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-import classes from "./ProjectForm.module.css";
+import classes from "./ProjectDataForm.module.css";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
@@ -64,11 +64,11 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
     if (projectName !== projectNameInit) {
       setProjectName(projectNameInit);
     }
-    if (projectDescription !== projectDescriptionInit) {
-      setProjectDescription(
-        projectDescriptionInit ? projectDescriptionInit : ""
-      );
-    }
+    // if (projectDescription !== projectDescriptionInit) {
+    //   setProjectDescription(
+    //     projectDescriptionInit ? projectDescriptionInit : ""
+    //   );
+    // }
   }, [isError]);
 
   const [projectName, setProjectName] = useState(projectNameInit);

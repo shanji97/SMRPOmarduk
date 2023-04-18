@@ -18,7 +18,7 @@ import {
   getAllProjects,
   setActiveProject,
 } from "../features/projects/projectSlice";
-import ProjectForm from "../components/ProjectForm";
+import ProjectForm from "./AddProject";
 import { ProjectData, ProjectDataEdit, UserRole } from "../classes/projectData";
 import ProjectDataForm from "../components/ProjectDataForm";
 import ProjectRolesForm from "../components/ProjectRolesForm";
@@ -203,6 +203,7 @@ const Projects = () => {
               handleSubmitForm={submitAddProject}
               users={users}
               userRoles={projects[editIndexRoles].userRoles}
+              isAdmin={isAdmin}
             />
           </Modal.Body>
         </Modal>

@@ -34,6 +34,7 @@ interface ProjectProps {
   userRoles: any;
   projectState: ProjectState;
   handleSubmitForm: (projectData: ProjectData) => void;
+  isAdmin: boolean;
 }
 
 const ProjectRolesForm: React.FC<ProjectProps> = ({
@@ -42,6 +43,7 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
   userRoles,
   projectState,
   handleSubmitForm,
+  isAdmin,
 }) => {
   const dispatch = useAppDispatch();
 
@@ -205,6 +207,7 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
                 name="productOwnerID"
                 value={productOwnerID}
                 onChange={productOwnerChangedHandler}
+                disabled={!isAdmin}
               >
                 {" "}
                 {users.map(
@@ -239,6 +242,7 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
                 name="scrumMasterID"
                 value={scrumMasterID}
                 onChange={scrumMasterChangedHandler}
+                disabled={!isAdmin}
               >
                 {users.map(
                   (user) =>

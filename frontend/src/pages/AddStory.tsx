@@ -93,7 +93,7 @@ const AddStory = () => {
   const enteredPriorityValid = priority.trim() !== "";
   const enteredBusinessValueValid =
     businessValue.trim() !== "" &&
-    parseInt(businessValue) >= 0 &&
+    parseInt(businessValue) >= 1 &&
     parseInt(businessValue) <= 10;
   const enteredTestsValid = tests.map((test) => test.trim() !== "");
 
@@ -395,7 +395,7 @@ const AddStory = () => {
                   type="number"
                 />
                 <Form.Text className="text-secondary">
-                  Enter a number between 0 and 10.
+                  Enter a number between 1 and 10.
                 </Form.Text>
               </Form.Group>
             </Col>
