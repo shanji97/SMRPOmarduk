@@ -71,9 +71,9 @@ export class StoryController {
     try {
 
       let usersOnProject = await this.projectService.listUsersWithRolesOnProject(projectId);
-      let isProjectOwnerOrScrumMaster = usersOnProject.filter(user => user.role != UserRole.Developer && user.userId == token.sid).length == 1;
-      if (!isProjectOwnerOrScrumMaster)
-        throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
+      // let isProjectOwnerOrScrumMaster = usersOnProject.filter(user => user.role != UserRole.Developer && user.userId == token.sid).length == 1;
+      // if (!isProjectOwnerOrScrumMaster)
+      //   throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
 
       let checkStory = await this.storyService.getStoryById(storyId);
       if (checkStory.isRealized)

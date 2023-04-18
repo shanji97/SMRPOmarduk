@@ -13,7 +13,6 @@ import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { StoryService } from '../story/story.service';
-import { inflateRaw } from 'zlib';
 
 @ApiTags('sprint')
 @ApiBearerAuth()
@@ -109,12 +108,11 @@ export class SprintController {
   @ApiForbiddenResponse()
   @Post(':sprintId/add-story/:storyId')
   async addStoryToSprint(@Token() token: TokenDto, @Param('sprintId', ParseIntPipe) sprintId: number, @Param('storyId', ParseIntPipe) storyId: number) {
-
-    let story = await this.storyService.getStoryById(storyId);
+    const story = await this.storyService.getStoryById(storyId);
     if (story == null)
       throw new BadRequestException('No story with the given ID exists');
 
-    let sprint = await this.sprintService.getSprintById(sprintId);
+    const sprint = await this.sprintService.getSprintById(sprintId);
     if (sprint == null)
       throw new BadRequestException('No sprint with the given ID exists in the ')
 
