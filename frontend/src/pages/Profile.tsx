@@ -4,7 +4,7 @@ import AddUser from "./AddUser";
 import Card from "../components/Card";
 import {parseJwt} from "../helpers/helpers";
 import { toast } from "react-toastify";
-import {disable2fa, getUser, setUp2FA, confirm2FA} from "../features/users/userSlice";
+import {disable2fa, getUser, setUp2FA, confirm2FA, get2faStatus} from "../features/users/userSlice";
 import { Button, Form, Modal } from "react-bootstrap";
 
 import classes from './Profile.module.css';
@@ -12,7 +12,7 @@ import QRCode from "react-qr-code";
 
 const Profile = () => {
     const dispatch = useAppDispatch();
-    const {userData, twofaConfirmed, qrUrl, isError, message} = useAppSelector(state => state.users);
+    const {userData, twofaConfirmed, qrUrl, isError, message, twoFaEnabled} = useAppSelector(state => state.users);
     const [userId, setUserId] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [codeText, setCodeText]   = useState('');
@@ -29,23 +29,29 @@ const Profile = () => {
         const uid = parseJwt(token).sid;
         setUserId(uid);
         dispatch(getUser(uid));
+        dispatch(get2faStatus(uid));
     }, [isError, message]);
 
     useEffect(() => {}, [qrUrl])
+    useEffect(() => {
+        console.log(twoFaEnabled);
+    }, [twoFaEnabled]);
 
     useEffect(() => {
         if (twofaConfirmed) {
             closeModal();
-            toast.success('2 Factor Authentication enabled!')
+            toast.info('2 Factor Authentication enabled!')
         }
     }, [twofaConfirmed]);
 
-
-
-
     const handle2faState = () => {
-        setShowModal(true);
-        dispatch(setUp2FA(userId));
+        if (twoFaEnabled) {
+            dispatch(disable2fa(userId));
+            toast.info('2 Factor Authentication disabled!');
+        } else {
+            dispatch(setUp2FA(userId));
+            setShowModal(true);
+        }
     }
 
     const handleCodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,13 +59,13 @@ const Profile = () => {
     }
 
     const handleConfirm2FA = () => {
-        // TODO send to backend
         const confirmData = {
             userId,
             code: codeText
         }
         console.log(confirmData);
         dispatch(confirm2FA(confirmData));
+        closeModal();
     }
 
     const renderModal = () => {
@@ -110,7 +116,7 @@ const Profile = () => {
                             onClick={handle2faState} 
                             style={{ float: 'right' }}
                         >
-                            Enable 2 Fa
+                            {twoFaEnabled ? 'Disable' : 'Enable'} 2 Fa
                         </Button>
                     </div>
                     {userData && (

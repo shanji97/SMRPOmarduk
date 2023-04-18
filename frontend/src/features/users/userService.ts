@@ -109,6 +109,16 @@ const confirm2FA = async (confirmData: {userId: string, code: string}, token: st
     return response.data;
 }
 
+const get2faStatus = async (userId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${USERS_API_URL}/${userId}/2fa/status`, config);
+    return response.data;
+}
+
 const disable2fa = async (userId: string, token: string) => {
     const config = {
         headers: {
@@ -143,6 +153,7 @@ const userService = {
     getUser,
     confirm2FA,
     disable2fa,
+    get2faStatus,
 }
 
 export default userService;
