@@ -205,7 +205,7 @@ export class ProjectController {
       throw new BadRequestException('The user is already a developer.');
 
     try {
-      await this.projectService.addDeveloperToProject(projectId, userId, UserRole.Developer);
+      await this.projectService.addUserToProject(projectId, userId, UserRole.Developer);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
