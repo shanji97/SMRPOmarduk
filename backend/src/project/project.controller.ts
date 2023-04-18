@@ -80,7 +80,7 @@ export class ProjectController {
       const projectId = (<any>row).id;
       for (const userRole of project.userRoles)
         for (const role of userRole.role)
-          await this.projectService.addDeveloperToProject(projectId, userRole.userId, role);
+          await this.projectService.addUserToProject(projectId, userRole.userId, role);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
