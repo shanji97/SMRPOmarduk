@@ -21,14 +21,12 @@ import {
 import { UserData } from "../classes/userData";
 import { ProjectState } from "../features/projects/projectSlice";
 import { toast } from "react-toastify";
-import { tr } from "date-fns/locale";
 import {
   addDeveloper,
   removeDeveloper,
   reset,
   updateProjectRoles,
 } from "../features/projects/projectRoleSlice";
-import { previousDay } from "date-fns";
 
 interface ProjectProps {
   idInit?: string;
@@ -54,10 +52,9 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
 
   useEffect(() => {
     setDevelopers([]);
-
     // put current roles (obtained from props) into state
     userRoles.forEach((user: any) => {
-      // TODO shady !!!
+      // TODO change ?
       if (user.role === 2) {
         setProductOwnerID(user.userId.toString());
         setInitProductOwnerID(user.userId.toString());
@@ -74,9 +71,6 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
     });
   }, [userRoles]);
 
-  console.log(userRoles);
-
-  const toastId = useRef(null);
   // alerts for errors/success
   useEffect(() => {
     if ((isSuccess || isSuccessAdd) && !isLoading) {
@@ -120,13 +114,11 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
     addNewDeveloperTouched && !enteredAddDeveloperValid;
 
   const removeDeveloperHandler = (index: any) => {
-    console.log("CALL REMOVE DEV ID: ", developers[index]);
     // TODO call remove
     let removeDeveloperData = {
       projectId: idInit,
       userId: developers[index],
     };
-    console.log(removeDeveloperData);
     dispatch(removeDeveloper(removeDeveloperData));
   };
 
@@ -169,7 +161,6 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
       userId: addNewDeveloper,
     };
 
-    console.log(addDeveloperData);
     dispatch(addDeveloper(addDeveloperData));
   };
 
@@ -179,7 +170,6 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
       projectId: idInit,
       userId: productOwnerID,
     };
-    console.log(projectRoleData);
     dispatch(updateProjectRoles(projectRoleData));
   };
 
@@ -189,13 +179,10 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
       projectId: idInit,
       userId: scrumMasterID,
     };
-    console.log(projectRoleData);
     dispatch(updateProjectRoles(projectRoleData));
   };
 
   const displayUsername = (member: string) => {
-    console.log(member);
-    console.log(users);
     let u = users.filter((user) => {
       return user.id?.toString() === member;
     });
@@ -284,7 +271,6 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
                 value={addNewDeveloper}
                 onChange={(e) => {
                   addDeveloperChangedHandler(e);
-                  // console.log(index);
                 }}
                 onBlur={addDeveloperBlurHandler}
                 isInvalid={addNewDeveloperInvalid}

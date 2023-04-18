@@ -53,7 +53,6 @@ const Projects = () => {
 
     const token = JSON.parse(localStorage.getItem("user")!).token;
     setIsAdmin(parseJwt(token).isAdmin);
-    // console.log(isAdmin);
 
     const id = parseJwt(token).sid;
     setUserId(id);
