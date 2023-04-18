@@ -188,18 +188,21 @@ export class ProjectController {
       throw new ForbiddenException('Only the administrator and the scrum master are allowed to add the developer.');
 
     // Get every user on the project and remove the project owner.
-    let allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId));
+    const allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId));
 
     // Check if we would like to add the dev role to the product owner.
     if (allUsersOnProject.filter(po => po.role == UserRole.ProjectOwner && po.userId == userId).length == 1)
       throw new BadRequestException('Product owner cannot also be a developer.');
 
     // Check if Scrum master already has a developer role.
-    let scrumMaster: ProjectUserRole = allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster)[0];
+    const scrumMasterUserId: number = allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster)[0].userId;
 
-    if (allUsersOnProject.filter(usersRoles => usersRoles.userId == scrumMaster.userId).length == 2)
+    // Get "all roles" with the current scrum master.
+    const scrumMastersRoles = allUsersOnProject.filter(scrumMastersRoles => scrumMastersRoles.userId = scrumMasterUserId);
+
+    if (scrumMastersRoles.length == 2 && scrumMasterUserId == userId) {
       throw new BadRequestException('The scrum master is already a developer.');
-
+    }
     // Check if the target user already has the developer role.
     if (allUsersOnProject.filter(dev => dev.role == UserRole.Developer && dev.userId == userId).length == 1)
       throw new BadRequestException('The user is already a developer.');
