@@ -164,7 +164,7 @@ export class ProjectService {
   }
 
   async overwriteUserRoleOnProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
-    await this.entityManager.update(ProjectUserRole, { userId: userId }, { projectId: projectId, role: role });
+    await this.entityManager.update(ProjectUserRole, { projectId, role: role }, { userId });
   }
 
   async removeUserFromProject(projectId: number, userId: number): Promise<void> {
