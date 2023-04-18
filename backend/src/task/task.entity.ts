@@ -9,7 +9,8 @@ export enum TaskCategory {
   ASSIGNED = 2,
   ACCEPTED = 3,
   ACTIVE = 4,
-  COMPLETED = 250
+  
+ ENDED = 250
 }
 
 @Entity()
