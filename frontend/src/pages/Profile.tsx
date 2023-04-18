@@ -35,14 +35,14 @@ const Profile = () => {
 
     useEffect(() => {
         if (twofaConfirmed) {
-            console.log('Confirmed');
             closeModal();
+            toast.success('2 Factor Authentication enabled!')
         }
     }, [twofaConfirmed]);
 
 
 
-    
+
     const handle2faState = () => {
         setShowModal(true);
         dispatch(setUp2FA(userId));
