@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {ProjectData, UserRole} from "../../classes/projectData";
+import {ProjectData, ProjectDataEdit, UserRole} from "../../classes/projectData";
 import projectService from "./projectService";
 
-interface ProjectState {
+
+export interface ProjectState {
     projectName: string
     userRoles: any[] // TODO fix this !!!
     isLoading: boolean
@@ -59,6 +60,17 @@ export const getProject = createAsyncThunk('project/getProject', async (id: stri
         return thunkAPI.rejectWithValue(message)
     }
 });
+
+export const editProject = createAsyncThunk('project/editProject', async (projectData: ProjectDataEdit, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await projectService.editProject(projectData, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
 
 export const projectSlice = createSlice({
     name: 'projects',
@@ -119,6 +131,22 @@ export const projectSlice = createSlice({
             state.userRoles = action.payload;
         })
         .addCase(getProject.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(editProject.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(editProject.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.userRoles = action.payload;
+        })
+        .addCase(editProject.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

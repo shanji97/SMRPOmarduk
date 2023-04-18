@@ -16,8 +16,6 @@ const create = async (storyData: StoryData, token: string) => {
     let projectID = storyData.projectID;
     delete storyData.projectID;
 
-    // console.log(storyData);
-
     const response = await axios.post(`${STORY_API_URL}/${projectID}/add-story`, storyData, config);
 
     return response.data;
