@@ -28,22 +28,21 @@ export class ProjectController {
     private readonly userService: UserService,
   ) { }
 
-  @ApiOperation({ summary: 'List projects' })
+  @ApiOperation({ summary: 'List projects.' })
   @ApiOkResponse()
   @Get()
   async listProjects(): Promise<Project[]> {
     return await this.projectService.getAllProjects();
   }
 
-  @ApiOperation({ summary: 'List projects with user data' })
+  @ApiOperation({ summary: 'List projects with user data.' })
   @ApiOkResponse()
   @Get('/withData')
   async listProjectsAndUserData(): Promise<ProjectDto[]> {
     return await this.projectService.getAllProjectsWithUserData();
   }
 
-
-  @ApiOperation({ summary: 'Get project by ID' })
+  @ApiOperation({ summary: 'Get project by ID.' })
   @ApiOkResponse()
   @ApiNotFoundResponse()
   @Get(':projectId')
@@ -54,7 +53,7 @@ export class ProjectController {
     return project;
   }
 
-  @ApiOperation({ summary: 'Create project' })
+  @ApiOperation({ summary: 'Create project.' })
   @ApiCreatedResponse()
   @ApiBadRequestResponse()
   @AdminOnly()
@@ -81,7 +80,7 @@ export class ProjectController {
       const projectId = (<any>row).id;
       for (const userRole of project.userRoles)
         for (const role of userRole.role)
-          await this.projectService.addUserToProject(projectId, userRole.userId, role);
+          await this.projectService.addDeveloperToProject(projectId, userRole.userId, role);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
@@ -127,7 +126,7 @@ export class ProjectController {
   @Patch(':projectId/change-user/role/:role')
   async changeProjectOwner(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('role', ParseIntPipe) role: number, @Body(new JoiValidationPipe(UpdateSuperiorUserSchema)) newUser: UpdateSuperiorUser) {
     if (!token.isAdmin) {
-      throw new ForbiddenException('Only the administrator can change the project owner.');
+      throw new ForbiddenException('Only the administrator can change the project owner or the scrum master.');
     }
 
     if (role != UserRole.ScrumMaster && role != UserRole.ProjectOwner) {
@@ -137,7 +136,7 @@ export class ProjectController {
     await this.projectService.overwriteUserRoleOnProject(projectId, newUser.newUserId, role);
   }
 
-  @ApiOperation({ summary: 'Delete project' })
+  @ApiOperation({ summary: 'Delete project.' })
   @ApiOkResponse()
   @AdminOnly()
   @Delete(':projectId')
@@ -145,8 +144,7 @@ export class ProjectController {
     await this.projectService.deleteProjectById(projectId);
   }
 
-
-  @ApiOperation({ summary: 'List users with roles on the project ' })
+  @ApiOperation({ summary: 'List users with roles on the project.' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Get(':projectId/user')
@@ -160,7 +158,7 @@ export class ProjectController {
     return await this.projectService.listUsersWithRolesOnProject(projectId);
   }
 
-  @ApiOperation({ summary: 'List users with role on the project' })
+  @ApiOperation({ summary: 'List users with role on the project.' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Get(':projectId/user/role/:role')
@@ -175,7 +173,7 @@ export class ProjectController {
     return await this.projectService.listUsersWithRoleOnProject(projectId, role);
   }
 
-  @ApiOperation({ summary: 'Add user to project' })
+  @ApiOperation({ summary: 'Add user to project.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @HttpCode(200)
@@ -207,7 +205,7 @@ export class ProjectController {
       throw new BadRequestException('The user is already a developer.');
 
     try {
-      await this.projectService.addUserToProject(projectId, userId, UserRole.Developer);
+      await this.projectService.addDeveloperToProject(projectId, userId, UserRole.Developer);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
@@ -215,7 +213,7 @@ export class ProjectController {
     }
   }
 
-  @ApiOperation({ summary: 'Remove developer from project' })
+  @ApiOperation({ summary: 'Remove developer from project.' })
   @ApiOkResponse()
   @Delete(':projectId/remove-developer/:userId')
   async removeDeveloperFromProject(

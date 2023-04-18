@@ -119,9 +119,8 @@ export class ProjectService {
     });
   }
 
-  async addUserToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
+  async addDeveloperToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
     try {
-      console.log(userId)
       // Check: User can't be project owner if he already has any other role
       if (role === UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, null))
         throw new ValidationException('User already has some role and can\'t be also project owner.');
