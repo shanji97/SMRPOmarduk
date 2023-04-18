@@ -136,10 +136,9 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicName">
-                    <Form.Label>Velocity</Form.Label>
+                    <Form.Label>Velocity (hours)</Form.Label>
                     <Form.Control 
                         type='number'
-                        placeholder="velocity in hours"
                         min={1}
                         name='velocity'
                         value={velocity}
