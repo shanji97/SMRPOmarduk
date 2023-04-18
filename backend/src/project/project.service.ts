@@ -138,7 +138,7 @@ export class ProjectService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('User already has same role on project');
+            throw new ValidationException('User already has same role on project.');
         }
       }
       throw ex;
