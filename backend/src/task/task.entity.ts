@@ -7,8 +7,9 @@ export enum TaskCategory {
   UNKNOWN = 0,
   UNASSIGNED = 1,
   ASSIGNED = 2,
-  ACTIVE = 3,
-  ENDED = 250
+  ACCEPTED = 3,
+  ACTIVE = 4,
+  COMPLETED = 250
 }
 
 @Entity()
@@ -23,16 +24,19 @@ export class Task {
   category: number;
 
   @Column({ type: 'float', unsigned: true })
-  remaining: number;
+  remaining: number; // estimate remaining work in houtrs
 
   @Column({ type: 'datetime', default: null })
   dateAssigned: string;
 
   @Column({ type: 'datetime', default: null })
+  dateAccepted: string;
+
+  @Column({ type: 'datetime', default: null })
   dateActive: string;
 
   @Column({ type: 'datetime', default: null })
-  dateEnded: string;
+  dateCompleted: string;
 
   @CreateDateColumn()
   dateCreated: string;
