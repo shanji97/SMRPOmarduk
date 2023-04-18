@@ -43,4 +43,10 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
 	JWT_PUBLIC_KEY_PATH: Joi.string(),
 	JWT_PRIVATE_KEY_PATH: Joi.string(),
 	JWT_ACCESS_TOKEN_EXPIRE: Joi.allow(Joi.string(), Joi.number()).default('1h'),
+
+  /**
+   * Bussines logic validation parameters
+   */
+  PERSON_HOURS_PER_DAY: Joi.number().min(0).default(8),
+  PERSON_MAX_LOAD_FACTOR: Joi.number().min(0).default(1.5),
 });

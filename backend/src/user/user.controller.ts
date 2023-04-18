@@ -11,6 +11,7 @@ import { UpdateUserDto, UpdateUserSchema } from './dto/update-user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { ValidationException } from '../common/exception/validation.exception';
+import { TokenDto } from '../auth/dto/token.dto';
 
 @ApiTags('user')
 @ApiBearerAuth()
@@ -95,6 +96,23 @@ export class UserController {
       if (token.sid !== userId) // Don't allow normal user to update other users data
         throw new ForbiddenException();
     await this.userService.deleteUserById(userId);
+  }
+
+  @ApiOperation({ summary: 'Check if 2FA is enabled for user' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Get(':userId/2fa/status')
+  async status2FA(
+    @Token() token: TokenDto,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<{ status: boolean }> {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
+
+    return {
+      status: await this.userService.hasUser2FA(userId),
+    };
   }
 
   @ApiOperation({ summary: 'Setup 2FA for user '})

@@ -17,6 +17,11 @@ interface UserState {
     message: any
     qrUrl: string
     lastLogin: string
+    firstLogin: boolean
+    finalLogin: boolean
+    twofaConfirmed: boolean
+    twofaAuthenticatedUsers: string[]
+    twoFaEnabled: boolean
 }
 
 const initialState: UserState = {
@@ -32,6 +37,11 @@ const initialState: UserState = {
     isCommonPassword: false,
     qrUrl: '',
     lastLogin: '',
+    firstLogin: false,
+    finalLogin: false,
+    twofaConfirmed: false,
+    twofaAuthenticatedUsers: [],
+    twoFaEnabled: false,
 }
 
 export const login = createAsyncThunk('auth/login', async (userData: LoginData, thunkAPI) => {
@@ -42,6 +52,26 @@ export const login = createAsyncThunk('auth/login', async (userData: LoginData, 
         return thunkAPI.rejectWithValue(message)
     }  
 });
+
+export const login2fa = createAsyncThunk('auth/2falogin', async (userData: LoginData, thunkAPI) => {
+    try {
+        return await userService.login(userData);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const disable2fa = createAsyncThunk('auth/disable2falogin', async (userId: string, thunkAPI) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.disable2fa(userId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
 
 export const logout = createAsyncThunk('auth/logout', async () => {
     await userService.logout();
@@ -117,6 +147,26 @@ export const setUp2FA = createAsyncThunk('/auth/setUp2FA', async (userId: string
     }
 });
 
+export const confirm2FA = createAsyncThunk('/auth/confirm2FA', async (confirmData: {userId: string, code: string}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.confirm2FA(confirmData, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const get2faStatus = createAsyncThunk('/auth/get2faStatus', async (userId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await userService.get2faStatus(userId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 export const getLastLogin = createAsyncThunk('/auth/lastLogin', async (userId: string, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -137,6 +187,9 @@ export const userSlice = createSlice({
             state.isError = false
             state.isSuccess = false
             state.message = ''
+        },
+        setUserAs2faAuthenticated: (state, action) => {
+            state.twofaAuthenticatedUsers.push(action.payload);
         }
     },
     extraReducers: builder => {
@@ -150,12 +203,81 @@ export const userSlice = createSlice({
                 state.isError = false;
                 state.message = '';
                 state.user = action.payload.token
+                state.firstLogin = true
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false
                 state.isError = true
                 state.message = action.payload
                 state.user = null
+                state.firstLogin = false;
+                state.finalLogin = false;
+            })
+            .addCase(login2fa.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(login2fa.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.user = action.payload.token
+                state.firstLogin = false;
+                state.finalLogin = true;
+            })
+            .addCase(login2fa.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+                state.user = null
+                state.firstLogin = false;
+                state.finalLogin = false;
+            })
+            .addCase(get2faStatus.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(get2faStatus.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.twoFaEnabled = action.payload.status;
+            })
+            .addCase(get2faStatus.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(disable2fa.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(disable2fa.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.twoFaEnabled = false;
+            })
+            .addCase(disable2fa.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(confirm2FA.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(confirm2FA.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.twofaConfirmed = true;
+                state.twoFaEnabled = true;
+            })
+            .addCase(confirm2FA.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
             })
             .addCase(getAllUsers.pending, (state) => {
                 state.isLoading = true
@@ -231,6 +353,7 @@ export const userSlice = createSlice({
                 state.isLoading = true
             })
             .addCase(setUp2FA.fulfilled, (state, action) => {
+                console.log('success setup');
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.isError = false;
@@ -305,4 +428,4 @@ export const userSlice = createSlice({
 })
 
 export default userSlice.reducer;
-export const {reset} = userSlice.actions
+export const {reset, setUserAs2faAuthenticated} = userSlice.actions

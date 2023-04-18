@@ -22,4 +22,5 @@ export interface UserDataEdit {
 export interface LoginData {
     username: string,
     password: string,
+    twoFa?:   string,
 }
