@@ -27,7 +27,7 @@ export class SprintController {
     private readonly storyService: StoryService
   ) { }
 
-  @ApiOperation({ summary: 'List sprints for project' })
+  @ApiOperation({ summary: 'List sprints for project.' })
   @ApiOkResponse()
   @Get('project/:projectId')
   async listSprintsForProject(
@@ -41,7 +41,7 @@ export class SprintController {
     return await this.sprintService.listSprintsForProject(projectId);
   }
 
-  @ApiOperation({ summary: 'Get sprint by ID' })
+  @ApiOperation({ summary: 'Get sprint by ID.' })
   @ApiOkResponse()
   @Get(':sprintId')
   async getSprintById(
@@ -58,7 +58,7 @@ export class SprintController {
     return sprint;
   }
 
-  @ApiOperation({ summary: 'Create new sprint' })
+  @ApiOperation({ summary: 'Create new sprint.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @ApiForbiddenResponse()
@@ -80,7 +80,7 @@ export class SprintController {
     }
   }
 
-  @ApiOperation({ summary: 'Update sprint' })
+  @ApiOperation({ summary: 'Update sprint.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @ApiForbiddenResponse()
@@ -105,24 +105,26 @@ export class SprintController {
 
   @ApiOperation({ summary: 'Add story to sprint.' })
   @ApiOkResponse()
-  @Patch(':sprintId/add-story/:storyId')
-  async addStoryToSprint(@Token() token, @Param('sprintId', ParseIntPipe) sprintId, @Param('storyId', ParseIntPipe) storyId) {
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @Post(':sprintId/add-story/:storyId')
+  async addStoryToSprint(@Token() token: TokenDto, @Param('sprintId', ParseIntPipe) sprintId: number, @Param('storyId', ParseIntPipe) storyId: number) {
 
     let story = await this.storyService.getStoryById(storyId);
     if (story == null)
       throw new BadRequestException('No story with the given ID exists');
 
     let sprint = await this.sprintService.getSprintById(sprintId);
-    if(sprint == null)
+    if (sprint == null)
       throw new BadRequestException('No sprint with the given ID exists in the ')
 
     if(!await this.projectService.hasUserRoleOnProject(story.projectId,token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the scrum master can add the story to sprint.');
-    
-    await this.sprintService.addStoryToSprint(sprintId,storyId);
+
+    await this.sprintService.addStoryToSprint(sprintId, storyId);
   }
 
-  @ApiOperation({ summary: 'Delete sprint' })
+  @ApiOperation({ summary: 'Delete sprint.' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Delete(':sprintId')
