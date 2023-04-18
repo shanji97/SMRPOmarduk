@@ -177,7 +177,7 @@ export class ProjectController {
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @HttpCode(200)
-  @Post(':projectId/add-developer/:userId')
+  @Post(':projectId/developer/:userId')
   async addDeveloperToProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
@@ -218,7 +218,7 @@ export class ProjectController {
 
   @ApiOperation({ summary: 'Remove developer from project.' })
   @ApiOkResponse()
-  @Delete(':projectId/remove-developer/:userId')
+  @Delete(':projectId/developer/:userId')
   async removeDeveloperFromProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,

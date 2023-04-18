@@ -119,9 +119,9 @@ export class ProjectService {
     });
   }
 
-  async countUsersWithRoleOnProject(projectId: number, roles: UserRole[] | number[] | UserRole | number ): Promise<number> {
+  async countUsersWithRoleOnProject(projectId: number, roles: UserRole[] | number[] | UserRole | number): Promise<number> {
     if (!Array.isArray(roles)) // Force an array
-        roles = [roles];
+      roles = [roles];
     const result = await this.entityManager.createQueryBuilder(ProjectUserRole, 'pur')
       .select('COUNT(DISTINCT(pur.userId))', 'cnt')
       .where('pur.projectId = :projectId AND pur.role IN (:...role)', { projectId: projectId, role: roles })
@@ -164,7 +164,7 @@ export class ProjectService {
   }
 
   async overwriteUserRoleOnProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
-    await this.entityManager.update(ProjectUserRole, { projectId, role: role }, { userId });
+    await this.entityManager.update(ProjectUserRole, { userId: userId }, { projectId: projectId, role: role });
   }
 
   async removeUserFromProject(projectId: number, userId: number): Promise<void> {
