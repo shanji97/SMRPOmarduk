@@ -119,7 +119,17 @@ export class ProjectService {
     });
   }
 
-  async addDeveloperToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
+  async countUsersWithRoleOnProject(projectId: number, roles: UserRole[] | number[] | UserRole | number ): Promise<number> {
+    if (!Array.isArray(roles)) // Force an array
+        roles = [roles];
+    const result = await this.entityManager.createQueryBuilder(ProjectUserRole, 'pur')
+      .select('COUNT(DISTINCT(pur.userId))', 'cnt')
+      .where('pur.projectId = :projectId AND pur.role IN (:...role)', { projectId: projectId, role: roles })
+      .getRawOne();
+    return (result) ? result.cnt : 0;
+  }
+
+  async addUserToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
     try {
       // Check: User can't be project owner if he already has any other role
       if (role === UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, null))
@@ -175,7 +185,6 @@ export class ProjectService {
     if (roles) {
       if (!Array.isArray(roles)) // Force an array
         roles = [roles];
-
       return await this.entityManager.countBy(ProjectUserRole, {
         projectId: projectId,
         userId: userId,
