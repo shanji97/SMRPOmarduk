@@ -4,7 +4,7 @@ import AddUser from "./AddUser";
 import Card from "../components/Card";
 import {parseJwt} from "../helpers/helpers";
 import { toast } from "react-toastify";
-import {disable2fa, getUser, setUp2FA, confirm2FA, get2faStatus} from "../features/users/userSlice";
+import {disable2fa, getUser, setUp2FA, confirm2FA, get2faStatus, reset} from "../features/users/userSlice";
 import { Button, Form, Modal } from "react-bootstrap";
 import QRCode from "react-qr-code";
 
@@ -19,7 +19,6 @@ const Profile = () => {
 
     const closeModal = () => {setShowModal(false)};
 
-
     useEffect(() => {
         if (isError) {
             toast.error(message);
@@ -33,9 +32,7 @@ const Profile = () => {
     }, [isError, message]);
 
     useEffect(() => {}, [qrUrl])
-    useEffect(() => {
-        console.log(twoFaEnabled);
-    }, [twoFaEnabled]);
+    useEffect(() => {}, [twoFaEnabled]);
 
     useEffect(() => {
         if (twofaConfirmed) {
@@ -63,7 +60,6 @@ const Profile = () => {
             userId,
             code: codeText
         }
-        console.log(confirmData);
         dispatch(confirm2FA(confirmData));
         closeModal();
     }

@@ -1,7 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
 import { CreateProjectDto, CreateProjectSchema } from './dto/create-project.dto';
 import { hasNewProjectDevelopers, hasNewProjectProjectOwner, hasNewProjectScrumMaster } from './dto/create-project-user-role.dto';
@@ -13,7 +12,10 @@ import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
-import { TokenDto } from '../auth/dto/token.dto';
+import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
+import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
+import { ProjectDto } from './dto/project.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -26,14 +28,21 @@ export class ProjectController {
     private readonly userService: UserService,
   ) { }
 
-  @ApiOperation({ summary: 'List projects' })
+  @ApiOperation({ summary: 'List projects.' })
   @ApiOkResponse()
   @Get()
   async listProjects(): Promise<Project[]> {
     return await this.projectService.getAllProjects();
   }
 
-  @ApiOperation({ summary: 'Get project by ID' })
+  @ApiOperation({ summary: 'List projects with user data.' })
+  @ApiOkResponse()
+  @Get('/withData')
+  async listProjectsAndUserData(): Promise<ProjectDto[]> {
+    return await this.projectService.getAllProjectsWithUserData();
+  }
+
+  @ApiOperation({ summary: 'Get project by ID.' })
   @ApiOkResponse()
   @ApiNotFoundResponse()
   @Get(':projectId')
@@ -44,7 +53,7 @@ export class ProjectController {
     return project;
   }
 
-  @ApiOperation({ summary: 'Create project' })
+  @ApiOperation({ summary: 'Create project.' })
   @ApiCreatedResponse()
   @ApiBadRequestResponse()
   @AdminOnly()
@@ -79,7 +88,55 @@ export class ProjectController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete project' })
+  @ApiOperation({ summary: "Update project name and description." })
+  @ApiOkResponse()
+  @Patch(':projectId')
+  async updateProject(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(UpdateProjectSchema)) project: UpdateProjectDto) {
+    try {
+
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster)) {
+        throw new ForbiddenException('User must be either an administrator or a scrum master to have any permission.');
+      }
+
+      let existingProject: Project = await this.projectService.getProjectById(projectId);
+      if (existingProject == null) {
+        throw new NotFoundException('Project with the given ID not found.');
+      }
+
+      existingProject.projectName = project.projectName;
+      existingProject.projectDescription = project.projectDescription == null ? existingProject.projectDescription : project.projectDescription;
+
+      await this.projectService.updateProjectById(projectId, existingProject);
+    }
+    catch (ex) {
+      if (ex instanceof ConflictException) {
+        throw new ConflictException(ex.message);
+      }
+      else if (ex instanceof NotFoundException) {
+        throw new NotFoundException(ex.message);
+      }
+      else {
+        throw new BadRequestException(ex.message);
+      }
+    }
+  }
+
+  @ApiOperation({ summary: 'Update the scrum master / product owner.' })
+  @ApiOkResponse()
+  @Patch(':projectId/change-user/role/:role')
+  async changeProjectOwner(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('role', ParseIntPipe) role: number, @Body(new JoiValidationPipe(UpdateSuperiorUserSchema)) newUser: UpdateSuperiorUser) {
+    if (!token.isAdmin) {
+      throw new ForbiddenException('Only the administrator can change the project owner or the scrum master.');
+    }
+
+    if (role != UserRole.ScrumMaster && role != UserRole.ProjectOwner) {
+      throw new BadRequestException('Only the scrum master and the product owner can be changed.');
+    }
+
+    await this.projectService.overwriteUserRoleOnProject(projectId, newUser.newUserId, role);
+  }
+
+  @ApiOperation({ summary: 'Delete project.' })
   @ApiOkResponse()
   @AdminOnly()
   @Delete(':projectId')
@@ -87,8 +144,7 @@ export class ProjectController {
     await this.projectService.deleteProjectById(projectId);
   }
 
-
-  @ApiOperation({ summary: 'List users with roles on the project '})
+  @ApiOperation({ summary: 'List users with roles on the project.' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Get(':projectId/user')
@@ -102,7 +158,7 @@ export class ProjectController {
     return await this.projectService.listUsersWithRolesOnProject(projectId);
   }
 
-  @ApiOperation({ summary: 'List users with role on the project' })
+  @ApiOperation({ summary: 'List users with role on the project.' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Get(':projectId/user/role/:role')
@@ -117,22 +173,42 @@ export class ProjectController {
     return await this.projectService.listUsersWithRoleOnProject(projectId, role);
   }
 
-  @ApiOperation({ summary: 'Add user to project' })
+  @ApiOperation({ summary: 'Add user to project.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @HttpCode(200)
-  @Post(':projectId/user/:userId/:role')
-  async addUserToProject(
+  @Post(':projectId/developer/:userId')
+  async addDeveloperToProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
     @Param('userId', ParseIntPipe) userId: number,
-    @Param('role', ParseIntPipe) role: number,
   ) {
-    // Check permissions
+
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException();
+      throw new ForbiddenException('Only the administrator and the scrum master are allowed to add the developer.');
+
+    // Get every user on the project and remove the project owner.
+    const allUsersOnProject: ProjectUserRole[] = (await this.projectService.listUsersWithRolesOnProject(projectId));
+
+    // Check if we would like to add the dev role to the product owner.
+    if (allUsersOnProject.filter(po => po.role == UserRole.ProjectOwner && po.userId == userId).length == 1)
+      throw new BadRequestException('Product owner cannot also be a developer.');
+
+    // Check if Scrum master already has a developer role.
+    const scrumMasterUserId: number = allUsersOnProject.filter(sc => sc.role == UserRole.ScrumMaster)[0].userId;
+
+    // Get "all roles" with the current scrum master.
+    const scrumMastersRoles = allUsersOnProject.filter(scrumMastersRoles => scrumMastersRoles.userId = scrumMasterUserId);
+
+    if (scrumMastersRoles.length == 2 && scrumMasterUserId == userId) {
+      throw new BadRequestException('The scrum master is already a developer.');
+    }
+    // Check if the target user already has the developer role.
+    if (allUsersOnProject.filter(dev => dev.role == UserRole.Developer && dev.userId == userId).length == 1)
+      throw new BadRequestException('The user is already a developer.');
+
     try {
-      await this.projectService.addUserToProject(projectId, userId, role);
+      await this.projectService.addUserToProject(projectId, userId, UserRole.Developer);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
@@ -140,32 +216,28 @@ export class ProjectController {
     }
   }
 
-  @ApiOperation({ summary: 'Remove role from user on project' })
+  @ApiOperation({ summary: 'Remove developer from project.' })
   @ApiOkResponse()
-  @Delete(':projectId/user/:userId/:role')
-  async removeUserRoleFromProject(
+  @Delete(':projectId/developer/:userId')
+  async removeDeveloperFromProject(
     @Token() token: TokenDto,
     @Param('projectId', ParseIntPipe) projectId: number,
     @Param('userId', ParseIntPipe) userId: number,
-    @Param('role', ParseIntPipe) role: number,
   ) {
-    // Check permissions
-    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException();
-    await this.projectService.removeRoleFromUserOnProject(projectId, userId, role);
-  }
 
-  @ApiOperation({ summary: 'Remove user from project' })
-  @ApiOkResponse()
-  @Delete(':projectId/user/:userId')
-  async removeUserFromProject(
-    @Token() token: TokenDto,
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('userId', ParseIntPipe) userId: number,
-  ) {
     // Check permissions
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException();
-    await this.projectService.removeUserFromProject(projectId, userId);
+      throw new ForbiddenException('Only the administrator and the scrum master are allowed to remove the developer.');
+
+    let developers: ProjectUserRole[] = await this.projectService.listUsersWithRoleOnProject(projectId, UserRole.Developer);
+
+    // Check if developer count in the project. 
+    if (developers.length == 1)
+      throw new BadRequestException('You cannot remove the only developer on a project.');
+
+    if (developers.filter(dev => dev.userId == userId).length == 0)
+      throw new BadRequestException('The user is not developer. Try again with a new user.');
+
+    await this.projectService.removeRoleFromUserOnProject(projectId, userId, UserRole.Developer);
   }
 }
