@@ -134,11 +134,31 @@ export class StoryController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete test from story' })
+  @ApiOperation({ summary: 'Realie story.' })
+  @ApiNoContentResponse()
+  @Patch('/test/:testId')
+  async realizeTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
+    const test: StoryTest = await this.testService.getTestById(testId);
+    if(test.isRealized)
+      throw new BadRequestException('Test is already realized.');
+
+    const story: Story = await this.storyService.getStoryById(test.storyId);
+    await this.storyService.checkStoryProperties(story);
+    const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
+    if (usersOnProject.length == 0)
+      throw new ForbiddenException('Only the product owner and scrum master can realize tests.');
+
+    // await this.testService.realiseTestById(testId);
+  }
+
+  @ApiOperation({ summary: 'Delete test from story.' })
   @ApiNoContentResponse()
   @Delete('/test/:testId')
   async deleteTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
     const test: StoryTest = await this.testService.getTestById(testId);
+    if(test.isRealized)
+      throw new BadRequestException('Test is already realized.');
+
     const story: Story = await this.storyService.getStoryById(test.storyId);
     await this.storyService.checkStoryProperties(story);
     const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
