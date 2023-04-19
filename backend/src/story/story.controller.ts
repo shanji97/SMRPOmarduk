@@ -15,9 +15,9 @@ import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/up
 import { StoryTest } from '../test/test.entity';
 
 @ApiTags('story')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
