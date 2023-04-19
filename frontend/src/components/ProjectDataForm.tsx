@@ -58,7 +58,7 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
     projectDescriptionInit ? projectDescriptionInit : ""
   );
 
-  console.log(projectName, projectDescription);
+  // console.log(projectName, projectDescription);
 
   const [projectNameTouched, setProjectNameTouched] = useState(false);
 

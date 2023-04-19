@@ -21,12 +21,15 @@ const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { users, userData } = useAppSelector((state) => state.users);
-  const isAdmin = userData.isAdmin ? userData.isAdmin : false;
-  const userId = userData.id ? userData.id : "";
+  // const isAdmin = userData.isAdmin ? userData.isAdmin : false;
+  // const userId = userData.id ? userData.id : "";
 
   let { projects, activeProject, isError, isSuccess } = useAppSelector(
     (state) => state.projects
   );
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState("");
 
   const [editIndexProject, setEditIndexProject] = useState(-1);
   const [editIndexRoles, setEditIndexRoles] = useState(-1);
@@ -39,6 +42,12 @@ const Projects = () => {
       return;
     }
     dispatch(getAllProjects());
+
+    const token = JSON.parse(localStorage.getItem("user")!).token;
+    const isAdmin = parseJwt(token).isAdmin;
+    setIsAdmin(isAdmin);
+    const id = parseJwt(token).sid;
+    setUserId(id);
   }, []);
 
   // when projects are fetched, reset project state
