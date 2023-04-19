@@ -353,7 +353,6 @@ export const userSlice = createSlice({
                 state.isLoading = true
             })
             .addCase(setUp2FA.fulfilled, (state, action) => {
-                console.log('success setup');
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.isError = false;

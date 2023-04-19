@@ -38,7 +38,7 @@ const Sprints = () => {
           <tr>
             <th>#</th>
             <th>Sprint name</th>
-            <th>Velocity</th>
+            <th>Velocity (hours)</th>
             <th>Date range</th>
           </tr>
           </thead>

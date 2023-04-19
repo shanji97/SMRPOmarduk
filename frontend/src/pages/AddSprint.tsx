@@ -34,7 +34,7 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
             toast.success('Sprint updated!');
         }
         else if (isError && !isSuccess && message !== '') {
-            toast.error(message);
+            message.includes('400') ? toast.error('Invalid velocity value!') : toast.error(message);
         } else if (isSuccess && !isError && message === '') {
             toast.success('Sprint created!');
         }
@@ -66,24 +66,6 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
 
     const [dateRange, setDateRange] = useState<DateRangeSpecs>(dateRangeInit);
     const {name, velocity} = sprintData;
-
-    const formIsValid = useMemo(() => {
-        const startDate = new Date(dateRange.startDate);
-        const endDate = new Date(dateRange.endDate);
-        const today = new Date();
-        const todayWithoutTime = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate()
-        );
-
-        return (
-          name !== '' &&
-          velocity > 0 &&
-          startDate >= todayWithoutTime &&
-          startDate < endDate
-        );
-    }, [name, velocity, dateRange.startDate, dateRange.endDate]);
 
     const sprintDataChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSprintData(sprintData => ({
@@ -139,7 +121,6 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
                     <Form.Label>Velocity (hours)</Form.Label>
                     <Form.Control 
                         type='number'
-                        min={1}
                         name='velocity'
                         value={velocity}
                         onChange={sprintDataChanged}
@@ -153,7 +134,7 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
                         onChange={handleSelect}
                     />
                 </div>
-                <Button type='submit' disabled={!formIsValid}>+ Add</Button>
+                <Button type='submit' disabled={name === ''}>+ Add</Button>
             </Form>
         </Card>
     );
