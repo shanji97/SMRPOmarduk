@@ -20,37 +20,26 @@ import { getAllUsers } from "../features/users/userSlice";
 const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { users } = useAppSelector((state) => state.users);
+  const { users, userData } = useAppSelector((state) => state.users);
+  const isAdmin = userData.isAdmin ? userData.isAdmin : false;
+  const userId = userData.id ? userData.id : "";
 
   let { projects, activeProject, isError, isSuccess } = useAppSelector(
     (state) => state.projects
   );
-
-  // store isAdmin in state for now
-  // TODO rewrite this later
-  const [isAdmin, setIsAdmin] = useState(false);
 
   const [editIndexProject, setEditIndexProject] = useState(-1);
   const [editIndexRoles, setEditIndexRoles] = useState(-1);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [showEditRolesModal, setShowEditRolesModal] = useState(false);
 
-  const [userId, setUserId] = useState("");
-
   useEffect(() => {
     if (localStorage.getItem("user") == null) {
       navigate("/login");
       return;
     }
-
-    const token = JSON.parse(localStorage.getItem("user")!).token;
-    setIsAdmin(parseJwt(token).isAdmin);
-
-    const id = parseJwt(token).sid;
-    setUserId(id);
-
     dispatch(getAllProjects());
-  }, [isAdmin]);
+  }, []);
 
   // when projects are fetched, reset project state
   // so it doesn't interfere with other components
@@ -139,11 +128,15 @@ const Projects = () => {
                         >
                           Make active
                         </Dropdown.Item>
-                        <Dropdown.Item
-                          onClick={() => redirectToAddStory(project.id)}
-                        >
-                          Add story
-                        </Dropdown.Item>
+                        {(isAdmin ||
+                          isUserScrumMaster(project.userRoles) ||
+                          isUserProductOwner(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => redirectToAddStory(project.id)}
+                          >
+                            Add story
+                          </Dropdown.Item>
+                        )}
                         <Dropdown.Item
                           onClick={() => redirectToAddSprint(project.id)}
                         >
