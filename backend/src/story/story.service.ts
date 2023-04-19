@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager } from 'typeorm';
@@ -14,7 +14,6 @@ export class StoryService {
   private readonly logger: Logger = new Logger(StoryService.name);
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
     @InjectRepository(Story)
     private readonly storyRepository: Repository<Story>,
@@ -75,6 +74,10 @@ export class StoryService {
     await this.storyRepository.delete({ id: storyId });
   }
 
+  async deleteStory(story: Story) {
+    await this.storyRepository.delete(story);
+  }
+
   async getStoryByTitleAndProjectId(title: string, projectId: number): Promise<Story> {
     return await this.storyRepository.findOneBy({ title: title, projectId: projectId });
   }
@@ -120,6 +123,16 @@ export class StoryService {
     return existingStory;
   }
 
+  async checkStoryProperties(story: Story) {
+    if (!story) {
+      throw new NotFoundException('The story was not found.');
+    }
+    if (story.isRealized)
+      throw new BadRequestException('A realized story cannot be deleted.');
+
+    if (await this.isStoryInSprint(story.id))
+      throw new BadRequestException('The story has been already added to sprint.');
+  }
 
   async hasUserPermissionForStory(userId: number, storyId: number): Promise<boolean> {
     const projectId = await this.getStoryProjectId(storyId);

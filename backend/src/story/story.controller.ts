@@ -6,13 +6,13 @@ import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { UpdateStoryDto, UpdateStorySchema } from './dto/update-story.dto';
 import { Category, Story } from './story.entity';
 import { StoryService } from './story.service';
-import { TestService } from '../test/test.service';
+import { TestService as StoryTestService } from '../test/test.service';
 import { ValidationException } from '../common/exception/validation.exception';
 import { Token } from '../auth/decorator/token.decorator';
 import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
-import { tokenSchema } from 'src/auth/dto/token.dto';
+import { StoryTest } from '../test/test.entity';
 
 @ApiTags('story')
 // @ApiBearerAuth()
@@ -22,25 +22,35 @@ import { tokenSchema } from 'src/auth/dto/token.dto';
 export class StoryController {
   constructor(
     private readonly storyService: StoryService,
-    private readonly testService: TestService,
+    private readonly testService: StoryTestService,
     private readonly projectService: ProjectService,
   ) { }
 
-  @ApiOperation({ summary: 'List stories' })
+  @ApiOperation({ summary: 'List stories.' })
   @ApiOkResponse()
   @Get()
   async listStories(): Promise<Story[]> {
     return await this.storyService.getAllStories();
   }
 
-  @ApiOperation({ summary: 'Get story by ID' })
+  @ApiOperation({ summary: 'Get story by ID.' })
   @ApiOkResponse()
   @Get(':storyId')
   async getStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<Story> {
-    const story = await this.storyService.getStoryById(storyId);
+    const story: Story = await this.storyService.getStoryById(storyId);
     if (!story)
       throw new NotFoundException('Story not found.');
     return story;
+  }
+
+  @ApiOperation({ summary: 'Get tests for a particullar story.' })
+  @ApiOkResponse()
+  @Get(':storyId/tests')
+  async getTestForStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<StoryTest[]> {
+    const storyTests: StoryTest[] = await this.testService.getTestsByStory(storyId);
+    if (!storyTests)
+      throw new NotFoundException('Tests for story not found.');
+    return storyTests;
   }
 
   @ApiOperation({ summary: 'Create story.' })
@@ -68,14 +78,12 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Get story data by project ID.' })
   @ApiOkResponse()
-  @ApiBadRequestResponse()
-  @ApiNotFoundResponse()
   @Get(':projectId')
   async getStoriesWithData(@Param('projectId', ParseIntPipe) projectId: number): Promise<Story[]> {
     return await this.storyService.getStoriesByProjectId(projectId);
   }
 
-  @ApiOperation({ summary: 'Update story category' })
+  @ApiOperation({ summary: 'Update story category.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @ApiNotFoundResponse()
@@ -102,14 +110,14 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
-  @Patch('/:projectId/update-story/:storyId')
+  @Patch('/:projectId/story/:storyId')
   async updateStory(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
     try {
 
       let usersOnProject = await this.projectService.listUsersWithRolesOnProject(projectId);
-      // let isProjectOwnerOrScrumMaster = usersOnProject.filter(user => user.role != UserRole.Developer && user.userId == token.sid).length == 1;
-      // if (!isProjectOwnerOrScrumMaster)
-      //   throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
+      let isProjectOwnerOrScrumMaster = usersOnProject.filter(user => user.role != UserRole.Developer && user.userId == token.sid).length == 1;
+      if (!isProjectOwnerOrScrumMaster)
+        throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
 
       let checkStory = await this.storyService.getStoryById(storyId);
       if (checkStory.isRealized)
@@ -126,18 +134,30 @@ export class StoryController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete story' })
-  @ApiOkResponse()
+  @ApiOperation({ summary: 'Delete test from story' })
+  @ApiNoContentResponse()
+  @Delete('/test/:testId')
+  async deleteTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
+    const test: StoryTest = await this.testService.getTestById(testId);
+    const story: Story = await this.storyService.getStoryById(test.storyId);
+    await this.storyService.checkStoryProperties(story);
+    const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
+    if (usersOnProject.length == 0)
+      throw new ForbiddenException('Only the product owner and scrum master can delete tests.');
+
+    await this.testService.deleteTestById(testId);
+  }
+
+
+  @ApiOperation({ summary: 'Delete story.' })
   @ApiNoContentResponse()
   @Delete(':storyId')
   async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
-    const story: Story = await this.getStory(storyId);
-
-    if (story.isRealized)
-      throw new BadRequestException('A realized story cannot be deleted.');
-
-    if (await this.storyService.isStoryInSprint(storyId))
-      throw new BadRequestException('The story has been already added to sprint.');
+    const story: Story = await this.storyService.getStoryById(storyId);
+    await this.storyService.checkStoryProperties(story);
+    const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
+    if (usersOnProject.length == 0)
+      throw new ForbiddenException('Only the product owner and scrum master can delete stories.');
 
     await this.storyService.deleteStoryById(storyId);
   }

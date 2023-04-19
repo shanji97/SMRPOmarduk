@@ -2,10 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
-
 import { StoryTest } from './test.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { CreateTestDto, CreateTestSchema } from './dto/create-test.dto';
 
 @Injectable()
 export class TestService {
@@ -23,6 +21,10 @@ export class TestService {
 
     async getTestById(testId: number): Promise<StoryTest> {
         return await this.testRepository.findOneBy({ id: testId });
+    }
+
+    async getTestsByStory(storyId: number): Promise<StoryTest[]> {
+        return await this.testRepository.findBy({ storyId: storyId });
     }
 
     async createTest(storyId: number, testName: string[]) {
