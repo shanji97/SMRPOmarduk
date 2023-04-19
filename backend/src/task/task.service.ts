@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
+import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
 
+import { ProjectService } from '../project/project.service';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
+import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
 @Injectable()
@@ -11,6 +13,7 @@ export class TaskService {
   private readonly logger: Logger = new Logger(TaskService.name);
 
   constructor(
+    private readonly projectService: ProjectService,
     private readonly storyService: StoryService,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
@@ -21,16 +24,24 @@ export class TaskService {
   }
 
   async getTasksForSprint(sprintId: number): Promise<Task[]> {
-    // TODO
-    return [];
+    const storyIds: number[] = await this.storyService.getStoryIdsForSprint(sprintId);
+
+    return await this.taskRepository.findBy({ storyId: In(storyIds) });
   }
 
   async getTaskById(taskId: number): Promise<Task> {
     return await this.taskRepository.findOneBy({ id: taskId });
   }
 
+  async getStoryIdForTaskById(taskId: number): Promise<number | null> {
+    const result = await this.taskRepository.findOne({ where: { id: taskId }, select: ['storyId'] });
+    return result.storyId || null;
+  }
+
   async createTask(storyId: number, task: DeepPartial<Task>): Promise<void> {
-    // TODO: Check if story is part of active sprint, else error
+    // Check if we are trying to insert task into active sprint
+    if (!await this.storyService.isStoryInActiveSprint(storyId))
+      throw new ValidationException('Story not in active sprint');
 
     // TODO: Check remaining value
 
@@ -43,7 +54,9 @@ export class TaskService {
   }
 
   async updateTask(taskId: number, task: DeepPartial<Task>): Promise<void> {
-    // TODO: Check if task is part of active sprint
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
 
     // TODO: Check remaining value
 
@@ -51,7 +64,9 @@ export class TaskService {
   }
 
   async deleteTask(taskId: number): Promise<void> {
-    // TODO: Check if task is part of active sprint
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
 
     await this.taskRepository.delete({ id: taskId });
   }
@@ -64,7 +79,9 @@ export class TaskService {
   }
 
   async assignTaskToUser(taskId: number, userId: number): Promise<void> {
-    // TODO: Check if task is part of active sprint
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
 
     const task = await this.getTaskById(taskId);
     if (!task)
@@ -72,6 +89,11 @@ export class TaskService {
     if (task.category != TaskCategory.UNASSIGNED)
       throw new ValidationException('Task is not unassigned');
     
+    // Only users that have role on project, can be assigned to task
+    const projectId: number = await this.getTaskProjectId(task.id);
+    if (!await this.projectService.hasUserRoleOnProject(projectId, userId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ValidationException('User hasn\'t got role on the project');
+
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ASSIGNED,
       dateAssigned: () => 'NOW()', // TODO: Check if working
@@ -80,12 +102,14 @@ export class TaskService {
   }
 
   async acceptTask(taskId: number): Promise<void> {
-    // TODO: Check if task is part of active sprint
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
 
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category != TaskCategory.ASSIGNED)
+    if (!task.assignedUserId || task.category != TaskCategory.ASSIGNED)
       throw new ValidationException('Task not assigned to user');
     
     await this.taskRepository.update({ id: taskId }, {
@@ -94,14 +118,15 @@ export class TaskService {
     });
   }
 
-  // TODO: Reject task (reset date assigned)
   async rejectTask(taskId: number): Promise<void> {
-    // TODO: Check if task is part of active sprint
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
 
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category != TaskCategory.ASSIGNED)
+    if (!task.assignedUserId || task.category != TaskCategory.ASSIGNED)
       throw new ValidationException('Task not assigned to user');
     
     await this.taskRepository.update({ id: taskId }, {
@@ -112,13 +137,15 @@ export class TaskService {
   }
 
   async releaseTask(taskId: number): Promise<void> {
-    // TODO: Check if task is part of active sprint
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
 
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category == TaskCategory.ENDED)
-      throw new ValidationException('Task already completed');
+    if (![TaskCategory.ACCEPTED, TaskCategory.ACTIVE, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED].includes(task.category))
+      throw new ValidationException('User can\'t be unassigned');
 
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.UNASSIGNED,
@@ -129,11 +156,18 @@ export class TaskService {
     });
   }
 
-  async hasUserPermissionForTask(userId: number, taskId: number): Promise<boolean> {
-    const task = await this.getTaskById(taskId);
-    if (!task)
+  async isTaskInActiveSprint(taskId: number): Promise<boolean> {
+    const storyId = await this.getStoryIdForTaskById(taskId);
+    if (!storyId) // Task does not exit
       return false;
-    return await this.storyService.hasUserPermissionForStory(userId, task.storyId);
+    return await this.storyService.isStoryInActiveSprint(storyId);
+  }
+
+  async hasUserPermissionForTask(userId: number, taskId: number): Promise<boolean> {
+    const storyId = await this.getStoryIdForTaskById(taskId);
+    if (!storyId)
+      return false;
+    return await this.storyService.hasUserPermissionForStory(userId, storyId);
   }
 
 }

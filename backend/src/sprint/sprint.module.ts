@@ -19,5 +19,8 @@ import { SprintService } from './sprint.service';
   controllers: [
     SprintController,
   ],
+  exports: [
+    SprintService,
+  ],
 })
 export class SprintModule {}

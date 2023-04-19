@@ -7,6 +7,7 @@ import { ProjectService } from '../project/project.service';
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { CreateStoryDto } from './dto/create-story.dto';
+import { UserRole } from '../project/project-user-role.entity';
 
 @Injectable()
 export class StoryService {
@@ -93,11 +94,19 @@ export class StoryService {
     return newStory;
   }
 
-  async hasUserPermissionForStory(userId: number, storyId: number): Promise<boolean> {
+  async hasUserPermissionForStory(userId: number, storyId: number, userRole: UserRole[] | UserRole | number | null = null): Promise<boolean> {
     const projectId = await this.getStoryProjectId(storyId);
     if (!projectId)
       return false;
     
-    return await this.projectService.hasUserRoleOnProject(projectId, userId, null); // If user has any role on project, he can view it
+    return await this.projectService.hasUserRoleOnProject(projectId, userId, userRole); // If user has any role on project, he can view it
+  }
+
+  async isStoryInActiveSprint(storyId: number): Promise<boolean> {
+    return true; // TODO: Implement query when many to many relation will be implemented
+  }
+
+  async getStoryIdsForSprint(sprintId: number): Promise<number[]> {
+    return []; // TODO: Implement query when many to many relation will be implemented
   }
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ProjectModule } from '../project/project.module';
+import { SprintModule } from '../sprint/sprint.module';
 import { StoryModule } from '../story/story.module';
 import { Task } from './task.entity';
 import { TaskService } from './task.service';
@@ -13,6 +14,7 @@ import { TaskController } from './task.controller';
       Task,
     ]),
     ProjectModule,
+    SprintModule,
     StoryModule,
   ],
   providers: [
