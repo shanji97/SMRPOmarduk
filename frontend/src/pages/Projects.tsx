@@ -127,11 +127,15 @@ const Projects = () => {
                         >
                           Make active
                         </Dropdown.Item>
-                        <Dropdown.Item
-                          onClick={() => redirectToAddStory(project.id)}
-                        >
-                          Add story
-                        </Dropdown.Item>
+                        {(isAdmin ||
+                          isUserScrumMaster(project.userRoles) ||
+                          isUserProductOwner(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => redirectToAddStory(project.id)}
+                          >
+                            Add story
+                          </Dropdown.Item>
+                        )}
                         <Dropdown.Item
                           onClick={() => redirectToAddSprint(project.id)}
                         >
