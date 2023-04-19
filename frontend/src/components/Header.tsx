@@ -21,7 +21,8 @@ function Header() {
   const { user, lastLogin, userData } = useAppSelector((state) => state.users);
   const { sprints } = useAppSelector((state) => state.sprints);
   const {activeProject} = useAppSelector(state => state.projects);
-
+  
+  const [sub, setSub] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastLoginDate, setLastLoginDate] = useState("");
 
@@ -31,6 +32,8 @@ function Header() {
     }
     const token = JSON.parse(localStorage.getItem("user")!).token;
     const userData1 = parseJwt(token);
+    
+    setSub(userData1.sub);
     setIsAdmin(userData1.isAdmin);
 
     dispatch(getLastLogin(userData1.sid));
@@ -167,7 +170,7 @@ function Header() {
                       <div style={{ display: "inline-flex" }}>
                     <span>
                       <PersonCircle className="mb-1"></PersonCircle>{" "}
-                      {userData.username},{" "}
+                      {sub},{" "}
                     </span>
                         {lastLoginDate ? (
                             <p>Last login: {parseDate(lastLoginDate)}</p>
@@ -192,7 +195,7 @@ function Header() {
               <NavDropdown.Item onClick={redirectToEditProfile}>
                 Edit profile
               </NavDropdown.Item>
-              {userData.isAdmin && (
+              {isAdmin && (
                   <Fragment>
                     <NavDropdown.Item onClick={redirectToUsers}>
                       Users
