@@ -21,7 +21,7 @@ import {
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { Link, useNavigate } from "react-router-dom";
-import { StoryData, SprintBacklogItemStatus } from '../classes/storyData';
+import { StoryData, ProductBacklogItemStatus } from '../classes/storyData';
 
 import produce from 'immer';
 import  DeleteConfirmation  from './DeleteConfirmation'
@@ -89,14 +89,13 @@ const columnsFromBackend = {
 
 
 const defaultItems = {
-  [SprintBacklogItemStatus.UNALLOCATED]: [],
-  [SprintBacklogItemStatus.ALLOCATED]: [],
-  [SprintBacklogItemStatus.IN_PROGRESS]: [],
-  [SprintBacklogItemStatus.DONE]: [],
+  [ProductBacklogItemStatus.UNALLOCATED]: [],
+  [ProductBacklogItemStatus.ALLOCATED]: [],
+  [ProductBacklogItemStatus.DONE]: [],
   
 };
 
-type TaskboardData = Record<SprintBacklogItemStatus, StoryData[]>;
+type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 
 
@@ -160,9 +159,9 @@ function Dashboard() {
           return;
         }
         const [removed] = draft[
-          source.droppableId as SprintBacklogItemStatus
+          source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
-        draft[destination.droppableId as SprintBacklogItemStatus].splice(
+        draft[destination.droppableId as ProductBacklogItemStatus].splice(
           destination.index,
           0,
           removed
@@ -173,7 +172,7 @@ function Dashboard() {
   
   
 
-  type HandleDeleteFunc = (args: { status: SprintBacklogItemStatus; itemToDelete: StoryData }) => void;
+  type HandleDeleteFunc = (args: { status: ProductBacklogItemStatus; itemToDelete: StoryData }) => void;
 
   const handleDelete: HandleDeleteFunc = ({
     status,
@@ -193,7 +192,7 @@ function Dashboard() {
   //doda začetne elemnte
   
   useEffect(() => {
-    //console.log(SprintBacklogItemStatus)
+    //console.log(ProductBacklogItemStatus)
     //console.log(itemsByStatus)
 
     const isEmpty = Object.values(itemsByStatus).every(value => value.length === 0);
@@ -203,22 +202,20 @@ function Dashboard() {
           
           setItemsByStatus((current) =>
               produce(current, (draft) => {
-                  //for (const status of Object.values(SprintBacklogItemStatus)) {
+                  //for (const status of Object.values(ProductBacklogItemStatus)) {
                   //  draft[status] = draft[status].filter(() => false);
                   //}
 
                   // Adding new item as "to do"
                   
                   stories.forEach((story: StoryData) => {
-                    draft[SprintBacklogItemStatus.UNALLOCATED].push({ 
-                      id: story.id?.toString(), 
+                    draft[ProductBacklogItemStatus.UNALLOCATED].push({ id: story.id?.toString(), 
                       title: story.title, 
                       description: story.description,
                       tests: story.tests,
                       priority: story.priority,
                       businessValue: story.businessValue,
-                      sequenceNumber: story.sequenceNumber 
-                    });
+                      sequenceNumber: story.sequenceNumber });
                       
                   })
               })
@@ -278,19 +275,23 @@ function Dashboard() {
     <>
     
     <div className="row flex-row flex-sm-nowrap m-1 mt-3">
-      
-      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="text-center col-sm-4 col-md-3 col-xl-3 mt-3">
+        <Button size="lg" variant="light">Wall</Button>
+        </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
         
-        {Object.values(SprintBacklogItemStatus).map((status) => {
+        {Object.values(ProductBacklogItemStatus).map((status) => {
           //console.log(columns)
           return (
+            <>
+           
             <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
               <Card className="bg-light border-0 ">
                 <div className="pt-3 hstack gap-2 mx-3">
                   <Card.Title className="fs-6 my-0">{status}</Card.Title>
                   <div className="vr my-0"></div>
                   <p className="fs-6 my-0">6</p>
-                  { (status === SprintBacklogItemStatus.UNALLOCATED) && <Button className="ms-auto" variant="light">New Card</Button> }
+                  { (status === ProductBacklogItemStatus.UNALLOCATED) && <Button className="ms-auto" variant="light">New Card</Button> }
                 </div>
                 <hr className="hr mx-3" />
                 
@@ -319,7 +320,7 @@ function Dashboard() {
                               key={item.id}
                               draggableId={item.id!}
                               index={index}
-                              isDragDisabled={status === SprintBacklogItemStatus.DONE}
+                              isDragDisabled={status === ProductBacklogItemStatus.DONE}
                             >
                               
                               {(provided, snapshot) => {
@@ -341,11 +342,9 @@ function Dashboard() {
                                       <p className="fs-6 text-muted m-1">
                                         TSK-{item.sequenceNumber}
                                       </p>
-                                      <p className="fs-6 text-muted m-1  text-truncate">
-                                        sivar.lapajne@gmail.com
-                                      </p>
                                       
-                                      <Dropdown className="">
+                                      
+                                      <Dropdown className="ms-auto">
                                         
                                         <Dropdown.Toggle
                                           variant="link"
@@ -375,7 +374,7 @@ function Dashboard() {
 
                                             <Trash /> Delete
                                           </Dropdown.Item>
-                                          {/* <DeleteConfirmation item={item} status={status}  onCancel={() => setShow(false)} show={show} onDelete={handleDelete}/> */}
+                                          <DeleteConfirmation item={item} status={status}  onCancel={() => setShow(false)} show={show} onDelete={handleDelete}/>
                                           <Dropdown.Item href="#/action-3">
                                             Something else
                                           </Dropdown.Item>
@@ -431,35 +430,7 @@ function Dashboard() {
                                         
                                       </div>
                                     </Card.Body>
-                                    <Card.Footer className="bg-transparent pb-0 px-2">
-                                    
-                                    <ListGroup className="pb-0 px-2"> 
-                                      <ListGroup.Item
-                                        className={`d-flex justify-content-between align-items-center border-0 mb-2 rounded ${classes["listItem-bg"]}`}>
-                                        <div className="d-flex align-items-center">
-                                          <input className="form-check-input me-2" type="checkbox" value="" aria-label="..." />
-                                          Cras justo odio
-                                        </div>
-                                        <a href="#!" data-mdb-toggle="tooltip" title="Remove item">
-                                          <X className="text-primary"/>
-                                        </a>
-                                        </ListGroup.Item>
-                                        <ListGroup.Item
-                                        className={`d-flex justify-content-between align-items-center border-0 mb-2 rounded ${classes["listItem-bg"]}`}>
-                                        <div className="d-flex align-items-center">
-                                          <input className="form-check-input me-2" type="checkbox" value="" aria-label="..." />
-                                          Cras justo odio
-                                        </div>
-                                        <a href="#!" data-mdb-toggle="tooltip" title="Remove item">
-                                          <X className="text-primary"/>
-                                        </a>
-                                        
-                                        </ListGroup.Item>
-
-                                    </ListGroup>                           
                                    
-
-                                    </Card.Footer>
                                     <ListGroup variant="flush">
         <ListGroup.Item><Row><Col  sm={7}>Time complexity: </Col>
         <Col sm={5}>
@@ -510,6 +481,7 @@ function Dashboard() {
               </Card>
 
             </div>
+            </>
           );
         })}
       </DragDropContext>

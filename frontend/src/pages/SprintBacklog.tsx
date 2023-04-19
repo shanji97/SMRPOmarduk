@@ -210,15 +210,13 @@ function Dashboard() {
                   // Adding new item as "to do"
                   
                   stories.forEach((story: StoryData) => {
-                    draft[SprintBacklogItemStatus.UNALLOCATED].push({ 
-                      id: story.id?.toString(), 
+                    draft[SprintBacklogItemStatus.UNALLOCATED].push({ id: story.id?.toString(), 
                       title: story.title, 
                       description: story.description,
                       tests: story.tests,
                       priority: story.priority,
                       businessValue: story.businessValue,
-                      sequenceNumber: story.sequenceNumber 
-                    });
+                      sequenceNumber: story.sequenceNumber });
                       
                   })
               })
@@ -290,7 +288,6 @@ function Dashboard() {
                   <Card.Title className="fs-6 my-0">{status}</Card.Title>
                   <div className="vr my-0"></div>
                   <p className="fs-6 my-0">6</p>
-                  { (status === SprintBacklogItemStatus.UNALLOCATED) && <Button className="ms-auto" variant="light">New Card</Button> }
                 </div>
                 <hr className="hr mx-3" />
                 
@@ -375,7 +372,6 @@ function Dashboard() {
 
                                             <Trash /> Delete
                                           </Dropdown.Item>
-                                          {/* <DeleteConfirmation item={item} status={status}  onCancel={() => setShow(false)} show={show} onDelete={handleDelete}/> */}
                                           <Dropdown.Item href="#/action-3">
                                             Something else
                                           </Dropdown.Item>
@@ -460,31 +456,8 @@ function Dashboard() {
                                    
 
                                     </Card.Footer>
-                                    <ListGroup variant="flush">
-        <ListGroup.Item><Row><Col  sm={7}>Time complexity: </Col>
-        <Col sm={5}>
-        {visiblePoints && <Form onSubmit={handleSubmit} className=" ms-auto"> 
-        <InputGroup size="sm">
-<Form.Control
-    className="mobileBox"
-    size='sm'
-    pattern="[0-9]*"
-    required
-    placeholder="PT"
-    onChange={handleKeyDown}
-    value={points}
-    type='tel'
-    maxLength={2}
-              
-/>  
-<InputGroup.Text className="">PT</InputGroup.Text>
-</InputGroup>
-</Form>}
-{!visiblePoints && <Button onClick={() => setVisiblePonts((prev) => !prev)} variant="link" className="m-0 p-0 float-end text-decoration-none">{points}</Button>}
-</Col></Row>
-        </ListGroup.Item>
+                                  
         
-      </ListGroup>
                                   </Card>
                           
                                   </>

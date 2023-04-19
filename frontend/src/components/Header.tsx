@@ -3,7 +3,7 @@ import {
   HouseDoorFill,
   PersonCircle,
   Calendar,
-  Journals,
+  Journals, Stack,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
@@ -84,9 +84,17 @@ function Header() {
   };
 
   const redirectToChangePassword = () => {
-    navigate("/change-password");
-  };
-
+      navigate('/change-password');
+  }
+  const redirectToProductBacklog = () => {
+      navigate('/product-backlog');
+  }
+  const redirectToSprintBacklog = () => {
+      navigate('/sprint-backlog');
+  }
+  const redirectToMyTask = () => {
+      navigate('/my-tasks');
+  }
   const redirectToEditProfile = () => {
     navigate("/profile");
   };
@@ -96,12 +104,12 @@ function Header() {
       <Container>
         <Navbar.Brand onClick={redirectHome} className="hstack">
           <HouseDoorFill className="me-2"></HouseDoorFill> Dashboard&nbsp;
-          {activeProject.id !== '' && 
-              (activeSprint ? 
-                <Navbar.Text style={{marginRight: '5rem'}}> 
-                  Active sprint: <b>{activeSprint?.name}</b> {activeSprint?.startDate} - {activeSprint?.endDate}
-                </Navbar.Text> :
-                <Navbar.Text> No active sprint</Navbar.Text>
+          {activeProject.id !== '' &&
+              (activeSprint ?
+                      <Navbar.Text style={{marginRight: '5rem'}}>
+                        Active sprint: <b>{activeSprint?.name}</b> {activeSprint?.startDate} - {activeSprint?.endDate}
+                      </Navbar.Text> :
+                      <Navbar.Text> No active sprint</Navbar.Text>
               )
           }
         </Navbar.Brand>
@@ -109,20 +117,37 @@ function Header() {
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="ms-auto">
             <NavDropdown
-              id="sprint-dropdown"
-              title={
-                <span>
+                id="backlog-dropdown"
+                title={
+                  <span>
+                                <Stack className="mb-1"></Stack> Backlog
+                              </span>
+                }
+            >
+              <NavDropdown.Item onClick={redirectToProductBacklog}>
+                ProductBacklog
+              </NavDropdown.Item>
+              {isAdmin && (<NavDropdown.Item onClick={redirectToSprintBacklog}>
+                    SprintBacklog
+                  </NavDropdown.Item>
+              ) }
+            </NavDropdown>
+
+            <NavDropdown
+                id="sprint-dropdown"
+                title={
+                  <span>
                   <Journals className="mb-1"></Journals> Projects
                 </span>
-              }
+                }
             >
               <NavDropdown.Item onClick={redirectToProjectList}>
                 Project List
               </NavDropdown.Item>
               {isAdmin && (
-                <NavDropdown.Item onClick={redirectToNewProject}>
-                  Add Project
-                </NavDropdown.Item>
+                  <NavDropdown.Item onClick={redirectToNewProject}>
+                    Add Project
+                  </NavDropdown.Item>
               )}
             </NavDropdown>
             <NavDropdown
@@ -137,26 +162,26 @@ function Header() {
             </NavDropdown>
 
             <NavDropdown
-              title={
-                user !== null ? (
-                  <div style={{ display: "inline-flex" }}>
+                title={
+                  user !== null ? (
+                      <div style={{ display: "inline-flex" }}>
                     <span>
                       <PersonCircle className="mb-1"></PersonCircle>{" "}
                       {userData.username},{" "}
                     </span>
-                    {lastLoginDate ? (
-                      <p>Last login: {parseDate(lastLoginDate)}</p>
-                    ) : (
-                      <p>Last login: First login</p>
-                    )}
-                  </div>
-                ) : (
-                  <span>
+                        {lastLoginDate ? (
+                            <p>Last login: {parseDate(lastLoginDate)}</p>
+                        ) : (
+                            <p>Last login: First login</p>
+                        )}
+                      </div>
+                  ) : (
+                      <span>
                     <PersonCircle className="mb-1"></PersonCircle> Account
                   </span>
-                )
-              }
-              id="basic-nav-dropdown"
+                  )
+                }
+                id="basic-nav-dropdown"
             >
               <NavDropdown.Item onClick={handleLoginAndLogout}>
                 {user === null ? "Log in" : "Logout"}
@@ -168,14 +193,14 @@ function Header() {
                 Edit profile
               </NavDropdown.Item>
               {userData.isAdmin && (
-                <Fragment>
-                  <NavDropdown.Item onClick={redirectToUsers}>
-                    Users
-                  </NavDropdown.Item>
-                  <NavDropdown.Item onClick={redirectToAddUser}>
-                    + Add user
-                  </NavDropdown.Item>
-                </Fragment>
+                  <Fragment>
+                    <NavDropdown.Item onClick={redirectToUsers}>
+                      Users
+                    </NavDropdown.Item>
+                    <NavDropdown.Item onClick={redirectToAddUser}>
+                      + Add user
+                    </NavDropdown.Item>
+                  </Fragment>
               )}
             </NavDropdown>
           </Nav>
