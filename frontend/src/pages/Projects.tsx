@@ -74,7 +74,7 @@ const Projects = () => {
 
   const handleActivateSprint = (projectId: string) => {
     activateProject(projectId!);
-    toast.info("Sprint active");
+    toast.info("Project active");
   };
 
   useEffect(() => {

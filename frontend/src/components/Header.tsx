@@ -9,7 +9,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 
 import { getLastLogin, logout } from "../features/users/userSlice";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { parseDate, parseJwt } from "../helpers/helpers";
 import { useNavigate } from "react-router-dom";
 import {getAllSprints} from "../features/sprints/sprintSlice";
@@ -44,6 +44,18 @@ function Header() {
   }, [activeProject, dispatch, sprints.length]);
 
   useEffect(() => {}, [userData]);
+
+  const activeSprint = useMemo(() => {
+    return sprints.find(sprint => {
+      const startDate = new Date(sprint.startDate);
+      const endDate = new Date(sprint.endDate);
+      const today = new Date();
+
+      return today >= startDate && today <= endDate;
+    });
+  }, [sprints]);
+
+  useEffect(() => {}, [sprints]);
 
   const handleLoginAndLogout = () => {
     if (user !== null) {
@@ -83,7 +95,15 @@ function Header() {
     <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
       <Container>
         <Navbar.Brand onClick={redirectHome} className="hstack">
-          <HouseDoorFill className="me-2"></HouseDoorFill> Dashboard
+          <HouseDoorFill className="me-2"></HouseDoorFill> Dashboard&nbsp;
+          {activeProject.id !== '' && 
+              (activeSprint ? 
+                <Navbar.Text style={{marginRight: '5rem'}}> 
+                  Active sprint: <b>{activeSprint?.name}</b> {activeSprint?.startDate} - {activeSprint?.endDate}
+                </Navbar.Text> :
+                <Navbar.Text> No active sprint</Navbar.Text>
+              )
+          }
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
