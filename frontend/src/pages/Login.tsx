@@ -34,9 +34,9 @@ const Login = () => {
         }
         if (user !== null || isSuccess) {
             navigate('/');
-            return () => {
-                dispatch(reset());
-            }
+        }
+        return () => {
+            dispatch(reset());
         }
     }, [isError, navigate, user, isSuccess]);
 

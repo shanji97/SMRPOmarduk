@@ -187,6 +187,7 @@ export const userSlice = createSlice({
             state.isError = false
             state.isSuccess = false
             state.message = ''
+            state.twofaConfirmed = false;
         },
         setUserAs2faAuthenticated: (state, action) => {
             state.twofaAuthenticatedUsers.push(action.payload);

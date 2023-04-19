@@ -70,8 +70,9 @@ const Projects = () => {
     navigate(`/${projectID}/add-sprint`);
   };
 
-  const handleActivateSprint = (projectId: string) => {
+  const handleActivateProject = (projectId: string) => {
     activateProject(projectId!);
+    navigate(`?activeProject=${projectId}`);
     toast.info("Project active");
   };
 
@@ -134,7 +135,7 @@ const Projects = () => {
                         title="Options"
                       >
                         <Dropdown.Item
-                          onClick={() => handleActivateSprint(project.id!)}
+                          onClick={() => handleActivateProject(project.id!)}
                         >
                           Make active
                         </Dropdown.Item>

@@ -65,7 +65,6 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectID/sprints" element={<Sprints />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
-
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />
