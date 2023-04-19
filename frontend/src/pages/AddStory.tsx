@@ -7,7 +7,7 @@ import classes from "./AddStory.module.css";
 
 import { StoryData } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { createStory } from "../features/stories/storySlice";
+import { createStory, reset } from "../features/stories/storySlice";
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -33,6 +33,7 @@ const AddStory = () => {
     if (storyState.isSuccess && !storyState.isLoading) {
       toast.success("Story successfully created!");
       resetInputs();
+      dispatch(reset());
     }
     if (storyState.isError && !storyState.isLoading) {
       toast.error(storyState.message);

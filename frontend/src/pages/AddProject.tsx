@@ -26,6 +26,7 @@ const AddProject = () => {
   const projectState = useAppSelector((state) => state.projects);
   const { users, isAdmin } = useAppSelector((state) => state.users);
 
+  // check for JWT token, check if user is admin
   useEffect(() => {
     if (localStorage.getItem("user") == null) {
       navigate("/login");
@@ -34,7 +35,6 @@ const AddProject = () => {
 
     const token = JSON.parse(localStorage.getItem("user")!).token;
     const isAdmin = parseJwt(token).isAdmin;
-    // console.log(isAdmin);
 
     if (!isAdmin) {
       navigate("/");
@@ -44,6 +44,8 @@ const AddProject = () => {
     dispatch(getAllUsers());
   }, [isAdmin]);
 
+  // success & error messages for form submission
+  // TODO THIS STILL DOESNT WORK PROPERLY
   useEffect(() => {
     if (projectState.isSuccess && !projectState.isLoading) {
       toast.success("Project successfully created!");
@@ -88,6 +90,7 @@ const AddProject = () => {
     enteredScrumMasterValid &&
     !enteredDevelopersValid.includes(false);
 
+  // handles adding a developer input
   const addInputHandler = () => {
     setDevelopers((prevDevelopers) => [...prevDevelopers, ""]);
     setDevelopersTouched((prevDevelopersTouched) => [
@@ -96,6 +99,7 @@ const AddProject = () => {
     ]);
   };
 
+  // handles removing a developer input
   const removeDeveloperHandler = (index: any) => {
     setDevelopers((prevDevelopers) => {
       const newDevelopers = [...prevDevelopers];
@@ -138,6 +142,7 @@ const AddProject = () => {
     setScrumMasterIDTouched(true);
   };
 
+  // handles change event for all developer inputs
   const developerInputChangedHandler = (e: any, index: number) => {
     setDevelopers((prevDevelopers) => {
       const newDevelopers = [...prevDevelopers];
@@ -151,6 +156,7 @@ const AddProject = () => {
     });
   };
 
+  // handles blur event for all developer inputs
   const developerInputBlurHandler = (index: number) => {
     setDevelopersTouched((prevDevelopersTouched) => {
       const newDevelopersTouched = [...prevDevelopersTouched];
@@ -204,6 +210,7 @@ const AddProject = () => {
     console.log(newProject);
     dispatch(createProject(newProject));
 
+    // reset inputs and touched states
     setProjectName("");
     setProjectDescription("");
     setDevelopers([""]);
@@ -289,6 +296,7 @@ const AddProject = () => {
                 </option>
                 {users.map(
                   (user) =>
+                    // check if user is not already product owner
                     String(user.id) !== productOwnerID && (
                       <option key={user.id} value={user.id}>
                         {user.username}
@@ -324,6 +332,7 @@ const AddProject = () => {
                           Select developer
                         </option>
                         {users.map((user) => {
+                          // check if user is not product owner or developer
                           const isProductOwner =
                             String(user.id) === productOwnerID;
                           const isDeveloper = developers.includes(
@@ -365,27 +374,14 @@ const AddProject = () => {
             variant="outline-primary d-block"
             type="button"
             onClick={addInputHandler}
-            disabled={developers.length >= users.length}
+            disabled={developers.length >= users.length - 1}
           >
             Add developer
           </Button>
-          {developers.length >= users.length && (
+          {developers.length >= users.length - 1 && (
             <Form.Text>There are no more users to add.</Form.Text>
           )}
         </Form.Group>
-        {/* {invalidFormMessage !== "" && (
-          <Alert variant={"danger"}>{invalidFormMessage}</Alert>
-        )}
-        {invalidFormMessage === "" &&
-          projectState.isError &&
-          !projectState.isLoading && (
-            <Alert variant={"danger"}>{projectState.message}</Alert>
-          )}
-        {invalidFormMessage === "" &&
-          projectState.isSuccess &&
-          !projectState.isLoading && (
-            <Alert variant={"success"}>Project added successfully!</Alert>
-          )} */}
         <Button variant="primary" type="submit" size="lg" disabled={false}>
           Add project
         </Button>
