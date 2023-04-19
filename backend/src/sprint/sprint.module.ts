@@ -21,5 +21,8 @@ import { StoryModule } from '../story/story.module';
   controllers: [
     SprintController,
   ],
+  exports: [
+    SprintService,
+  ],
 })
 export class SprintModule {}

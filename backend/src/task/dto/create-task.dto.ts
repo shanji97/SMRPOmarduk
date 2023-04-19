@@ -28,7 +28,7 @@ export const CreateTaskSchema = Joi.object().keys({
   dateAssigned: Joi.any().strip(),
   dateAccepted: Joi.any().strip(),
   dateActive: Joi.any().strip(),
-  dateCompleted: Joi.any().strip(),
+  dateEnded: Joi.any().strip(),
   dateCreated: Joi.any().strip(),
   dateUpdated: Joi.any().strip(),
   storyId: Joi.any().strip(),
