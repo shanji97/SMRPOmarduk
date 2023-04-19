@@ -30,8 +30,8 @@ export class StoryService {
     return await this.storyRepository.findOneBy({ id: storyId });
   }
 
-  async getStoriesByProjectId(projectId: number):Promise<Story[]>{
-    return await this.storyRepository.findBy({projectId: projectId})
+  async getStoriesByProjectId(projectId: number): Promise<Story[]> {
+    return await this.storyRepository.findBy({ projectId: projectId })
   }
 
   async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
@@ -51,6 +51,10 @@ export class StoryService {
         }
       }
     }
+  }
+
+  async updateStoryCategory(storyId: number, category: number) {
+    await this.storyRepository.update({ id: storyId }, { category: category });
   }
 
   async updateStoryById(storyId: number, story: UpdateStoryDto) {

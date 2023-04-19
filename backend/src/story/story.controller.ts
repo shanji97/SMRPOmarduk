@@ -1,16 +1,18 @@
 import { BadRequestException, ConflictException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, HttpException, HttpStatus, UnauthorizedException, ForbiddenException } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateStoryDto, CreateStorySchema } from './dto/create-story.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { UpdateStoryDto, UpdateStorySchema } from './dto/update-story.dto';
-import { Story } from './story.entity';
+import { Category, Story } from './story.entity';
 import { StoryService } from './story.service';
 import { TestService } from '../test/test.service';
 import { ValidationException } from '../common/exception/validation.exception';
 import { Token } from '../auth/decorator/token.decorator';
 import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
+import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
+import { tokenSchema } from 'src/auth/dto/token.dto';
 
 @ApiTags('story')
 // @ApiBearerAuth()
@@ -73,6 +75,31 @@ export class StoryController {
     return await this.storyService.getStoriesByProjectId(projectId);
   }
 
+  @ApiOperation({ summary: 'Update story category' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Patch(':storyId/category')
+  async updateStoryCategory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryCategoryStorySchema)) updateData: UpdateStoryCategoryDto): Promise<void> {
+    try {
+      const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(updateData.projectId)).filter(users => users.userId == token.sid);
+      if (usersOnProject == null)
+        throw new BadRequestException('This project doesn\'t exist.');
+
+      const isDeveloper = usersOnProject.length == 1 && usersOnProject[0].role == UserRole.Developer;
+      if (updateData.category == Category.Unassigned && usersOnProject.length == 0 || isDeveloper)
+        throw new ForbiddenException('No users with this user ID on the project or this user is only a developer.');
+
+      await this.storyService.updateStoryCategory(storyId, updateData.category);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex)
+      else if (ex instanceof NotFoundException)
+        throw new NotFoundException(ex)
+      throw ex
+    }
+  }
+
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
   @Patch('/:projectId/update-story/:storyId')
@@ -101,6 +128,7 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Delete story' })
   @ApiOkResponse()
+  @ApiNoContentResponse()
   @Delete(':storyId')
   async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     const story: Story = await this.getStory(storyId);
