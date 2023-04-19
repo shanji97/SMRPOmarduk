@@ -58,8 +58,7 @@ export class StoryController {
   @Post(':projectId')
   async createStory(@Token() token, @Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto, @Param('projectId', ParseIntPipe) projectId: number) {
     try {
-      let hasValidRole: boolean = await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]);
-      if (!hasValidRole)
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner.');
 
       const row = await this.storyService.createStory(story, projectId);
@@ -113,10 +112,7 @@ export class StoryController {
   @Patch('/:projectId/story/:storyId')
   async updateStory(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
     try {
-
-      let usersOnProject = await this.projectService.listUsersWithRolesOnProject(projectId);
-      let isProjectOwnerOrScrumMaster = usersOnProject.filter(user => user.role != UserRole.Developer && user.userId == token.sid).length == 1;
-      if (!isProjectOwnerOrScrumMaster)
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
         throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
 
       let checkStory = await this.storyService.getStoryById(storyId);
@@ -141,8 +137,7 @@ export class StoryController {
     const test: StoryTest = await this.testService.getTestById(testId);
     const story: Story = await this.storyService.getStoryById(test.storyId);
     await this.storyService.checkStoryProperties(story);
-    const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
-    if (usersOnProject.length == 0)
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the product owner and scrum master can delete tests.');
 
     await this.testService.deleteTestById(testId);
@@ -155,8 +150,8 @@ export class StoryController {
   async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     const story: Story = await this.storyService.getStoryById(storyId);
     await this.storyService.checkStoryProperties(story);
-    const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
-    if (usersOnProject.length == 0)
+    
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the product owner and scrum master can delete stories.');
 
     await this.storyService.deleteStoryById(storyId);

@@ -1,13 +1,15 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager } from 'typeorm';
-import { ProjectService } from '../project/project.service';
-import { Story } from './story.entity';
-import { ValidationException } from '../common/exception/validation.exception';
+
 import { CreateStoryDto } from './dto/create-story.dto';
-import { UpdateStoryDto } from './dto/update-story.dto';
+import { ProjectService } from '../project/project.service';
+import { Sprint } from '../sprint/sprint.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
+import { Story } from './story.entity';
+import { UpdateStoryDto } from './dto/update-story.dto';
+import { UserRole } from '../project/project-user-role.entity';
+import { ValidationException } from '../common/exception/validation.exception';
 
 @Injectable()
 export class StoryService {
@@ -134,11 +136,24 @@ export class StoryService {
       throw new BadRequestException('The story has been already added to sprint.');
   }
 
-  async hasUserPermissionForStory(userId: number, storyId: number): Promise<boolean> {
+  async hasUserPermissionForStory(userId: number, storyId: number, userRole: UserRole[] | UserRole | number | null = null): Promise<boolean> {
     const projectId = await this.getStoryProjectId(storyId);
     if (!projectId)
       return false;
 
-    return await this.projectService.hasUserRoleOnProject(projectId, userId, null); // If user has any role on project, he can view it
+    return await this.projectService.hasUserRoleOnProject(projectId, userId, userRole); // If user has any role on project, he can view it
+  }
+
+  async isStoryInActiveSprint(storyId: number): Promise<boolean> {
+    const count = await this.storyRepository.createQueryBuilder('st')
+      .innerJoin(SprintStory, 'ss', 'ss.storyId = st.id')
+      .innerJoin(Sprint, 'sp', 'sp.id = ss.sprintId')
+      .where('st.id = :storyId AND sp.startDate <= NOW() AND sp.endDate >= NOW()', { storyId: storyId })
+      .getCount();
+    return count > 0;
+  }
+
+  async getStoryIdsForSprint(sprintId: number): Promise<number[]> {
+    return (await this.entityManager.findBy(SprintStory, { sprintId: sprintId })).map(ss => ss.storyId);
   }
 }
