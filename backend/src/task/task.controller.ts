@@ -114,7 +114,7 @@ export class TaskController {
     const task = await this.taskService.getTaskById(taskId);
     if (!task)
       throw new NotFoundException();
-    if (task.category === TaskCategory.ENDED)
+    if (task.category === TaskCategory.COMPLETED)
       throw new ForbiddenException('Can\'t delete ended task');
 
     await this.taskService.deleteTask(taskId);
@@ -150,6 +150,10 @@ export class TaskController {
     await this.taskService.assignTaskToUser(taskId, userId);
   }
 
+  // TODO: Accept
+
+  // TODO: Reject
+
   @ApiOperation({ summary: 'Release task (remove assigned user)' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
@@ -165,10 +169,6 @@ export class TaskController {
     const task = await this.taskService.getTaskById(taskId);
     if (!task)
       throw new NotFoundException();
-    if (task.assignedUserId == null)
-      throw new ForbiddenException('No one assigned to task');
-    if (task.category == TaskCategory.ENDED)
-      throw new ForbiddenException('Can\'t release ended task');
 
     // User can assign only himself, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
