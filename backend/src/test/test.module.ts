@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Test } from './test.entity';
+import { StoryTest } from './test.entity';
 import { TestService } from './test.service';
 
 @Module({
   imports: [
 
     TypeOrmModule.forFeature([
-      Test
+      StoryTest
     ]),
   ],
   providers: [

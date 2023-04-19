@@ -1,8 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, Unique } from 'typeorm';
-
 import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
-import { Test } from '../test/test.entity';
+import { StoryTest } from '../test/test.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
 
 export enum Category {
@@ -50,8 +49,8 @@ export class Story {
   @OneToMany(type => Task, task => task.story)
   tasks: Task[];
 
-  @OneToMany(type => Test, test => test.story)
-  tests: Test[];
+  @OneToMany(type => StoryTest, test => test.story, {eager: true})
+  tests: StoryTest[];
 
   @OneToMany(type => SprintStory, sprint => sprint.story)
   sprintStories: SprintStory[];

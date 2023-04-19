@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, HttpException, HttpStatus, UnauthorizedException, ForbiddenException } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateStoryDto, CreateStorySchema } from './dto/create-story.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
@@ -37,13 +37,13 @@ export class StoryController {
   async getStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<Story> {
     const story = await this.storyService.getStoryById(storyId);
     if (!story)
-      throw new NotFoundException('Story not found');
+      throw new NotFoundException('Story not found.');
     return story;
   }
 
-  @ApiOperation({ summary: 'Create story' })
+  @ApiOperation({ summary: 'Create story.' })
   @ApiCreatedResponse()
-  @Post('/:projectId/add-story')
+  @Post(':projectId')
   async createStory(@Token() token, @Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto, @Param('projectId', ParseIntPipe) projectId: number) {
     try {
       let hasValidRole: boolean = await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]);
@@ -62,6 +62,15 @@ export class StoryController {
       }
       throw ex;
     }
+  }
+
+  @ApiOperation({ summary: 'Get story data by project ID.' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Get(':projectId')
+  async getStoriesWithData(@Param('projectId', ParseIntPipe) projectId: number): Promise<Story[]> {
+    return await this.storyService.getStoriesByProjectId(projectId);
   }
 
   @ApiOperation({ summary: 'Update story.' })

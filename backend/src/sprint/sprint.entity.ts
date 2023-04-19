@@ -12,7 +12,7 @@ export class Sprint {
   name: string;
 
   @Column({ unsigned: true })
-  velocity: number;
+  velocity: number; // hours
 
   @Column({ type: 'date' })
   startDate: string;

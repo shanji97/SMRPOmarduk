@@ -1,9 +1,8 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-
 import { Story } from '../story/story.entity';
 
 @Entity()
-export class Test {
+export class StoryTest {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 

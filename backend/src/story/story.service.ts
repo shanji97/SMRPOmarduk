@@ -2,7 +2,6 @@ import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager } from 'typeorm';
-
 import { ProjectService } from '../project/project.service';
 import { Story } from './story.entity';
 import { ValidationException } from '../common/exception/validation.exception';
@@ -29,6 +28,10 @@ export class StoryService {
 
   async getStoryById(storyId: number): Promise<Story> {
     return await this.storyRepository.findOneBy({ id: storyId });
+  }
+
+  async getStoriesByProjectId(projectId: number):Promise<Story[]>{
+    return await this.storyRepository.findBy({projectId: projectId})
   }
 
   async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
