@@ -8,10 +8,11 @@ import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
 import { SprintService } from './sprint.service';
 import { Token } from '../auth/decorator/token.decorator';
-import { TokenDto } from '../auth/dto/token.dto';
+import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { StoryService } from '../story/story.service';
 
 @ApiTags('sprint')
 @ApiBearerAuth()
@@ -22,9 +23,10 @@ export class SprintController {
   constructor(
     private readonly projectService: ProjectService,
     private readonly sprintService: SprintService,
-  ) {}
-  
-  @ApiOperation({ summary: 'List sprints for project' })
+    private readonly storyService: StoryService
+  ) { }
+
+  @ApiOperation({ summary: 'List sprints for project.' })
   @ApiOkResponse()
   @Get('project/:projectId')
   async listSprintsForProject(
@@ -38,7 +40,7 @@ export class SprintController {
     return await this.sprintService.listSprintsForProject(projectId);
   }
 
-  @ApiOperation({ summary: 'Get sprint by ID' })
+  @ApiOperation({ summary: 'Get sprint by ID.' })
   @ApiOkResponse()
   @Get(':sprintId')
   async getSprintById(
@@ -55,7 +57,7 @@ export class SprintController {
     return sprint;
   }
 
-  @ApiOperation({ summary: 'Create new sprint' })
+  @ApiOperation({ summary: 'Create new sprint.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @ApiForbiddenResponse()
@@ -77,7 +79,7 @@ export class SprintController {
     }
   }
 
-  @ApiOperation({ summary: 'Update sprint' })
+  @ApiOperation({ summary: 'Update sprint.' })
   @ApiOkResponse()
   @ApiBadRequestResponse()
   @ApiForbiddenResponse()
@@ -90,9 +92,9 @@ export class SprintController {
     // Check permissions
     if (!token.isAdmin && !await this.sprintService.hasUserEditPermissionForSprint(token.sid, sprintId))
       throw new ForbiddenException();
-    
+
     try {
-      await this.sprintService.updateSprintById(sprintId, sprint); 
+      await this.sprintService.updateSprintById(sprintId, sprint);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
@@ -100,7 +102,27 @@ export class SprintController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete sprint' })
+  @ApiOperation({ summary: 'Add story to sprint.' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @Post(':sprintId/add-story/:storyId')
+  async addStoryToSprint(@Token() token: TokenDto, @Param('sprintId', ParseIntPipe) sprintId: number, @Param('storyId', ParseIntPipe) storyId: number) {
+    const story = await this.storyService.getStoryById(storyId);
+    if (story == null)
+      throw new BadRequestException('No story with the given ID exists');
+
+    const sprint = await this.sprintService.getSprintById(sprintId);
+    if (sprint == null)
+      throw new BadRequestException('No sprint with the given ID exists in the ')
+
+    if(!await this.projectService.hasUserRoleOnProject(story.projectId,token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException('Only the scrum master can add the story to sprint.');
+
+    await this.sprintService.addStoryToSprint(sprintId, storyId);
+  }
+
+  @ApiOperation({ summary: 'Delete sprint.' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @Delete(':sprintId')

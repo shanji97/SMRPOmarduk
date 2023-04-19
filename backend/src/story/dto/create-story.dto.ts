@@ -71,7 +71,7 @@ export const CreateStorySchema = Joi.object().keys({
   title: Joi.string().trim().min(1).max(128).required(),
   description: Joi.string().trim().min(1).required(),
   sequenceNumber: Joi.number().greater(0).min(1).required().default(1),
-  tests: Joi.any(),
+  tests: Joi.array().items(Joi.string()),
   priority: Joi.number().required().default(3),
   businessValue: Joi.number().greater(-1).less(11).required().default(5),
   userId: Joi.number().greater(0).required()
