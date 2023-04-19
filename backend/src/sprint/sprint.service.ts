@@ -43,7 +43,7 @@ export class SprintService {
       throw new ValidationException('End date is before start date');
 
     // Start date can't be in the past
-    if (moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment()))
+    if (moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment(), 'd'))
       throw new ValidationException('Can\'t start sprint in the past');
 
     // Check if velocity to high for the sprint
@@ -71,7 +71,7 @@ export class SprintService {
       throw new ValidationException('Invalid sprint ID');
 
     // Can't edit sprints that have already started
-    if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment()))
+    if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment(), 'd'))
       throw new ValidationException('Sprint has already started');
 
     // Check if end is after start
@@ -80,11 +80,11 @@ export class SprintService {
         throw new ValidationException('End date is before start date');
 
       // Start date can't be in the past
-      if (sprint.startDate && moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment()))
+      if (sprint.startDate && moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment(), 'd'))
         throw new ValidationException('Can\'t start sprint in the past');
 
       // End date can't be in the past
-      if (sprint.endDate && moment(sprint.endDate, 'YYYY-MM-DD').isBefore(moment()))
+      if (sprint.endDate && moment(sprint.endDate, 'YYYY-MM-DD').isBefore(moment(), 'd'))
         throw new ValidationException('Can\'t end sprint in the past');
 
       // Only one sprint can be at same time
