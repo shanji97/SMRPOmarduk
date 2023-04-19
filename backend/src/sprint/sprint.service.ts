@@ -29,6 +29,12 @@ export class SprintService {
     return await this.sprintRepository.findOneBy({ id: sprintId });
   }
 
+  async getActiveSprintForProject(projectId: number): Promise<Sprint> {
+    return await this.sprintRepository.createQueryBuilder('s')
+      .where('s.projectId = :projectId AND s.startDate <= NOW() AND s.endDate >= NOW()', { projectId: projectId })
+      .getOne();
+  }
+
   async createSprint(projectId: number, sprint: DeepPartial<Sprint>): Promise<void> {
     sprint.projectId = projectId;
     

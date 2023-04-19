@@ -1,10 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, InternalServerErrorException, HttpException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseBoolPipe, ParseIntPipe, Patch, Post, UseGuards, InternalServerErrorException, HttpException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
 import { CreateTaskDto, CreateTaskSchema } from './dto/create-task.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { ProjectService } from '../project/project.service';
+import { SprintService } from '../sprint/sprint.service';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
 import { TaskService } from './task.service';
@@ -21,6 +22,7 @@ import { UserRole } from '../project/project-user-role.entity';
 export class TaskController {
   constructor(
     private readonly projectService: ProjectService,
+    private readonly sprintService: SprintService,
     private readonly storyService: StoryService,
     private readonly taskService: TaskService,
   ) {}
@@ -45,9 +47,10 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('sprintId', ParseIntPipe) sprintId: number,
   ): Promise<Task[]> {
-    // TODO: Permission check
-
-    return [];
+    if (!await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+    
+    return this.taskService.getTasksForSprint(sprintId);
   }
 
   @ApiOperation({ summary: 'Get task by ID'})
@@ -77,7 +80,7 @@ export class TaskController {
     @Param('storyId', ParseIntPipe) storyId: number,
     @Body(new JoiValidationPipe(CreateTaskSchema)) task: CreateTaskDto,
   ): Promise<void> {
-    if (!await this.storyService.hasUserPermissionForStory(token.sid, storyId))
+    if (!await this.storyService.hasUserPermissionForStory(token.sid, storyId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     await this.taskService.createTask(storyId, task);
@@ -112,10 +115,13 @@ export class TaskController {
     
     // Can't delete active or ended tasks
     const task = await this.taskService.getTaskById(taskId);
-    if (!task)
-      throw new NotFoundException();
+    
     if (task.category === TaskCategory.ENDED)
       throw new ForbiddenException('Can\'t delete ended task');
+
+    // After task is assigned it can be deleted only by assigned user, scrum master or admin 
+    if (task.assignedUserId && task.assignedUserId !== token.sid && !token.isAdmin && !await this.storyService.hasUserPermissionForStory(task.storyId, token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException('Insufficient permissions to delete task');
 
     await this.taskService.deleteTask(taskId);
   }
@@ -137,8 +143,7 @@ export class TaskController {
 
     // Check if task exitsts
     const task = await this.taskService.getTaskById(taskId);
-    if (!task)
-      throw new NotFoundException();
+    
     // User can accept task; admin and scrum master can reassign people
     if (task.assignedUserId != null && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Someone is already assigned to task');
@@ -148,6 +153,30 @@ export class TaskController {
       throw new ForbiddenException("Can't assign other users to task");
 
     await this.taskService.assignTaskToUser(taskId, userId);
+  }
+
+  @ApiOperation({ summary: 'Accept task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Post(':taskId/accept/:confirm')
+  async acceptTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('confirm', ParseBoolPipe) confirm: boolean,
+  ): Promise<void> {
+    if (!await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+      throw new ForbiddenException();
+    
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can only accept tasks that were assigned to him
+    if (task.assignedUserId !== token.sid)
+      throw new ForbiddenException('Task was\'t assigned to you');
+
+    if (confirm)
+      await this.taskService.acceptTask(taskId);
+    else
+      await this.taskService.rejectTask(taskId);
   }
 
   @ApiOperation({ summary: 'Release task (remove assigned user)' })
@@ -163,12 +192,6 @@ export class TaskController {
 
     // Check if someone is already assigned to task or if task even exitsts
     const task = await this.taskService.getTaskById(taskId);
-    if (!task)
-      throw new NotFoundException();
-    if (task.assignedUserId == null)
-      throw new ForbiddenException('No one assigned to task');
-    if (task.category == TaskCategory.ENDED)
-      throw new ForbiddenException('Can\'t release ended task');
 
     // User can assign only himself, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
