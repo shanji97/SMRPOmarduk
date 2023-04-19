@@ -30,7 +30,7 @@ const create = async (storyData: StoryData, token: string) => {
 
     // console.log(storyData);
 
-    const response = await axios.post(`${STORY_API_URL}/${projectID}/add-story`, storyData, config);
+    const response = await axios.post(`${STORY_API_URL}/${projectID}`, storyData, config);
 
     return response.data;
 }
