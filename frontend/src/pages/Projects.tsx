@@ -1,25 +1,17 @@
-import {
-  DropdownButton,
-  Table,
-  Dropdown,
-  Modal,
-  Form,
-  Button,
-} from "react-bootstrap";
+import { DropdownButton, Table, Dropdown, Modal } from "react-bootstrap";
 import Card from "../components/Card";
-import React, { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import {
-  editProject,
   getAllProjects,
   setActiveProject,
+  reset,
 } from "../features/projects/projectSlice";
-import ProjectForm from "./AddProject";
-import { ProjectData, ProjectDataEdit, UserRole } from "../classes/projectData";
+import { UserRole } from "../classes/projectData";
 import ProjectDataForm from "../components/ProjectDataForm";
 import ProjectRolesForm from "../components/ProjectRolesForm";
 import { toast } from "react-toastify";
@@ -28,11 +20,11 @@ import { getAllUsers } from "../features/users/userSlice";
 const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
-  const projectState = useAppSelector((state) => state.projects);
   const { users } = useAppSelector((state) => state.users);
 
-  let { projects, activeProject } = useAppSelector((state) => state.projects);
+  let { projects, activeProject, isError, isSuccess } = useAppSelector(
+    (state) => state.projects
+  );
 
   // store isAdmin in state for now
   // TODO rewrite this later
@@ -59,6 +51,12 @@ const Projects = () => {
 
     dispatch(getAllProjects());
   }, [isAdmin]);
+
+  // when projects are fetched, reset project state
+  // so it doesn't interfere with other components
+  useEffect(() => {
+    dispatch(reset());
+  }, [isSuccess, isError]);
 
   const activateProject = (projectID: string) => {
     dispatch(setActiveProject(projectID));
@@ -99,8 +97,6 @@ const Projects = () => {
     setShowEditRolesModal(false);
   };
 
-  const submitAddProject = () => {};
-
   const isUserScrumMaster = (userRoles: UserRole[]) => {
     let scrumMasterId = userRoles.filter((user) => user.role === 1)[0].userId;
     return parseInt(userId) === scrumMasterId;
@@ -133,11 +129,6 @@ const Projects = () => {
                       ) : (
                         project.projectName
                       )}
-
-                      {/* <button onClick={() => redirectToAddStory(project.id)}>
-                        {" "}
-                        Add story
-                      </button> */}
                       <DropdownButton
                         id="dropdown-basic-button"
                         title="Options"
@@ -199,8 +190,6 @@ const Projects = () => {
           <Modal.Body>
             <ProjectRolesForm
               idInit={projects[editIndexRoles].id}
-              projectState={projectState}
-              handleSubmitForm={submitAddProject}
               users={users}
               userRoles={projects[editIndexRoles].userRoles}
               isAdmin={isAdmin}

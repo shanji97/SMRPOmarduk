@@ -32,7 +32,7 @@ const addDeveloper = async (addDeveloperData: any, token: string) => {
     let userId = addDeveloperData.userId;
     let projectID = addDeveloperData.projectId;
 
-    const response = await axios.post(`${PROJECTS_API_URL}/${projectID}/add-developer/${userId}`, '', config);
+    const response = await axios.post(`${PROJECTS_API_URL}/${projectID}/developer/${userId}`, '', config);
 
     return response.data;
 }
@@ -48,7 +48,7 @@ const removeDeveloper = async (removeDeveloperData: any, token: string) => {
     let projectID = removeDeveloperData.projectId;
     console.log(`${PROJECTS_API_URL}/${projectID}/removeDeveloper/${userId}`)
 
-    const response = await axios.delete(`${PROJECTS_API_URL}/${projectID}/remove-developer/${userId}`, config);
+    const response = await axios.delete(`${PROJECTS_API_URL}/${projectID}/developer/${userId}`, config);
 
     return response.data;
 }

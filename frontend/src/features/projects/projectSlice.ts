@@ -5,7 +5,7 @@ import projectService from "./projectService";
 
 export interface ProjectState {
     projectName: string
-    userRoles: any[] // TODO fix this !!!
+    userRoles: any[] // TODO fix this?
     isLoading: boolean
     isSuccess: boolean
     isEditSuccess: boolean
@@ -63,6 +63,7 @@ export const getProject = createAsyncThunk('project/getProject', async (id: stri
     }
 });
 
+// only for editing project name and description
 export const editProject = createAsyncThunk('project/editProject', async (projectData: ProjectDataEdit, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;

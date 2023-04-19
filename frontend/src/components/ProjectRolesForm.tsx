@@ -1,25 +1,14 @@
-import { Fragment, useEffect, useRef, useState } from "react";
-import { Alert, Button, Table } from "react-bootstrap";
-import Card from "./Card";
+import { Fragment, useEffect, useState } from "react";
+import { Button, Table } from "react-bootstrap";
 import { Form } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-
-import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
 import classes from "./ProjectRolesForm.module.css";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { parseJwt } from "../helpers/helpers";
-import { getAllUsers } from "../features/users/userSlice";
-import { ProjectData, UserRole } from "../classes/projectData";
-import {
-  createProject,
-  getAllProjects,
-} from "../features/projects/projectSlice";
+import { getAllProjects } from "../features/projects/projectSlice";
 import { UserData } from "../classes/userData";
-import { ProjectState } from "../features/projects/projectSlice";
 import { toast } from "react-toastify";
 import {
   addDeveloper,
@@ -32,8 +21,6 @@ interface ProjectProps {
   idInit?: string;
   users: UserData[];
   userRoles: any;
-  projectState: ProjectState;
-  handleSubmitForm: (projectData: ProjectData) => void;
   isAdmin: boolean;
 }
 
@@ -41,8 +28,6 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
   idInit,
   users,
   userRoles,
-  projectState,
-  handleSubmitForm,
   isAdmin,
 }) => {
   const dispatch = useAppDispatch();
@@ -101,12 +86,7 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
   const [addNewDeveloper, setAddNewDeveloper] = useState("");
 
   const [developers, setDevelopers] = useState<string[]>([]);
-
-  const [productOwnerIDTouched, setProductOwnerIDTouched] = useState(false);
-  const [scrumMasterIDTouched, setScrumMasterIDTouched] = useState(false);
   const [addNewDeveloperTouched, setAddNewDeveloperTouched] = useState(false);
-
-  const [developersTouched, setDevelopersTouched] = useState([false]);
 
   const enteredProductOwnerValid = productOwnerID !== initProductOwnerID;
   const enteredScrumMasterValid = scrumMasterID !== initScrumMasterID;
@@ -115,32 +95,12 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
   const addNewDeveloperInvalid =
     addNewDeveloperTouched && !enteredAddDeveloperValid;
 
-  const removeDeveloperHandler = (index: any) => {
-    // TODO call remove
-    let removeDeveloperData = {
-      projectId: idInit,
-      userId: developers[index],
-    };
-    dispatch(removeDeveloper(removeDeveloperData));
-  };
-
   const productOwnerChangedHandler = (e: any) => {
     setProductOwnerID(e.target.value);
-    if (e.target.value === initProductOwnerID) {
-      setProductOwnerIDTouched(false);
-    } else {
-      setProductOwnerIDTouched(true);
-    }
   };
 
   const scrumMasterChangedHandler = (e: any) => {
     setScrumMasterID(e.target.value);
-    if (e.target.value === initScrumMasterID) {
-      setScrumMasterIDTouched(false);
-    } else {
-      setScrumMasterIDTouched(true);
-    }
-    // TODO
   };
 
   const addDeveloperChangedHandler = (e: any) => {
@@ -184,6 +144,15 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
     dispatch(updateProjectRoles(projectRoleData));
   };
 
+  const removeDeveloperHandler = (index: any) => {
+    let removeDeveloperData = {
+      projectId: idInit,
+      userId: developers[index],
+    };
+    dispatch(removeDeveloper(removeDeveloperData));
+  };
+
+  // utility function, takes in user id and returns username
   const displayUsername = (member: string) => {
     let u = users.filter((user) => {
       return user.id?.toString() === member;
@@ -246,6 +215,7 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
               >
                 {users.map(
                   (user) =>
+                    // check if user is already product owner and don't show them here
                     String(user.id) !== productOwnerID && (
                       <option key={user.id} value={user.id}>
                         {user.username}
@@ -284,6 +254,7 @@ const ProjectRolesForm: React.FC<ProjectProps> = ({
                   Select developer
                 </option>
                 {users.map((user) => {
+                  // check if user is already developer or product owner and don't show them here
                   const isProductOwner = String(user.id) === productOwnerID;
                   const isDeveloper = developers.includes(String(user.id));
                   if (

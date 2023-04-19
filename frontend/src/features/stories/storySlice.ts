@@ -64,3 +64,4 @@ export const storySlice = createSlice({
 
 
 export default storySlice.reducer;
+export const {reset} = storySlice.actions

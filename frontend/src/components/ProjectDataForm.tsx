@@ -1,27 +1,16 @@
 import { Fragment, useEffect, useState } from "react";
-import { Alert, Button } from "react-bootstrap";
-import Card from "../components/Card";
+import { Button } from "react-bootstrap";
 import { Form } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 
 import classes from "./ProjectDataForm.module.css";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
-import { getAllUsers } from "../features/users/userSlice";
-import { ProjectData, UserRole } from "../classes/projectData";
 import {
-  createProject,
   editProject,
   getAllProjects,
   reset,
 } from "../features/projects/projectSlice";
-import { UserData } from "../classes/userData";
-import { ProjectState } from "../features/projects/projectSlice";
 import { toast } from "react-toastify";
 
 interface ProjectProps {
@@ -42,7 +31,7 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
   const { isLoading, isError, isEditSuccess, message } = useAppSelector(
     (state) => state.projects
   );
-
+  // alerts for errors/success
   useEffect(() => {
     if (isEditSuccess && !isLoading && formIsValid) {
       toast.success("Changes successfully saved!");
@@ -57,18 +46,11 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
     }
   }, [isEditSuccess, isError, isLoading]);
 
-  console.log(projectNameInit, projectDescriptionInit);
-
+  // if project name wasn't changed due to error, set it to the initial one
   useEffect(() => {
-    console.log("USE EFF");
     if (projectName !== projectNameInit) {
       setProjectName(projectNameInit);
     }
-    // if (projectDescription !== projectDescriptionInit) {
-    //   setProjectDescription(
-    //     projectDescriptionInit ? projectDescriptionInit : ""
-    //   );
-    // }
   }, [isError]);
 
   const [projectName, setProjectName] = useState(projectNameInit);
@@ -81,7 +63,6 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
   const [projectNameTouched, setProjectNameTouched] = useState(false);
 
   const enteredNameValid = projectName.trim() !== "";
-
   const nameInputInvalid = projectNameTouched && !enteredNameValid;
 
   const formIsValid = enteredNameValid;
@@ -109,7 +90,8 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
       return;
     }
 
-    // TODO rewrite this !!!
+    // get user data
+    // TODO change?
     const token = JSON.parse(localStorage.getItem("user")!).token;
     const id = parseJwt(token).sid;
 
@@ -121,7 +103,6 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
     };
 
     console.log(updatedProject);
-
     dispatch(editProject(updatedProject));
   };
 
