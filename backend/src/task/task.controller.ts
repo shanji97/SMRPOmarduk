@@ -114,7 +114,7 @@ export class TaskController {
     const task = await this.taskService.getTaskById(taskId);
     if (!task)
       throw new NotFoundException();
-    if (task.category === TaskCategory.COMPLETED)
+    if (task.category === TaskCategory.ENDED)
       throw new ForbiddenException('Can\'t delete ended task');
 
     await this.taskService.deleteTask(taskId);

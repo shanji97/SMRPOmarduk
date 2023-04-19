@@ -117,7 +117,7 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category == TaskCategory.COMPLETED)
+    if (task.category == TaskCategory.ENDED)
       throw new ValidationException('Task already completed');
 
     await this.taskRepository.update({ id: taskId }, {

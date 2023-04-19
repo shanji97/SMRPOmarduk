@@ -9,8 +9,7 @@ export enum TaskCategory {
   ASSIGNED = 2,
   ACCEPTED = 3,
   ACTIVE = 4,
-  
- ENDED = 250
+  ENDED = 250,
 }
 
 @Entity()
@@ -37,7 +36,7 @@ export class Task {
   dateActive: string;
 
   @Column({ type: 'datetime', default: null })
-  dateCompleted: string;
+  dateEnded: string;
 
   @CreateDateColumn()
   dateCreated: string;
