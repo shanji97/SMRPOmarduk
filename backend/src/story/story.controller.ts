@@ -15,9 +15,9 @@ import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/up
 import { StoryTest } from '../test/test.entity';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -43,7 +43,7 @@ export class StoryController {
     return story;
   }
 
-  @ApiOperation({ summary: 'Get tests for a particullar story.' })
+  @ApiOperation({ summary: 'Get tests for a particular story.' })
   @ApiOkResponse()
   @Get(':storyId/tests')
   async getTestForStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<StoryTest[]> {
@@ -134,21 +134,20 @@ export class StoryController {
     }
   }
 
-  @ApiOperation({ summary: 'Realie story.' })
-  @ApiNoContentResponse()
+  @ApiOperation({ summary: 'Realize test.' })
+  @ApiOkResponse()
   @Patch('/test/:testId')
   async realizeTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
     const test: StoryTest = await this.testService.getTestById(testId);
-    if(test.isRealized)
+    if (test.isRealized)
       throw new BadRequestException('Test is already realized.');
 
     const story: Story = await this.storyService.getStoryById(test.storyId);
-    await this.storyService.checkStoryProperties(story);
     const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
     if (usersOnProject.length == 0)
       throw new ForbiddenException('Only the product owner and scrum master can realize tests.');
 
-    // await this.testService.realiseTestById(testId);
+    await this.testService.realizeTestById(testId);
   }
 
   @ApiOperation({ summary: 'Delete test from story.' })
@@ -156,7 +155,7 @@ export class StoryController {
   @Delete('/test/:testId')
   async deleteTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
     const test: StoryTest = await this.testService.getTestById(testId);
-    if(test.isRealized)
+    if (test.isRealized)
       throw new BadRequestException('Test is already realized.');
 
     const story: Story = await this.storyService.getStoryById(test.storyId);
@@ -167,7 +166,6 @@ export class StoryController {
 
     await this.testService.deleteTestById(testId);
   }
-
 
   @ApiOperation({ summary: 'Delete story.' })
   @ApiNoContentResponse()

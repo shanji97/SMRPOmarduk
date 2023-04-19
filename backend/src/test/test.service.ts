@@ -39,23 +39,27 @@ export class TestService {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
                     case 1062: // Duplicate entry
-                        throw new ValidationException('Testname already exists');
+                        throw new ValidationException('Test name already exists.');
                 }
             }
         }
     }
 
-    async updateTestById(testId, test) {
+    async updateTestById(testId: number, test) {
         try {
             await this.testRepository.update({ id: testId }, test);
         } catch (ex) {
             if (ex instanceof QueryFailedError) {
                 switch (ex.driverError.errno) {
                     case 1062: // Duplicate entry
-                        throw new ValidationException('Testname already exists');
+                        throw new ValidationException('Test name already exists.');
                 }
             }
         }
+    }
+
+    async realizeTestById(testId: number){
+        await this.testRepository.update({id:testId}, {isRealized: true});
     }
 
     async deleteTestById(testId: number) {
