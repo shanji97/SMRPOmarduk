@@ -10,3 +10,11 @@
 .modal {
     width: 90%;
 }
+
+.btnGroup {
+    float: right;
+}
+
+.btn {
+    margin: .5rem;
+}
