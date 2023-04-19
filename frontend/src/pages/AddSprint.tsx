@@ -88,13 +88,6 @@ const AddSprint: React.FC<AddSprintProps> = ({isEdit, sprintId, nameInit, veloci
             startDate: getCestDate(dateRange.startDate.toString()),
             endDate: getCestDate(dateRange.endDate.toString()),
         };
-        const today = new Date();
-        if (dateRange.startDate.getFullYear() === today.getFullYear() &&
-              dateRange.startDate.getMonth() === today.getMonth() &&
-              dateRange.startDate.getDate() === today.getDate()) {
-
-            // dispatch(setActiveSprint(sprintBody))
-        }
 
         if (isEdit) {
             dispatch(updateSprint(sprintBody));
