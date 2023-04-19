@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, Unique } from 'typeorm';
-
 import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
 import { Test } from '../test/test.entity';
