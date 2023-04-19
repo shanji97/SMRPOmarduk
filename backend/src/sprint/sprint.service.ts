@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, EntityManager, QueryFailedError, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import * as moment from 'moment';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
@@ -19,7 +19,7 @@ export class SprintService {
     @InjectRepository(Sprint)
     private readonly sprintRepository: Repository<Sprint>,
     @InjectEntityManager()
-    private readonly entityManager: EntityManager,
+    private readonly entityManager: EntityManager
   ) { }
 
   async listSprintsForProject(projectId: number): Promise<Sprint[]> {
@@ -52,7 +52,7 @@ export class SprintService {
     const peopleCount: number = await this.projectService.countUsersWithRoleOnProject(sprint.projectId, [UserRole.Developer, UserRole.ScrumMaster]);
     if (sprint.velocity > sprintDurationDays * peopleCount * personHoursPerDay * personMaxLoadFactor)
       throw new ValidationException('Irregular sprint velocity');
-    
+
     // Only one sprint can be at same time
     if (await this.getOverlappingSprint(projectId, sprint.startDate, sprint.endDate) !== null)
       throw new ValidationException('Sprint date overlaps with one of other sprints');
@@ -99,7 +99,7 @@ export class SprintService {
       if (sprint.velocity > sprintDurationDays * peopleCount * personHoursPerDay * personMaxLoadFactor)
         throw new ValidationException('Irregular sprint velocity');
     }
-    
+
     await this.sprintRepository.update({ id: sprintId }, sprint);
   }
 
@@ -117,7 +117,7 @@ export class SprintService {
       .andWhere(`((sprint.startDate <= :startDate AND sprint.endDate >= :endDate) OR
               (sprint.startDate >= :startDate AND sprint.startDate <= :endDate) OR
               (sprint.endDate >= :startDate AND sprint.endDate <= :endDate))`,
-              { startDate: startDate, endDate: endDate })
+        { startDate: startDate, endDate: endDate })
       .getOne();
   }
 
