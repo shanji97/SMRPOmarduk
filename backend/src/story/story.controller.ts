@@ -14,11 +14,12 @@ import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
 import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
+import { throwError } from 'rxjs';
 
 @ApiTags('story')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -127,16 +128,27 @@ export class StoryController {
 
   }
 
-  @ApiOperation({summary: 'Realize story.'})
+  @ApiOperation({ summary: 'Realize story.' })
   @ApiOkResponse()
   @Patch(':storyId/confirm')
-  async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number){
-    let story : Story = await this.storyService.getStoryById(storyId);
-    if(story.isRealized)
+  async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
+    let story: Story = await this.storyService.getStoryById(storyId);
+    if (story.isRealized)
       throw new BadRequestException('Story is already realized.');
 
-      
+    if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner]))
+      throw new ForbiddenException('Only a product owner can realize a story.');
 
+    if (!await this.storyService.isStoryInActiveSprint(storyId))
+      throw new BadRequestException('The story is already outside an active sprint.');
+
+    if (story.rejected)
+      throw new BadRequestException('The story was already rejected.');
+
+    if (story.category == Category.Finished)
+      throw new BadRequestException('The story was already finished.');
+
+    this.storyService.realizeStory(storyId);
   }
 
   @ApiOperation({ summary: 'Update story.' })

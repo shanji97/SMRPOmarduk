@@ -2,10 +2,6 @@ import { ConflictException, Injectable, Logger, NotFoundException, BadRequestExc
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager } from 'typeorm';
 import { ProjectService } from '../project/project.service';
-import { Sprint } from '../sprint/sprint.entity';
-import { SprintStory } from '../sprint/sprint-story.entity';
-import { UserRole } from '../project/project-user-role.entity';
-import { ValidationException } from '../common/exception/validation.exception';
 import { StoryNotification } from './story-notification.entity';
 import { StoryService } from '../story/story.service';
 

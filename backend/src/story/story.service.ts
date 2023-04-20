@@ -1,7 +1,6 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager } from 'typeorm';
-
 import { CreateStoryDto } from './dto/create-story.dto';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from '../sprint/sprint.entity';
@@ -10,7 +9,6 @@ import { Story } from './story.entity';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { timeStamp } from 'console';
 
 @Injectable()
 export class StoryService {
@@ -61,6 +59,10 @@ export class StoryService {
 
   async updateStoryTimeComplexity(storyId: number, timeComplexity: number) {
     await this.storyRepository.update({ id: storyId }, { timeComplexity: timeComplexity });
+  }
+
+  async realizeStory(storyId: number) {
+    await this.storyRepository.update({ id: storyId }, { isRealized: true });
   }
 
   async updateStoryById(storyId: number, story: UpdateStoryDto) {
