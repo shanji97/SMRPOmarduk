@@ -127,11 +127,16 @@ export class StoryController {
 
   }
 
-  @ApiOperation({summary: 'Confirm stories.'})
+  @ApiOperation({summary: 'Realize story.'})
   @ApiOkResponse()
   @Patch(':storyId/confirm')
   async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number){
     let story : Story = await this.storyService.getStoryById(storyId);
+    if(story.isRealized)
+      throw new BadRequestException('Story is already realized.');
+
+      
+
   }
 
   @ApiOperation({ summary: 'Update story.' })
