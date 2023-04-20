@@ -1,6 +1,5 @@
-import { BadRequestException, ConflictException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, HttpException, HttpStatus, UnauthorizedException, ForbiddenException } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { BadRequestException, ConflictException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, } from '@nestjs/swagger';
 import { CreateStoryDto, CreateStorySchema } from './dto/create-story.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { UpdateStoryDto, UpdateStorySchema } from './dto/update-story.dto';
@@ -14,12 +13,11 @@ import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
 import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
-import { throwError } from 'rxjs';
 
 @ApiTags('story')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -167,7 +165,6 @@ export class StoryController {
 
     this.storyService.realizeStory(storyId);
   }
-
 
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
