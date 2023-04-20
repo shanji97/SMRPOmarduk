@@ -175,8 +175,8 @@ export class StoryController {
   async updateStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
     try {
       let checkStory = await this.storyService.getStoryById(storyId);
-      // if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(checkStory.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
-      //   throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(checkStory.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
+        throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
 
       if (checkStory.isRealized)
         throw new BadRequestException('The story is already realized, so it cannot be updated.');
@@ -188,7 +188,7 @@ export class StoryController {
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new ConflictException(ex.message);
-      else if( ex instanceof ConflictException)
+      else if (ex instanceof ConflictException)
         throw new ConflictException(ex.message);
       throw ex;
     }
@@ -196,7 +196,7 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Realize test.' })
   @ApiOkResponse()
-  @Patch('/test/:testId')
+  @Patch('/test/:testId/realize')
   async realizeTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
     const test: StoryTest = await this.testService.getTestById(testId);
     if (test.isRealized)
@@ -235,6 +235,9 @@ export class StoryController {
 
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the product owner and scrum master can delete stories.');
+
+    if (await this.storyService.isStoryInSprint(storyId))
+      throw new BadRequestException('This story is already a part of a print.');
 
     await this.storyService.deleteStoryById(storyId);
   }

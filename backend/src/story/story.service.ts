@@ -68,11 +68,7 @@ export class StoryService {
   async updateStoryById(storyId: number, story: UpdateStoryDto) {
     try {
       let existingStory = await this.getStoryById(storyId);
-      existingStory.title = story.title;
-      existingStory.description = story.description;
-      existingStory.sequenceNumber = story.sequenceNumber;
-      existingStory.priority = story.priority;
-      existingStory.businessValue = story.businessValue;
+      
       await this.storyRepository.update({ id: storyId }, { title: story.title, description: story.description, sequenceNumber: story.sequenceNumber, priority: story.priority, businessValue: story.businessValue });
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
