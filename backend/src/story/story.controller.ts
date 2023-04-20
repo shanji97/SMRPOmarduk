@@ -13,11 +13,12 @@ import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
 import { StoryTest } from '../test/test.entity';
+import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -43,7 +44,7 @@ export class StoryController {
     return story;
   }
 
-  @ApiOperation({ summary: 'Get tests for a particullar story.' })
+  @ApiOperation({ summary: 'Get tests for a particular story.' })
   @ApiOkResponse()
   @Get(':storyId/tests')
   async getTestForStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<StoryTest[]> {
@@ -58,7 +59,8 @@ export class StoryController {
   @Post(':projectId')
   async createStory(@Token() token, @Body(new JoiValidationPipe(CreateStorySchema)) story: CreateStoryDto, @Param('projectId', ParseIntPipe) projectId: number) {
     try {
-      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
+      let hasValidRole: boolean = await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]);
+      if (!hasValidRole)
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner.');
 
       const row = await this.storyService.createStory(story, projectId);
@@ -77,7 +79,7 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Get story data by project ID.' })
   @ApiOkResponse()
-  @Get(':projectId')
+  @Get(':projectId/stories-by-project')
   async getStoriesWithData(@Param('projectId', ParseIntPipe) projectId: number): Promise<Story[]> {
     return await this.storyService.getStoriesByProjectId(projectId);
   }
@@ -107,6 +109,31 @@ export class StoryController {
     }
   }
 
+  @ApiOperation({ summary: 'Update time complexity of a story.' })
+  @ApiOkResponse()
+  @Patch(':storyId/time-complexity')
+  async updateStoryTimeComplexity(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryTimeComplexitySchema)) timeComplexityInfo: UpdateStoryTimeComplexityDto) {
+    let story: Story = await this.storyService.getStoryById(storyId);
+    if (!story)
+      throw new BadRequestException('The story by this ID does not exist.');
+
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
+      throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
+
+    if (await this.storyService.isStoryInActiveSprint(storyId))
+      throw new BadRequestException('Cannot update time complexity. The story is already in active sprint.')
+
+    await this.storyService.updateStoryTimeComplexity(storyId, timeComplexityInfo.timeComplexity);
+
+  }
+
+  @ApiOperation({summary: 'Confirm stories.'})
+  @ApiOkResponse()
+  @Patch(':storyId/confirm')
+  async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number){
+    let story : Story = await this.storyService.getStoryById(storyId);
+  }
+
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
   @Patch('/:projectId/story/:storyId')
@@ -130,11 +157,30 @@ export class StoryController {
     }
   }
 
-  @ApiOperation({ summary: 'Delete test from story' })
+  @ApiOperation({ summary: 'Realize test.' })
+  @ApiOkResponse()
+  @Patch('/test/:testId')
+  async realizeTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
+    const test: StoryTest = await this.testService.getTestById(testId);
+    if (test.isRealized)
+      throw new BadRequestException('Test is already realized.');
+
+    const story: Story = await this.storyService.getStoryById(test.storyId);
+    const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(story.projectId)).filter(user => user.role == UserRole.ProjectOwner || user.role == UserRole.ScrumMaster && user.userId == token.sid);
+    if (usersOnProject.length == 0)
+      throw new ForbiddenException('Only the product owner and scrum master can realize tests.');
+
+    await this.testService.realizeTestById(testId);
+  }
+
+  @ApiOperation({ summary: 'Delete test from story.' })
   @ApiNoContentResponse()
   @Delete('/test/:testId')
   async deleteTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
     const test: StoryTest = await this.testService.getTestById(testId);
+    if (test.isRealized)
+      throw new BadRequestException('Test is already realized.');
+
     const story: Story = await this.storyService.getStoryById(test.storyId);
     await this.storyService.checkStoryProperties(story);
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
@@ -143,14 +189,13 @@ export class StoryController {
     await this.testService.deleteTestById(testId);
   }
 
-
   @ApiOperation({ summary: 'Delete story.' })
   @ApiNoContentResponse()
   @Delete(':storyId')
   async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     const story: Story = await this.storyService.getStoryById(storyId);
     await this.storyService.checkStoryProperties(story);
-    
+
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the product owner and scrum master can delete stories.');
 

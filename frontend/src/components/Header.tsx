@@ -161,7 +161,14 @@ function Header() {
                 </span>
               }
             >
-              {sprints.length > 0 && <NavDropdown.Item onClick={() => navigate(`/projects/${activeProject.id}/sprints`)}>Sprint list</NavDropdown.Item>}
+              {sprints.length > 0 ?
+                (
+                  <Fragment>
+                    <NavDropdown.Item onClick={() => navigate(`/projects/${activeProject.id}/sprints`)}>Sprint list</NavDropdown.Item>
+                    <NavDropdown.Item onClick={() => navigate(`/projects/${activeProject.id}/userStories`)}>User stories</NavDropdown.Item>
+                  </Fragment>
+                ) :
+                <p style={{marginLeft: '1.5rem'}} className='text-secondary'>No active project</p>}
             </NavDropdown>
 
             <NavDropdown
