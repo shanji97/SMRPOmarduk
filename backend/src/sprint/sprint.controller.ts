@@ -116,7 +116,7 @@ export class SprintController {
     if (sprint == null)
       throw new BadRequestException('No sprint with the given ID exists in the ')
 
-    if(!await this.projectService.hasUserRoleOnProject(story.projectId,token.sid, UserRole.ScrumMaster))
+    if(!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the scrum master can add the story to sprint.');
 
     await this.sprintService.addStoryToSprint(sprintId, storyId);
