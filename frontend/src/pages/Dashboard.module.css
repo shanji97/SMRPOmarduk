@@ -1,0 +1,47 @@
+
+.custom-font-size {
+    font-size: 75em !important;
+  }
+
+.badge-light-must {
+	background-color: rgba(234, 84, 85, 0.12);
+	color: #EA5455 !important;
+}
+.badge-light-could {
+	background-color: rgba(255, 159, 67, 0.12);
+	color: #FF9F43 !important;
+}
+.badge-light-should {
+	background-color: rgba(40, 199, 111, 0.12);
+	color: #28C76F !important;
+}
+.badge-light-wont {
+	background-color: rgba(0, 207, 232, 0.12);
+	color: #00CFE8 !important;
+}
+.listItem-bg {
+    background-color: #f4f6f7;
+}
+
+/*table*/
+.gfg { 
+	border-collapse: separate; 
+	border-spacing:0 15px; 
+}
+.gfg td {
+	
+	padding: 10px;
+} 
+
+
+
+
+
+.gfg td:first-child {
+  border-radius: 10px 0 0 10px !important;
+}
+
+.gfg td:last-child {
+  border-radius: 0 10px 10px 0 !important;
+}
+.gfg td{background: #f4f6f7;}
