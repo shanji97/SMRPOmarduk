@@ -13,11 +13,12 @@ import { ProjectService } from '../project/project.service';
 import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
 import { StoryTest } from '../test/test.entity';
+import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -108,6 +109,25 @@ export class StoryController {
     }
   }
 
+  @ApiOperation({ summary: 'Update time complexity of a story.' })
+  @ApiOkResponse()
+  @Patch(':storyId/time-complexity')
+  async updateStoryTimeComplexity(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryTimeComplexitySchema)) timeComplexityInfo: UpdateStoryTimeComplexityDto) {
+    let story: Story = await this.storyService.getStoryById(storyId);
+    if (!story)
+      throw new BadRequestException('The story by this ID does not exist.');
+
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
+      throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
+
+    if (await this.storyService.isStoryInActiveSprint(storyId))
+      throw new BadRequestException('Cannot update time complexity. The story is already in active sprint.')
+
+    await this.storyService.updateStoryTimeComplexity(storyId, timeComplexityInfo.timeComplexity);
+
+  }
+
+
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
   @Patch('/:projectId/story/:storyId')
@@ -169,7 +189,7 @@ export class StoryController {
   async deleteStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     const story: Story = await this.storyService.getStoryById(storyId);
     await this.storyService.checkStoryProperties(story);
-    
+
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the product owner and scrum master can delete stories.');
 

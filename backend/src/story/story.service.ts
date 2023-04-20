@@ -10,6 +10,7 @@ import { Story } from './story.entity';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { timeStamp } from 'console';
 
 @Injectable()
 export class StoryService {
@@ -56,6 +57,10 @@ export class StoryService {
 
   async updateStoryCategory(storyId: number, category: number) {
     await this.storyRepository.update({ id: storyId }, { category: category });
+  }
+
+  async updateStoryTimeComplexity(storyId: number, timeComplexity: number) {
+    await this.storyRepository.update({ id: storyId }, { timeComplexity: timeComplexity });
   }
 
   async updateStoryById(storyId: number, story: UpdateStoryDto) {

@@ -10,8 +10,6 @@ export enum Category {
   Finished = 2,
 }
 
-
-
 @Entity()
 @Unique(['title', 'projectId'])
 @Unique(['sequenceNumber', 'projectId'])
@@ -40,7 +38,7 @@ export class Story {
   @Column({ type: 'tinyint', default: Category.Unassigned })
   category: number;
 
-  @Column({ type: 'integer', default: 1 })
+  @Column({ type: 'integer', default: 0 })
   timeComplexity: number
 
   @Column({ type: 'boolean', default: false })
