@@ -79,7 +79,7 @@ export class StoryController {
 
   @ApiOperation({ summary: 'Get story data by project ID.' })
   @ApiOkResponse()
-  @Get(':projectId')
+  @Get(':projectId/stories-by-project')
   async getStoriesWithData(@Param('projectId', ParseIntPipe) projectId: number): Promise<Story[]> {
     return await this.storyService.getStoriesByProjectId(projectId);
   }
@@ -127,6 +127,12 @@ export class StoryController {
 
   }
 
+  @ApiOperation({summary: 'Confirm stories.'})
+  @ApiOkResponse()
+  @Patch(':storyId/confirm')
+  async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number){
+    let story : Story = await this.storyService.getStoryById(storyId);
+  }
 
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()

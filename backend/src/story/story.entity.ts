@@ -3,6 +3,7 @@ import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
 import { StoryTest } from '../test/test.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
+import { StoryNotification } from 'src/story-notification/story-notification.entity';
 
 export enum Category {
   Unassigned = 0,
@@ -52,6 +53,9 @@ export class Story {
 
   @OneToMany(type => SprintStory, sprint => sprint.story)
   sprintStories: SprintStory[];
+
+  // @OneToMany(type => StoryNotification, notification => notification.story)
+  // notifications: StoryNotification[];
 
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;

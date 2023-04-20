@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 
 export class UpdateStoryTimeComplexityDto {
     @ApiProperty({
-      description: 'Time coplexity.',
+      description: 'Time complexity.',
       example: 1,
       minimum: 0,
       default: 1,
