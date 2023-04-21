@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { StoryData } from "../../classes/storyData";
+import {StoryData, StoryDataOfProject} from "../../classes/storyData";
 import storyService from "./storyService";
 
 let user = JSON.parse(localStorage.getItem('user')!);
 
 interface StoryState {
     stories: StoryData[]
+    storiesOfProject: StoryDataOfProject[]
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -14,6 +15,7 @@ interface StoryState {
 
 const initialState: StoryState = {
     stories: [],
+    storiesOfProject: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -32,10 +34,31 @@ export const getAllStory = createAsyncThunk('/story/getAllStory', async (_, thun
     }  
 });
 
+export const getAllStoriesOfProject = createAsyncThunk('/story/getAllStoriesOfProject', async (projectId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.getAllStoriesOfProject(projectId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        console.log(message);
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 export const createStory = createAsyncThunk('story/create', async (storyData: StoryData, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.create(storyData, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const realizeStory = createAsyncThunk('story/reqlizeStory', async (storyId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.realizeStory(storyId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -81,6 +104,31 @@ export const storySlice = createSlice({
                 state.isError = true
                 state.message = action.payload
             })
+          .addCase(realizeStory.pending, (state) => {
+              state.isLoading = true
+          })
+          .addCase(realizeStory.fulfilled, (state, action) => {
+              state.isLoading = false;
+              state.isSuccess = true;
+              state.isError = false;
+              state.message = '';
+
+              const storyId = action.meta.arg;
+              const index = state.storiesOfProject.findIndex(story => story.id === storyId);
+              const newStories = [...state.storiesOfProject];
+
+              let storyToUpdate: StoryDataOfProject | undefined = state.storiesOfProject.find(story => story.id === storyId);
+              if (storyToUpdate) {
+                  storyToUpdate.isRealized = true;
+              }
+              state.storiesOfProject
+          })
+          .addCase(realizeStory.rejected, (state, action) => {
+              state.isLoading = false
+              state.isSuccess = false;
+              state.isError = true
+              state.message = action.payload
+          })
             .addCase(getAllStory.pending, (state) => {
                 state.isLoading = true
             })
@@ -97,6 +145,22 @@ export const storySlice = createSlice({
                 state.isError = true
                 state.message = action.payload
             })
+            .addCase(getAllStoriesOfProject.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getAllStoriesOfProject.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.storiesOfProject = action.payload
+            })
+            .addCase(getAllStoriesOfProject.rejected, (state, action) => {
+                  state.isLoading = false
+                  state.isSuccess = false;
+                  state.isError = true;
+                  state.message = action.payload;
+             })
             .addCase(deleteStory.pending, (state) => {
                 state.isLoading = true
             })

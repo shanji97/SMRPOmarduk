@@ -121,7 +121,6 @@ function Dashboard() {
 
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -206,7 +205,6 @@ function Dashboard() {
     const isEmpty = Object.values(itemsByStatus).every(
       (value) => value.length === 0
     );
-    console.log(isEmpty);
     if (isEmpty && isSuccess) {
       setItemsByStatus((current) =>
         produce(current, (draft) => {
@@ -298,7 +296,6 @@ function Dashboard() {
                           }}
                         >
                           {itemsByStatus[status].map((item, index) => {
-                            console.log(status);
 
                             return (
                               <Draggable

@@ -149,7 +149,6 @@ function Dashboard() {
     //console.log(itemsByStatus)
 
     const isEmpty = Object.values(itemsByStatus).every(value => value);
-    console.log(isEmpty)
     if (isEmpty && isSuccess) {
       
           
@@ -161,8 +160,7 @@ function Dashboard() {
     
   }, [isSuccess]);
 
-console.log(itemsByStatus)
-  
+
 
 //{Object.values.map(([columnId, column], index) => {
 

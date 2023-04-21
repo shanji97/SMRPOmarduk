@@ -19,6 +19,18 @@ const getAllStory = async (token: string) => {
     return response.data;
 }
 
+const getAllStoriesOfProject = async (projectId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${STORY_API_URL}/${projectId}/stories-by-project`, config);
+
+    return response.data;
+}
+
 const create = async (storyData: StoryData, token: string) => {
     const config = {
         headers: {
@@ -28,10 +40,18 @@ const create = async (storyData: StoryData, token: string) => {
     let projectID = storyData.projectID;
     delete storyData.projectID;
 
-    // console.log(storyData);
-
     const response = await axios.post(`${STORY_API_URL}/${projectID}`, storyData, config);
+    return response.data;
+}
 
+const realizeStory = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.patch(`${STORY_API_URL}/${storyId}/confirm`, {}, config);
     return response.data;
 }
 
@@ -50,7 +70,9 @@ const deleteStory = async (storyId: string, token: string) => {
 const storyService = {
     create,
     getAllStory,
-    deleteStory
+    deleteStory,
+    getAllStoriesOfProject,
+    realizeStory,
 }
 
 export default storyService;
