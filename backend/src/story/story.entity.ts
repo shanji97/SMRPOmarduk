@@ -3,7 +3,7 @@ import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
 import { StoryTest } from '../test/test.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
-import { StoryNotification } from 'src/story-notification/story-notification.entity';
+import { StoryNotification } from '../story-notification/story-notification.entity';
 
 export enum Category {
   Unassigned = 0,
@@ -45,10 +45,13 @@ export class Story {
   @Column({ type: 'boolean', default: false })
   isRealized: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  rejected: boolean;
+
   @OneToMany(type => Task, task => task.story)
   tasks: Task[];
 
-  @OneToMany(type => StoryTest, test => test.story, {eager: true})
+  @OneToMany(type => StoryTest, test => test.story, { eager: true })
   tests: StoryTest[];
 
   @OneToMany(type => SprintStory, sprint => sprint.story)

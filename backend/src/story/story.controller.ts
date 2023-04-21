@@ -16,9 +16,9 @@ import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
 
 @ApiTags('story')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -127,27 +127,55 @@ export class StoryController {
 
   }
 
-  @ApiOperation({summary: 'Realize story.'})
+  @ApiOperation({ summary: 'Realize story.' })
   @ApiOkResponse()
   @Patch(':storyId/confirm')
-  async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number){
-    let story : Story = await this.storyService.getStoryById(storyId);
-    if(story.isRealized)
+  async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
+    let story: Story = await this.storyService.getStoryById(storyId);
+    if (story.isRealized)
       throw new BadRequestException('Story is already realized.');
 
-      
+    if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner]))
+      throw new ForbiddenException('Only a product owner can realize a story.');
 
+    if (!await this.storyService.isStoryInActiveSprint(storyId))
+      throw new BadRequestException('The story is already outside an active sprint.');
+
+    if (story.category == Category.Finished)
+      throw new BadRequestException('The story was already finished.');
+
+    this.storyService.realizeStory(storyId);
+  }
+
+  @ApiOperation({ summary: 'Reject story.' })
+  @ApiOkResponse()
+  @Patch(':storyId/reject')
+  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
+    let story: Story = await this.storyService.getStoryById(storyId);
+    if (!story.isRealized)
+      throw new BadRequestException('Story is not realized.');
+
+    if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner]))
+      throw new ForbiddenException('Only a product owner can realize a story.');
+
+    if (!await this.storyService.isStoryInActiveSprint(storyId))
+      throw new BadRequestException('The story is already outside an active sprint.');
+
+    if (story.category == Category.Finished)
+      throw new BadRequestException('The story was already finished.');
+
+    this.storyService.realizeStory(storyId);
   }
 
   @ApiOperation({ summary: 'Update story.' })
   @ApiOkResponse()
-  @Patch('/:projectId/story/:storyId')
-  async updateStory(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
+  @Patch(':storyId/update')
+  async updateStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStorySchema)) story: UpdateStoryDto) {
     try {
-      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
+      let checkStory = await this.storyService.getStoryById(storyId);
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(checkStory.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
         throw new ForbiddenException('Only the product owner and the scrum master can update the story in a project.');
 
-      let checkStory = await this.storyService.getStoryById(storyId);
       if (checkStory.isRealized)
         throw new BadRequestException('The story is already realized, so it cannot be updated.');
 
@@ -157,14 +185,16 @@ export class StoryController {
       await this.storyService.updateStoryById(storyId, story);
     } catch (ex) {
       if (ex instanceof ValidationException)
-        throw new BadRequestException(ex);
+        throw new ConflictException(ex.message);
+      else if (ex instanceof ConflictException)
+        throw new ConflictException(ex.message);
       throw ex;
     }
   }
 
   @ApiOperation({ summary: 'Realize test.' })
   @ApiOkResponse()
-  @Patch('/test/:testId')
+  @Patch('/test/:testId/realize')
   async realizeTest(@Token() token, @Param('testId', ParseIntPipe) testId: number) {
     const test: StoryTest = await this.testService.getTestById(testId);
     if (test.isRealized)
@@ -203,6 +233,9 @@ export class StoryController {
 
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the product owner and scrum master can delete stories.');
+
+    if (await this.storyService.isStoryInSprint(storyId))
+      throw new BadRequestException('This story is already a part of a print.');
 
     await this.storyService.deleteStoryById(storyId);
   }
