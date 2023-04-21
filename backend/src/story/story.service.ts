@@ -61,14 +61,14 @@ export class StoryService {
     await this.storyRepository.update({ id: storyId }, { timeComplexity: timeComplexity });
   }
 
-  async realizeStory(storyId: number) {
-    await this.storyRepository.update({ id: storyId }, { isRealized: true });
+  async realizeStory(storyId: number, realize: boolean) {
+    await this.storyRepository.update({ id: storyId }, { isRealized: realize });
   }
 
   async updateStoryById(storyId: number, story: UpdateStoryDto) {
     try {
       let existingStory = await this.getStoryById(storyId);
-      
+
       await this.storyRepository.update({ id: storyId }, { title: story.title, description: story.description, sequenceNumber: story.sequenceNumber, priority: story.priority, businessValue: story.businessValue });
     } catch (ex) {
       if (ex instanceof QueryFailedError) {

@@ -144,7 +144,7 @@ export class StoryController {
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
-    this.storyService.realizeStory(storyId);
+    await this.storyService.realizeStory(storyId, true);
   }
 
   @ApiOperation({ summary: 'Reject story.' })
@@ -164,7 +164,7 @@ export class StoryController {
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
-    this.storyService.realizeStory(storyId);
+    await this.storyService.realizeStory(storyId, false);
   }
 
   @ApiOperation({ summary: 'Update story.' })
@@ -183,6 +183,11 @@ export class StoryController {
         throw new BadRequestException('The story has been already added to sprint.');
 
       await this.storyService.updateStoryById(storyId, story);
+
+      await this.testService.deleteTestsByStoryId(storyId);
+
+      await this.testService.createTest(storyId, story.tests);
+
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new ConflictException(ex.message);

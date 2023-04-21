@@ -1,7 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { CreateSprintDto, CreateSprintSchema } from './dto/create-sprint.dto';
+import { AuthGuard } from '@nestjs/passport';import { CreateSprintDto, CreateSprintSchema } from './dto/create-sprint.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
