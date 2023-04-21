@@ -120,9 +120,14 @@ export class SprintController {
     if (await this.storyService.isStoryInActiveSprint(storyId))
       throw new BadRequestException('The story is already in an active sprint.');
 
+
     const sprint = await this.sprintService.getSprintById(sprintId);
     if (!sprint)
       throw new BadRequestException('No sprint with the given ID exists in the ');
+
+    const storyIdsInSprint = (await this.storyService.getStoryIdsForSprint(storyId)).length;
+    if(sprint.velocity = storyIdsInSprint)
+      throw new BadRequestException('The number of stories in the sprint is equal to the sprint velocity.');
 
     if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the scrum master can add the story to sprint.');
