@@ -6,9 +6,10 @@ import { SprintStory } from '../sprint/sprint-story.entity';
 import { StoryNotification } from '../story-notification/story-notification.entity';
 
 export enum Category {
-  Unassigned = 0,
-  Assigned = 1,
-  Finished = 2,
+  WontHave = 0,
+  Unassigned = 1,
+  Assigned = 2,
+  Finished = 3,
 }
 
 export enum Backlog {
@@ -41,10 +42,10 @@ export class Story {
   @Column({ type: 'tinyint' })
   businessValue: number;
 
-  @Column({ type: 'tinyint', default: Category.Unassigned })
+  @Column({ type: 'tinyint', default: Category.WontHave })
   category: number;
 
-  @Column({ type: 'tinyint', default: Backlog.Product})
+  @Column({ type: 'tinyint', default: Backlog.Product })
   backlog: number;
 
   @Column({ type: 'integer', default: 0 })
