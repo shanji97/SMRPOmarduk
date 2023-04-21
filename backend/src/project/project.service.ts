@@ -88,7 +88,7 @@ export class ProjectService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Project name already exists');
+            throw new ConflictException('Project name already exists.');
         }
       }
     }

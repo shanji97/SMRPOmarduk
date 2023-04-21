@@ -1,7 +1,6 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError, EntityManager } from 'typeorm';
-
+import { Repository, QueryFailedError, EntityManager, DeepPartial } from 'typeorm';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from '../sprint/sprint.entity';
@@ -58,15 +57,24 @@ export class StoryService {
     await this.storyRepository.update({ id: storyId }, { category: category });
   }
 
+  async updateStoryTimeComplexity(storyId: number, timeComplexity: number) {
+    await this.storyRepository.update({ id: storyId }, { timeComplexity: timeComplexity });
+  }
+
+  async realizeStory(storyId: number) {
+    await this.storyRepository.update({ id: storyId }, { isRealized: true });
+  }
+
   async updateStoryById(storyId: number, story: UpdateStoryDto) {
     try {
       let existingStory = await this.getStoryById(storyId);
-      await this.storyRepository.update({ id: storyId }, await this.updateStoryData(story, existingStory));
+      
+      await this.storyRepository.update({ id: storyId }, { title: story.title, description: story.description, sequenceNumber: story.sequenceNumber, priority: story.priority, businessValue: story.businessValue });
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Story name already exists');
+            throw new ValidationException('Story name or story with this sequence number already exists.');
         }
       }
     }
@@ -116,7 +124,7 @@ export class StoryService {
     return newStory;
   }
 
-  async updateStoryData(story: UpdateStoryDto, existingStory: Story): Promise<Story> {
+  async updateStoryData(story: UpdateStoryDto, existingStory: Story): Promise<DeepPartial<Story>> {
     existingStory.title = story.title;
     existingStory.description = story.description;
     existingStory.sequenceNumber = story.sequenceNumber;
