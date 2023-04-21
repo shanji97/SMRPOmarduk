@@ -114,7 +114,7 @@ export class StoryController {
   @ApiBadRequestResponse()
   @ApiNotFoundResponse()
   @Patch(':storyId/backlog')
-  async updateStoryCategory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryCategoryStorySchema)) updateData: UpdateStoryBacklog): Promise<void> {
+  async updateStoryBacklog(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryCategoryStorySchema)) updateData: UpdateStoryCategoryDto): Promise<void> {
     try {
       const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(updateData.projectId)).filter(users => users.userId == token.sid);
       if (usersOnProject == null)
@@ -129,10 +129,6 @@ export class StoryController {
       throw ex
     }
   }
-
-
-
-
 
   @ApiOperation({ summary: 'Update time complexity of a story.' })
   @ApiOkResponse()
