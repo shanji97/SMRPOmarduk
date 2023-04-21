@@ -11,6 +11,11 @@ export enum Category {
   Finished = 2,
 }
 
+export enum Backlog {
+  Product = 0,
+  Sprint = 1
+}
+
 @Entity()
 @Unique(['title', 'projectId'])
 @Unique(['sequenceNumber', 'projectId'])
@@ -39,14 +44,14 @@ export class Story {
   @Column({ type: 'tinyint', default: Category.Unassigned })
   category: number;
 
+  @Column({ type: 'tinyint', default: Backlog.Product})
+  backlog: number;
+
   @Column({ type: 'integer', default: 0 })
   timeComplexity: number
 
   @Column({ type: 'boolean', default: false })
   isRealized: boolean;
-
-  @Column({ type: 'boolean', default: false })
-  rejected: boolean;
 
   @OneToMany(type => Task, task => task.story)
   tasks: Task[];

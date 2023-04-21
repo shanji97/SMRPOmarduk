@@ -109,6 +109,31 @@ export class StoryController {
     }
   }
 
+  @ApiOperation({ summary: 'Update story backlog.' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Patch(':storyId/backlog')
+  async updateStoryCategory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryCategoryStorySchema)) updateData: UpdateStoryBacklog): Promise<void> {
+    try {
+      const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(updateData.projectId)).filter(users => users.userId == token.sid);
+      if (usersOnProject == null)
+        throw new BadRequestException('This project doesn\'t exist.');
+
+      await this.storyService.updateStoryBacklog(storyId, updateData.backlog);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex)
+      else if (ex instanceof NotFoundException)
+        throw new NotFoundException(ex)
+      throw ex
+    }
+  }
+
+
+
+
+
   @ApiOperation({ summary: 'Update time complexity of a story.' })
   @ApiOkResponse()
   @Patch(':storyId/time-complexity')

@@ -57,6 +57,10 @@ export class StoryService {
     await this.storyRepository.update({ id: storyId }, { category: category });
   }
 
+  async updateStoryBacklog(storyId: number, backlog: number) {
+    await this.storyRepository.update({ id: storyId }, { category: backlog });
+  }
+
   async updateStoryTimeComplexity(storyId: number, timeComplexity: number) {
     await this.storyRepository.update({ id: storyId }, { timeComplexity: timeComplexity });
   }
