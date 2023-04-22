@@ -42,6 +42,25 @@ export const createProject = createAsyncThunk('project/create', async (projectDa
     }  
 });
 
+export const activateProject = createAsyncThunk('project/activate', async (projectId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await projectService.activateProject(projectId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getActiveProject = createAsyncThunk('project/getactivate', async (_, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await projectService.getActiveProject(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
 
 export const getAllProjects = createAsyncThunk('project/getAllProjects', async (_, thunkAPI: any) => {
     try {
@@ -108,6 +127,22 @@ export const projectSlice = createSlice({
             state.isError = true
             state.message = action.payload
         })
+          .addCase(getActiveProject.pending, (state) => {
+              state.isLoading = true
+          })
+          .addCase(getActiveProject.fulfilled, (state, action) => {
+              state.isLoading = false;
+              state.isSuccess = true;
+              state.isError = false;
+              state.message = '';
+              state.activeProject = action.payload;
+          })
+          .addCase(getActiveProject.rejected, (state, action) => {
+              state.isLoading = false
+              state.isSuccess = false;
+              state.isError = true
+              state.message = action.payload
+          })
         .addCase(getAllProjects.pending, (state) => {
             state.isLoading = true
         })

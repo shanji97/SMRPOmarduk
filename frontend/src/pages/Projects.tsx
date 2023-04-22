@@ -7,8 +7,8 @@ import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import {
+  activateProject, getActiveProject,
   getAllProjects,
-  setActiveProject,
   reset,
 } from "../features/projects/projectSlice";
 import { UserRole } from "../classes/projectData";
@@ -50,15 +50,15 @@ const Projects = () => {
     setUserId(id);
   }, []);
 
+  useEffect(() => {
+    dispatch(getActiveProject());
+  }, []);
+
   // when projects are fetched, reset project state
   // so it doesn't interfere with other components
   useEffect(() => {
     dispatch(reset());
   }, [isSuccess, isError]);
-
-  const activateProject = (projectID: string) => {
-    dispatch(setActiveProject(projectID));
-  };
 
   const redirectToAddStory = (projectID: any) => {
     navigate(`/${projectID}/add-story`);
@@ -69,8 +69,7 @@ const Projects = () => {
   };
 
   const handleActivateProject = (projectId: string) => {
-    activateProject(projectId!);
-    navigate(`?activeProject=${projectId}`);
+    dispatch(activateProject(projectId));
     toast.info("Project active");
   };
 
