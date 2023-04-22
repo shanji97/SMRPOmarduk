@@ -186,6 +186,9 @@ function Header() {
                 }
                 id="basic-nav-dropdown"
             >
+              <NavDropdown.Item onClick={redirectToMyTask}>
+                My Tasks
+              </NavDropdown.Item>
               <NavDropdown.Item onClick={handleLoginAndLogout}>
                 {user === null ? "Log in" : "Logout"}
               </NavDropdown.Item>

@@ -200,23 +200,26 @@ function Dashboard() {
   //doda začetne elemnte
 
   useEffect(() => {
-    //console.log(SprintBacklogItemStatus)
+    //console.log(ProductBacklogItemStatus)
     //console.log(itemsByStatus)
 
-    const isEmpty = Object.values(itemsByStatus).every(
-      (value) => value.length === 0
-    );
-    console.log(isEmpty);
-    if (isEmpty && isSuccess) {
+  
+    if (isSuccess) {
       setItemsByStatus((current) =>
         produce(current, (draft) => {
-          //for (const status of Object.values(SprintBacklogItemStatus)) {
+          //for (const status of Object.values(ProductBacklogItemStatus)) {
           //  draft[status] = draft[status].filter(() => false);
           //}
-
+          console.log(current)
+          const isEmpty = Object.values(current).every(
+            (value) => value.length === 0
+          );
+          
+          if (isEmpty) {
           // Adding new item as "to do"
 
           stories.forEach((story: StoryData) => {
+            
             draft[SprintBacklogItemStatus.UNALLOCATED].push({
               id: story.id?.toString(),
               title: story.title,
@@ -225,8 +228,12 @@ function Dashboard() {
               priority: story.priority,
               businessValue: story.businessValue,
               sequenceNumber: story.sequenceNumber,
+              category: story.category,
+              timeComplexity: story.timeComplexity,
+              isRealized: story.isRealized
             });
           });
+        }
         })
       );
     }
@@ -248,6 +255,9 @@ function Dashboard() {
     priority: 0,
     businessValue: 0,
     sequenceNumber: 0,
+    category: 0,
+    timeComplexity: 0,
+    isRealized: false
   };
 
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
@@ -372,6 +382,7 @@ function Dashboard() {
                                             <Button
                                               className="text-decoration-none"
                                               variant="link"
+                                              size="sm"
                                             >
                                               {item.title}
                                             </Button>

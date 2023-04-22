@@ -192,42 +192,48 @@ function Dashboard() {
   //doda začetne elemnte
   
   useEffect(() => {
-    //console.log(SprintBacklogItemStatus)
+    //console.log(ProductBacklogItemStatus)
     //console.log(itemsByStatus)
 
-    const isEmpty = Object.values(itemsByStatus).every(value => value.length === 0);
-    console.log(isEmpty)
-    if (isEmpty && isSuccess) {
-      
+  
+    if (isSuccess) {
+      setItemsByStatus((current) =>
+        produce(current, (draft) => {
+          //for (const status of Object.values(ProductBacklogItemStatus)) {
+          //  draft[status] = draft[status].filter(() => false);
+          //}
+          console.log(current)
+          const isEmpty = Object.values(current).every(
+            (value) => value.length === 0
+          );
           
-          setItemsByStatus((current) =>
-              produce(current, (draft) => {
-                  //for (const status of Object.values(SprintBacklogItemStatus)) {
-                  //  draft[status] = draft[status].filter(() => false);
-                  //}
+          if (isEmpty) {
+          // Adding new item as "to do"
 
-                  // Adding new item as "to do"
-                  
-                  stories.forEach((story: StoryData) => {
-                    draft[SprintBacklogItemStatus.UNALLOCATED].push({ 
-                      id: story.id?.toString(), 
-                      title: story.title, 
-                      description: story.description,
-                      tests: story.tests,
-                      priority: story.priority,
-                      businessValue: story.businessValue,
-                      sequenceNumber: story.sequenceNumber 
-                    });
-                      
-                  })
-              })
-            );
-          
+          stories.forEach((story: StoryData) => {
+            
+            draft[SprintBacklogItemStatus.UNALLOCATED].push({
+              id: story.id?.toString(),
+              title: story.title,
+              description: story.description,
+              tests: story.tests,
+              priority: story.priority,
+              businessValue: story.businessValue,
+              sequenceNumber: story.sequenceNumber,
+              category: story.category,
+              timeComplexity: story.timeComplexity,
+              isRealized: story.isRealized
+            });
+          });
+        }
+        })
+      );
     }
+  }, [isSuccess]);
 
     
     
-  }, [isSuccess]);
+
 
 
   
@@ -249,8 +255,11 @@ function Dashboard() {
     tests: [],
     priority: 0,
     businessValue: 0,
-    sequenceNumber: 0
-};
+    sequenceNumber: 0,
+    category: 0,
+    timeComplexity: 0,
+    isRealized: false
+  };
 
 
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);

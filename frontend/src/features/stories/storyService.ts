@@ -1,5 +1,5 @@
 import axios from "axios";
-import { StoryData } from "../../classes/storyData";
+import { StoryData, UpdateStoryCategory } from "../../classes/storyData";
 import { getBaseUrl } from "../../helpers/helpers";
 
 
@@ -18,6 +18,7 @@ const getAllStory = async (token: string) => {
 
     return response.data;
 }
+
 
 const create = async (storyData: StoryData, token: string) => {
     const config = {
@@ -46,11 +47,28 @@ const deleteStory = async (storyId: string, token: string) => {
     return response.data;
 }
 
+const updateStoryCategory = async (updateStoryCategory: UpdateStoryCategory, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const updatedCategory = {
+        category: updateStoryCategory.category,
+        projectId: updateStoryCategory.projectId
+    }
+
+    const response = await axios.patch(`${STORY_API_URL}/${updateStoryCategory.id}/category`, updatedCategory, config);
+    return response.data;
+}
+
 
 const storyService = {
     create,
     getAllStory,
-    deleteStory
+    deleteStory,
+    updateStoryCategory
 }
 
 export default storyService;

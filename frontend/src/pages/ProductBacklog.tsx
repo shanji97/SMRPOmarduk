@@ -5,6 +5,7 @@ import {
   Droppable,
   DropResult,
   DragDropContextProps,
+  DraggableLocation,
 } from "@hello-pangea/dnd";
 import { v4 as uuid } from "uuid";
 import {
@@ -43,6 +44,7 @@ import {
   getAllStory,
   deleteStory,
   reset,
+  updateStoryCategory
 } from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
@@ -98,6 +100,7 @@ const columnsFromBackend = {
 */
 
 const defaultItems = {
+  [ProductBacklogItemStatus.WONTHAVE]: [],
   [ProductBacklogItemStatus.UNALLOCATED]: [],
   [ProductBacklogItemStatus.ALLOCATED]: [],
   [ProductBacklogItemStatus.DONE]: [],
@@ -107,21 +110,32 @@ type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function Dashboard() {
   const dispatch = useAppDispatch();
-  let storyState = useAppSelector((state) => state.stories);
+  let { stories, isSuccess, isLoading, isError } = useAppSelector((state) => state.stories);
 
   useEffect(() => {
     dispatch(getAllStory());
   }, []);
 
+  const projectState = useAppSelector((state) => state.projects);
+
+  const [activeProjectState, setactiveProjectState] = useState(projectState.activeProject);
+  
+  console.log(activeProjectState.projectName)
+
+  useEffect(() => {
+    setactiveProjectState(projectState.activeProject);
+     console.log(projectState.activeProject)
+  }, [projectState.isSuccess, projectState.isLoading]);
+
   // NOTE: temporary fix, change this if needed
   useEffect(() => {
-    if (storyState.isSuccess && !storyState.isLoading) {
+    if (isSuccess && !isLoading) {
       dispatch(reset());
     }
-    if (storyState.isError && !storyState.isLoading) {
+    if (isError && !isLoading) {
       dispatch(reset());
     }
-  }, [storyState.isSuccess, storyState.isError, storyState.isLoading]);
+  }, [isSuccess, isError, isLoading]);
 
   //let stories = useAppSelector((state) => state.stories);
   //console.log(stories)
@@ -135,7 +149,7 @@ function Dashboard() {
     }
   }, [user]);
 
-  const { stories, isSuccess } = useAppSelector((state) => state.stories);
+ 
 
   const [itemsByStatus, setItemsByStatus] = useState<TaskboardData>(
     defaultItems
@@ -156,6 +170,32 @@ function Dashboard() {
         return [];
     }
   };
+  const category = (category: number): string => {
+    switch (category) {
+      case 0: 
+        return "WONTHAVE"
+      case 1:
+        return "UNALLOCATED";
+      case 2:
+        return "ALLOCATED";
+      default:
+        return "DONE";
+    }
+  };
+  
+  const categoryChange = (category: string): number => {
+    switch (category) {
+      case "Won't have this time": 
+        return 0;
+      case "Unallocated":
+        return 1;
+      case "Allocated":
+        return 2;
+      default:
+        return 3;
+    }
+  };
+  
 
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
@@ -167,6 +207,16 @@ function Dashboard() {
         if (!destination) {
           return;
         }
+        /*
+        let projectRoleData = {
+          projectId: parseInt(activeProject.id),
+          category: categoryChange(destination.droppableId)
+        };
+        dispatch(updateStoryCategory(projectRoleData));
+        */
+
+
+
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -175,6 +225,7 @@ function Dashboard() {
           0,
           removed
         );
+
       })
     );
   };
@@ -202,21 +253,24 @@ function Dashboard() {
     //console.log(ProductBacklogItemStatus)
     //console.log(itemsByStatus)
 
-    const isEmpty = Object.values(itemsByStatus).every(
-      (value) => value.length === 0
-    );
-    console.log(isEmpty);
-    if (isEmpty && isSuccess) {
+  
+    if (isSuccess) {
       setItemsByStatus((current) =>
         produce(current, (draft) => {
           //for (const status of Object.values(ProductBacklogItemStatus)) {
           //  draft[status] = draft[status].filter(() => false);
           //}
-
+          console.log(current)
+          const isEmpty = Object.values(current).every(
+            (value) => value.length === 0
+          );
+          
+          if (isEmpty) {
           // Adding new item as "to do"
 
           stories.forEach((story: StoryData) => {
-            draft[ProductBacklogItemStatus.UNALLOCATED].push({
+            const cat = category(story.category)
+            draft[ProductBacklogItemStatus[cat as keyof typeof ProductBacklogItemStatus]].push({
               id: story.id?.toString(),
               title: story.title,
               description: story.description,
@@ -224,8 +278,12 @@ function Dashboard() {
               priority: story.priority,
               businessValue: story.businessValue,
               sequenceNumber: story.sequenceNumber,
+              category: story.category,
+              timeComplexity: story.timeComplexity,
+              isRealized: story.isRealized
             });
           });
+        }
         })
       );
     }
@@ -247,6 +305,9 @@ function Dashboard() {
     priority: 0,
     businessValue: 0,
     sequenceNumber: 0,
+    category: 0,
+    timeComplexity: 0,
+    isRealized: false
   };
 
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
@@ -266,18 +327,16 @@ function Dashboard() {
     if (e.target.validity.valid) setPonts(e.target.value);
     else if (val === "") setPonts(val);
   };
-
+ 
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3">
-        <div className="text-center col-sm-4 col-md-3 col-xl-3 mt-3">
-          <Button size="lg" variant="light">
-            Wall
-          </Button>
-        </div>
+   
+          
+      
         <DragDropContext onDragEnd={handleDragEnd}>
           {Object.values(ProductBacklogItemStatus).map((status) => {
-            //console.log(columns)
+            console.log(status)
             return (
               <>
                 <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>

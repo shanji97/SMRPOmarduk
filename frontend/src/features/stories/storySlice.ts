@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { StoryData } from "../../classes/storyData";
+import { StoryData, UpdateStoryCategory } from "../../classes/storyData";
 import storyService from "./storyService";
 
 let user = JSON.parse(localStorage.getItem('user')!);
@@ -46,6 +46,16 @@ export const deleteStory = createAsyncThunk('/story/deleteStory', async (storyId
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.deleteStory(storyId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const updateStoryCategory = createAsyncThunk('story/update/category', async (updateStoryCategory: UpdateStoryCategory, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.updateStoryCategory(updateStoryCategory, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -113,6 +123,23 @@ export const storySlice = createSlice({
                 state.isError = true
                 state.message = action.payload
                 state.isSuccess = false;
+            })
+            .addCase(updateStoryCategory.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(updateStoryCategory.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.stories = action.payload;
+
+            })
+            .addCase(updateStoryCategory.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
             })
     }
 })
