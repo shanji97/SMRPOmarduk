@@ -22,7 +22,6 @@ import MyTasks from './pages/MyTasks';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
-import UserStories from "./pages/UserStories";
 
 function App() {
   return (
@@ -65,7 +64,6 @@ function App() {
           <Route path="/projects/:projectID/sprints" element={<Sprints />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
           <Route path='/product-backlog' element={<ProductBacklog />} />
-          <Route path='/projects/:projectID/userStories' element={<UserStories />} />
           <Route path='/sprint-backlog' element={<SprintBacklog />} />
           <Route path='/my-tasks' element={<MyTasks />} />
         </Routes>

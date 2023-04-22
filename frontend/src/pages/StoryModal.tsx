@@ -60,10 +60,8 @@ function StoryModal({
 
 
   const handleAdd = (e: any) => {
-    console.log("submit")
     e.preventDefault();
-    console.log(e)
-    
+
   };
 
   let {users, user} = useAppSelector(state => state.users);

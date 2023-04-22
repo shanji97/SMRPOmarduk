@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { StoryData } from "../../classes/storyData";
+import {StoryData} from "../../classes/storyData";
 import storyService from "./storyService";
 
 let user = JSON.parse(localStorage.getItem('user')!);
