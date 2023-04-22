@@ -102,7 +102,6 @@ const ProjectDataForm: React.FC<ProjectProps> = ({
       projectDescription: projectDescription.trim(),
     };
 
-    console.log(updatedProject);
     dispatch(editProject(updatedProject));
   };
 

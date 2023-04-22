@@ -5,7 +5,6 @@ import { TestService } from './test.service';
 
 @Module({
   imports: [
-
     TypeOrmModule.forFeature([
       StoryTest
     ]),

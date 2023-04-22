@@ -5,5 +5,6 @@ export class ProjectDto {
     projectName: string;
     projectDescription?: string | null;
     userRoles: { userId: number, role: UserRole[] }[];
+    // wallNotifications:
   }
   
