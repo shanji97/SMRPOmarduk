@@ -5,6 +5,7 @@ import storySlice from '../features/stories/storySlice';
 import userSlice from "../features/users/userSlice";
 import sprintSlice from "../features/sprints/sprintSlice";
 import projectRoleSlice from '../features/projects/projectRoleSlice';
+import taskSlice from '../features/tasks/taskSlice';
 
 export const store = configureStore({
     reducer: {
@@ -12,7 +13,8 @@ export const store = configureStore({
         projects: projectSlice,
         projectRoles: projectRoleSlice,
         stories: storySlice,
-        sprints: sprintSlice
+        sprints: sprintSlice,
+        tasks: taskSlice
     },
 });
 
