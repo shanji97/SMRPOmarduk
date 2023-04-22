@@ -2,6 +2,11 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, Unique } 
 import { Story } from '../story/story.entity';
 import { User } from '../user/user.entity';
 
+export enum NotificationStatus {
+   Rejected = 0,
+   Accepted = 1
+  }
+  
 @Entity()
 export class StoryNotification {
     @PrimaryGeneratedColumn({ unsigned: true })
@@ -16,9 +21,15 @@ export class StoryNotification {
     @Column({ type: 'text' })
     notificationText: string;
 
-    @Column({ type: 'boolean', default: false })
-    approved: boolean;
+    @Column({ type: 'int', default: NotificationStatus.Rejected })
+    notificationStatus: number;
 
-    // @ManyToOne(type => Story, story => story.notifications, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
-    // story: Story;
+    @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    created: string;
+
+    @ManyToOne(type => Story, story => story.notifications, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+    story: Story;
+
+    @ManyToOne(type => User, user => user.storyNotifications, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+    author: User;
 }

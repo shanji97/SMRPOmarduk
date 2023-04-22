@@ -63,8 +63,8 @@ export class Story {
   @OneToMany(type => SprintStory, sprint => sprint.story)
   sprintStories: SprintStory[];
 
-  // @OneToMany(type => StoryNotification, notification => notification.story)
-  // notifications: StoryNotification[];
+  @OneToMany(type => StoryNotification, notification => notification.story)
+  notifications: StoryNotification[];
 
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;

@@ -15,6 +15,8 @@ import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/up
 import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
 import { RejectStoryDto, RejectStroySchema } from './dto/reject-story.dto';
+import { StoryNotificationService } from 'src/story-notification/story-notification.service';
+import { StoryNotification } from 'src/story-notification/story-notification.entity';
 
 @ApiTags('story')
 // @ApiBearerAuth()
@@ -26,6 +28,7 @@ export class StoryController {
     private readonly storyService: StoryService,
     private readonly testService: StoryTestService,
     private readonly projectService: ProjectService,
+    private readonly storyNotificationService: StoryNotificationService,
   ) { }
 
   @ApiOperation({ summary: 'List stories.' })
@@ -54,6 +57,18 @@ export class StoryController {
       throw new NotFoundException('Tests for story not found.');
     return storyTests;
   }
+
+  @ApiOperation({ summary: 'Get notifications for a particular story.' })
+  @ApiOkResponse()
+  @ApiNotFoundResponse()
+  @Get(':storyId/notifications')
+  async getNotificationsForStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<StoryNotification[]> {
+    const storyNotifications: StoryNotification[] = await this.storyNotificationService.getNotificationsByStoryId(storyId);
+    if (!storyNotifications)
+      throw new NotFoundException('Notifications for story not found.');
+    return storyNotifications;
+  }
+
 
   @ApiOperation({ summary: 'Create story.' })
   @ApiCreatedResponse()
@@ -154,7 +169,7 @@ export class StoryController {
   @Patch(':storyId/confirm')
   async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     let story: Story = await this.storyService.getStoryById(storyId);
-    if(!story){
+    if (!story) {
       throw new BadRequestException('The story by the given ID does not exist.');
     }
 
@@ -170,7 +185,7 @@ export class StoryController {
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
-    await this.storyService.realizeStory(storyId, true);
+    await this.storyService.setRealizeFlag(storyId, true);
   }
 
   @ApiOperation({ summary: 'Reject story.' })
@@ -195,9 +210,9 @@ export class StoryController {
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
-    await this.storyService.realizeStory(storyId, false);
-    if(rejectStoryData.description){
-
+    await this.storyService.setRealizeFlag(storyId, false);
+    if (rejectStoryData.description) {
+      await this.storyNotificationService.setRejectionDescription(rejectStoryData.description, 1, storyId);
     }
   }
 

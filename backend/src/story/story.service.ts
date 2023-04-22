@@ -65,7 +65,7 @@ export class StoryService {
     await this.storyRepository.update({ id: storyId }, { timeComplexity: timeComplexity });
   }
 
-  async realizeStory(storyId: number, realize: boolean) {
+  async setRealizeFlag(storyId: number, realize: boolean) {
     await this.storyRepository.update({ id: storyId }, { isRealized: realize });
   }
 
