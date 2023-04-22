@@ -14,11 +14,12 @@ import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
 import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
+import { RejectStoryDto, RejectStroySchema } from './dto/reject-story.dto';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -153,6 +154,10 @@ export class StoryController {
   @Patch(':storyId/confirm')
   async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     let story: Story = await this.storyService.getStoryById(storyId);
+    if(!story){
+      throw new BadRequestException('The story by the given ID does not exist.');
+    }
+
     if (story.isRealized)
       throw new BadRequestException('Story is already realized.');
 
@@ -171,8 +176,13 @@ export class StoryController {
   @ApiOperation({ summary: 'Reject story.' })
   @ApiOkResponse()
   @Patch(':storyId/reject')
-  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
+  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(RejectStroySchema)) rejectStoryData: RejectStoryDto) {
     let story: Story = await this.storyService.getStoryById(storyId);
+
+    if(!story){
+      throw new BadRequestException('The story by the given ID does not exist.');
+    }
+
     if (!story.isRealized)
       throw new BadRequestException('Story is not realized.');
 
@@ -186,6 +196,9 @@ export class StoryController {
       throw new BadRequestException('The story was already finished.');
 
     await this.storyService.realizeStory(storyId, false);
+    if(rejectStoryData.description){
+
+    }
   }
 
   @ApiOperation({ summary: 'Update story.' })

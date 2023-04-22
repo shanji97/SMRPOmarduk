@@ -120,7 +120,6 @@ export class SprintController {
     if (await this.storyService.isStoryInActiveSprint(storyId))
       throw new BadRequestException('The story is already in an active sprint.');
 
-
     const sprint = await this.sprintService.getSprintById(sprintId);
     if (!sprint)
       throw new BadRequestException('No sprint with the given ID exists in the ');
