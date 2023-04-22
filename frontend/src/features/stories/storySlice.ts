@@ -10,6 +10,10 @@ interface StoryState {
     isSuccess: boolean
     isError: boolean
     message: any
+    isUpdateSuccess: boolean
+    isUpdateError: boolean
+    isDeleteSuccess: boolean
+    isDeleteError: boolean
 }
 
 const initialState: StoryState = {
@@ -17,6 +21,10 @@ const initialState: StoryState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
+    isUpdateSuccess: false,
+    isUpdateError: false,
+    isDeleteSuccess: false,
+    isDeleteError: false,
     message: ''
 }
 
@@ -52,6 +60,16 @@ export const deleteStory = createAsyncThunk('/story/deleteStory', async (storyId
     }
 });
 
+export const editStory = createAsyncThunk('/story/editStory', async (storyData: StoryData, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.editStory(storyData, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 
 export const storySlice = createSlice({
     name: 'stories',
@@ -61,6 +79,10 @@ export const storySlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isDeleteError = false
+            state.isDeleteSuccess = false
+            state.isUpdateSuccess = false
+            state.isUpdateError = false
             state.message = ''
         }
     },
@@ -102,17 +124,32 @@ export const storySlice = createSlice({
             })
             .addCase(deleteStory.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isDeleteSuccess = true;
+                state.isDeleteError = false;
                 state.message = '';
                 // @ts-ignore
                 state.stories = state.stories.filter(story => story.id !== action.payload)
             })
             .addCase(deleteStory.rejected, (state, action) => {
                 state.isLoading = false
+                state.isDeleteError = true
+                state.message = action.payload
+                state.isDeleteSuccess = false;
+            })
+            .addCase(editStory.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(editStory.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+            })
+            .addCase(editStory.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
                 state.isError = true
                 state.message = action.payload
-                state.isSuccess = false;
             })
     }
 })

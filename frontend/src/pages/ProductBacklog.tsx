@@ -47,6 +47,7 @@ import {
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
+import StoryForm from "../components/StoryForm";
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -105,7 +106,7 @@ const defaultItems = {
 
 type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
-function Dashboard() {
+function ProductBacklog() {
   const dispatch = useAppDispatch();
   let storyState = useAppSelector((state) => state.stories);
 
@@ -239,6 +240,18 @@ function Dashboard() {
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
 
+  // modal za edit story
+  const [showEditStoryModal, setShowEditStoryModal] = useState(false);
+
+  const openEditStoryModal = (item: StoryData) => {
+    setTempDataStory(item);
+    setShowEditStoryModal(true);
+  };
+
+  const hideEditStoryModal = () => {
+    setShowEditStoryModal(false);
+  };
+
   const initvalue: StoryData = {
     id: "",
     title: "",
@@ -252,6 +265,7 @@ function Dashboard() {
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
   const getDataStory = (item: StoryData) => {
     setTempDataStory(item);
+    console.log(item);
     return setShowStory(true);
   };
 
@@ -266,6 +280,11 @@ function Dashboard() {
     if (e.target.validity.valid) setPonts(e.target.value);
     else if (val === "") setPonts(val);
   };
+
+  // utility function for edit story
+  function getTestsForEdit(items: any): string[] {
+    return items.map((item: any) => item.description);
+  }
 
   return (
     <>
@@ -346,7 +365,11 @@ function Dashboard() {
                                                 <ThreeDots />
                                               </Dropdown.Toggle>
                                               <Dropdown.Menu>
-                                                <Dropdown.Item>
+                                                <Dropdown.Item
+                                                  onClick={() =>
+                                                    openEditStoryModal(item)
+                                                  }
+                                                >
                                                   <Pencil /> Edit
                                                 </Dropdown.Item>
                                                 <Dropdown.Item
@@ -372,7 +395,6 @@ function Dashboard() {
                                                     setShow(false)
                                                   }
                                                   show={show}
-                                                  onDelete={handleDelete}
                                                 />
                                                 <Dropdown.Item href="#/action-3">
                                                   Something else
@@ -511,8 +533,25 @@ function Dashboard() {
           show={showstory}
         />
       )}
+      {showEditStoryModal && (
+        <Modal show={showEditStoryModal} onHide={hideEditStoryModal}>
+          <Modal.Body>
+            <StoryForm
+              id={tempDataStory.id}
+              isEdit={true}
+              sequenceNumberInit={tempDataStory.sequenceNumber}
+              titleInit={tempDataStory.title}
+              descriptionInit={tempDataStory.description}
+              testsInit={getTestsForEdit(tempDataStory.tests)}
+              priorityInit={tempDataStory.priority}
+              businessValueInit={tempDataStory.businessValue}
+              closeModal={hideEditStoryModal}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
     </>
   );
 }
 
-export default Dashboard;
+export default ProductBacklog;
