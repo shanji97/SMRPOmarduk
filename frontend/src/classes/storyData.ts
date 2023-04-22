@@ -30,5 +30,6 @@ export interface UpdateStoryCategory {
     id?:       string,
     category: number,
     projectId: number,
+    storyId: string
 }
 

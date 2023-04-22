@@ -59,7 +59,7 @@ const updateStoryCategory = async (updateStoryCategory: UpdateStoryCategory, tok
         projectId: updateStoryCategory.projectId
     }
 
-    const response = await axios.patch(`${STORY_API_URL}/${updateStoryCategory.id}/category`, updatedCategory, config);
+    const response = await axios.patch(`${STORY_API_URL}/${updateStoryCategory.storyId}/category`, updatedCategory, config);
     return response.data;
 }
 

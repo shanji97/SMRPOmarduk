@@ -145,19 +145,17 @@ function Dashboard() {
 
   const stringPriority = (priority: number): string[] => {
     switch (priority) {
-      case 1:
+      case 0:
         return ["Must have", "badge-light-must"];
-      case 2:
+      case 1:
         return ["Could have", "badge-light-could"];
-      case 3:
+      case 2:
         return ["Should have", "badge-light-should"];
-      case 4:
-        return ["Won't have this time", "gray-wont"];
       default:
-        return [];
+        return ["Won't have this time", "badge-light-wont"];
     }
-  };
-
+  }
+  
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
     destination,

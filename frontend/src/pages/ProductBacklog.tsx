@@ -110,24 +110,23 @@ type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function Dashboard() {
   const dispatch = useAppDispatch();
+  const {activeProject} = useAppSelector(state =>  state.projects);
+  
+
   let { stories, isSuccess, isLoading, isError } = useAppSelector((state) => state.stories);
 
   useEffect(() => {
     dispatch(getAllStory());
   }, []);
 
-  const projectState = useAppSelector((state) => state.projects);
 
-  const [activeProjectState, setactiveProjectState] = useState(projectState.activeProject);
-  
-  console.log(activeProjectState.projectName)
 
-  useEffect(() => {
-    setactiveProjectState(projectState.activeProject);
-     console.log(projectState.activeProject)
-  }, [projectState.isSuccess, projectState.isLoading]);
+
+
+
 
   // NOTE: temporary fix, change this if needed
+  /*
   useEffect(() => {
     if (isSuccess && !isLoading) {
       dispatch(reset());
@@ -137,6 +136,7 @@ function Dashboard() {
     }
   }, [isSuccess, isError, isLoading]);
 
+  */
   //let stories = useAppSelector((state) => state.stories);
   //console.log(stories)
   const navigate = useNavigate();
@@ -158,16 +158,14 @@ function Dashboard() {
 
   const stringPriority = (priority: number): string[] => {
     switch (priority) {
-      case 1:
+      case 0:
         return ["Must have", "badge-light-must"];
-      case 2:
+      case 1:
         return ["Could have", "badge-light-could"];
-      case 3:
+      case 2:
         return ["Should have", "badge-light-should"];
-      case 4:
-        return ["Won't have this time", "gray-wont"];
       default:
-        return [];
+        return ["Won't have this time", "badge-light-wont"];
     }
   };
   const category = (category: number): string => {
@@ -204,22 +202,31 @@ function Dashboard() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
+        console.log(activeProject)
         if (!destination) {
           return;
         }
-        /*
+        const [removed] = draft[
+                  source.droppableId as ProductBacklogItemStatus
+                ].splice(source.index, 1);
+
+
+        console.log(categoryChange(destination.droppableId))
+        console.log(parseInt(activeProject?.id || ""))
+        console.log(removed.id)
         let projectRoleData = {
-          projectId: parseInt(activeProject.id),
-          category: categoryChange(destination.droppableId)
+          projectId: parseInt(activeProject?.id || ""),
+          category: categoryChange(destination.droppableId),
+          storyId: removed.id || ""
         };
         dispatch(updateStoryCategory(projectRoleData));
-        */
+      
+        
 
 
-
-        const [removed] = draft[
-          source.droppableId as ProductBacklogItemStatus
-        ].splice(source.index, 1);
+        
+        
+       
         draft[destination.droppableId as ProductBacklogItemStatus].splice(
           destination.index,
           0,
@@ -327,7 +334,6 @@ function Dashboard() {
     if (e.target.validity.valid) setPonts(e.target.value);
     else if (val === "") setPonts(val);
   };
- 
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3">
@@ -336,7 +342,6 @@ function Dashboard() {
       
         <DragDropContext onDragEnd={handleDragEnd}>
           {Object.values(ProductBacklogItemStatus).map((status) => {
-            console.log(status)
             return (
               <>
                 <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
@@ -367,8 +372,7 @@ function Dashboard() {
                             }}
                           >
                             {itemsByStatus[status].map((item, index) => {
-                              console.log(status);
-
+                              
                               return (
                                 <Draggable
                                   key={item.id}
@@ -483,13 +487,7 @@ function Dashboard() {
                                                 BV: {item.businessValue}
                                               </p>
 
-                                              <div className="vr"></div>
-                                              <p className="text-nowrap text-muted my-0">
-                                                {" "}
-                                                2h
-                                              </p>
-
-                                              <Clock className=" text-muted" />
+                                              
                                             </div>
                                           </Card.Body>
 

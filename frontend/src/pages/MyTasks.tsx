@@ -147,13 +147,13 @@ function Dashboard() {
 
   const stringPriority = (priority: number): string[] => {
     switch(priority) {
-      case 1:
+      case 0:
         return ['Must have', 'badge-light-must'];
-      case 2:
+      case 1:
         return ['Could have', 'badge-light-could'];
-      case 3: 
+      case 2: 
         return ['Should have', 'badge-light-should'];
-      case 4: 
+      case 3: 
         return ["Won\'t have this time", 'gray-wont'];
       default:
         return [];

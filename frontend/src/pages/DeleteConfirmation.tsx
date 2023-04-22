@@ -22,8 +22,8 @@ function DeleteConfirmation({
     status,
 }: DeleteConfirmationProps) {
 
-
-
+    console.log("izbrisana kartica")
+    console.log(typeof item.id)
     return (
         <Modal show={show} onHide={onCancel}>
         <Modal.Header closeButton>
