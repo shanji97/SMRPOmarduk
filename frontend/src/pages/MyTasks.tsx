@@ -170,23 +170,20 @@ function Dashboard() {
   useEffect(() => {
     //console.log(SprintBacklogItemStatus)
     //console.log(itemsByStatus)
-    if (isSuccess) {
-      const isEmpty = Object.values(itemsByStatus).every(value => value);
-      console.log(isEmpty)
-      if (isEmpty && isSuccess) {
-        
-            
-            setItemsByStatus(stories);
-            
-      }
+
+    const isEmpty = Object.values(itemsByStatus).every(value => value);
+    if (isEmpty && isSuccess) {
+      
+          
+          setItemsByStatus(stories);
+          
     }
 
     
     
   }, [isSuccess]);
 
-console.log(itemsByStatus)
-  
+
 
 //{Object.values.map(([columnId, column], index) => {
 

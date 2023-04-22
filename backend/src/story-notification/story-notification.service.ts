@@ -1,17 +1,13 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager } from 'typeorm';
-import { ProjectService } from '../project/project.service';
 import { StoryNotification } from './story-notification.entity';
-import { StoryService } from '../story/story.service';
 
 @Injectable()
 export class StoryNotificationService {
     private readonly logger: Logger = new Logger(StoryNotificationService.name);
 
     constructor(
-        private readonly projectService: ProjectService,
-        private readonly StoryService: StoryService,
         @InjectRepository(StoryNotification)
         private readonly storyNotificationRepository: Repository<StoryNotification>,
         @InjectEntityManager()
@@ -30,10 +26,14 @@ export class StoryNotificationService {
         return await this.storyNotificationRepository.findBy({ stroyId: storyId });
     }
 
-    async approveNotifications(storyNotificationId: number) {
-        return await this.storyNotificationRepository.update({ id: storyNotificationId }, { approved: true })
-    }
+    // async approveNotifications(storyNotificationId: number) {
+    //     return await this.storyNotificationRepository.update({ id: storyNotificationId }, { approved: true })
+    // }
 
+    async setRejectionDescription(description: string, userId: number, stroyId: number) {
+        let newRejectionNotification: StoryNotification = this.createNotification(description, userId, stroyId);
+        await this.storyNotificationRepository.insert(newRejectionNotification);
+    };
     // async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
     //     try {
     //         let newStory = this.createStoryObject(story, projectId);
@@ -108,16 +108,13 @@ export class StoryNotificationService {
     //     }) > 0;
     // }
 
-    // createStoryObject(story: CreateStoryDto, projectId: number): Story {
-    //     let newStory = new Story();
-    //     newStory.projectId = projectId;
-    //     newStory.title = story.title;
-    //     newStory.description = story.description;
-    //     newStory.sequenceNumber = story.sequenceNumber;
-    //     newStory.priority = story.priority;
-    //     newStory.businessValue = story.businessValue;
-    //     return newStory;
-    // }
+    createNotification(description: string, userId: number, storyId: number): StoryNotification {
+        let newStoryNotification = new StoryNotification();
+        newStoryNotification.notificationText = description;
+        newStoryNotification.userId = userId;
+        newStoryNotification.stroyId = storyId;
+        return newStoryNotification;
+    }
 
     // async updateStoryData(story: UpdateStoryDto, existingStory: Story): Promise<Story> {
     //     existingStory.title = story.title;

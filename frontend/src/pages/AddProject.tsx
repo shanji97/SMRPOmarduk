@@ -207,7 +207,6 @@ const AddProject = () => {
       userRoles,
     };
 
-    console.log(newProject);
     dispatch(createProject(newProject));
 
     // reset inputs and touched states

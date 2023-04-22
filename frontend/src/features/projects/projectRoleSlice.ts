@@ -49,7 +49,6 @@ export const addDeveloper = createAsyncThunk('projectRole/addDeveloper', async (
 export const removeDeveloper = createAsyncThunk('projectRole/removeDeveloper', async (removeDeveloperData: any, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        console.log("remove dev")
         return await projectRoleService.removeDeveloper(removeDeveloperData, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()

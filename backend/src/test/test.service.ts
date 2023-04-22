@@ -62,6 +62,10 @@ export class TestService {
         await this.testRepository.update({id:testId}, {isRealized: true});
     }
 
+    async deleteTestsByStoryId(storyId: number){
+        await this.testRepository.delete({storyId: storyId});
+    }
+
     async deleteTestById(testId: number) {
         await this.testRepository.delete({ id: testId });
     }

@@ -15,9 +15,11 @@ import Profile from "./pages/Profile";
 import Projects from "./pages/Projects";
 import Sprints from "./pages/Sprints";
 
-import ProductBacklog from './pages/ProductBacklog';
-import SprintBacklog from './pages/SprintBacklog';
-import MyTasks from './pages/MyTasks';
+import ProductBacklog from "./pages/ProductBacklog";
+import SprintBacklog from "./pages/SprintBacklog";
+import MyTasks from "./pages/MyTasks";
+
+import TaskForm from "./components/TaskForm"; // temporary
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -30,42 +32,62 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<ProductBacklog />} />
-          <Route path="/add-user" element={
-            <AddUser
-              isEdit={false}
-              usernameInit=''
-              passwordInit=''
-              confirmPasswordInit=''
-              firstNameInit=''
-              lastNameInit=''
-              emailInit=''
-              isAdminInit={false}
-              handleClose={() => {}}
-            />}
+          <Route
+            path="/add-user"
+            element={
+              <AddUser
+                isEdit={false}
+                usernameInit=""
+                passwordInit=""
+                confirmPasswordInit=""
+                firstNameInit=""
+                lastNameInit=""
+                emailInit=""
+                isAdminInit={false}
+                handleClose={() => {}}
+              />
+            }
           />
           <Route path="/login" element={<Login />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/add-subtask" element={<AddSubtask />} />
           <Route path="/users" element={<Users />} />
           <Route path="/add-project" element={<AddProject />} />
-          <Route path="/:projectID/add-sprint" element={<AddSprint
-            isEdit={false}
-            sprintId=''
-            nameInit=''
-            velocityInit={0}
-            dateRangeInit={{
-              startDate: new Date(),
-              endDate: new Date(),
-              key: 'selection'
-            }}
-          />} />
+          <Route
+            path="/:projectID/add-sprint"
+            element={
+              <AddSprint
+                isEdit={false}
+                sprintId=""
+                nameInit=""
+                velocityInit={0}
+                dateRangeInit={{
+                  startDate: new Date(),
+                  endDate: new Date(),
+                  key: "selection",
+                }}
+              />
+            }
+          />
           <Route path="/profile" element={<Profile />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectID/sprints" element={<Sprints />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
-          <Route path='/product-backlog' element={<ProductBacklog />} />
-          <Route path='/sprint-backlog' element={<SprintBacklog />} />
-          <Route path='/my-tasks' element={<MyTasks />} />
+          <Route path="/product-backlog" element={<ProductBacklog />} />
+          <Route path="/sprint-backlog" element={<SprintBacklog />} />
+          <Route path="/my-tasks" element={<MyTasks />} />
+          <Route
+            path="/add-task/:storyID/"
+            element={
+              <TaskForm
+                storyId={1}
+                isEdit={false}
+                descriptionInit=""
+                timeRequiredInit=""
+                assignedUserIdInit=""
+              />
+            }
+          />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />

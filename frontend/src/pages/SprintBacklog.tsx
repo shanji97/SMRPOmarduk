@@ -121,7 +121,6 @@ function Dashboard() {
 
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -201,8 +200,10 @@ function Dashboard() {
     //console.log(ProductBacklogItemStatus)
     //console.log(itemsByStatus)
 
-  
-    if (isSuccess) {
+    const isEmpty = Object.values(itemsByStatus).every(
+      (value) => value.length === 0
+    );
+    if (isEmpty && isSuccess) {
       setItemsByStatus((current) =>
         produce(current, (draft) => {
           //for (const status of Object.values(ProductBacklogItemStatus)) {
@@ -306,7 +307,6 @@ function Dashboard() {
                           }}
                         >
                           {itemsByStatus[status].map((item, index) => {
-                            console.log(status);
 
                             return (
                               <Draggable

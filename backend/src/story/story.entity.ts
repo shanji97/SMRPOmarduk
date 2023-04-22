@@ -6,9 +6,15 @@ import { SprintStory } from '../sprint/sprint-story.entity';
 import { StoryNotification } from '../story-notification/story-notification.entity';
 
 export enum Category {
-  Unassigned = 0,
-  Assigned = 1,
-  Finished = 2,
+  WontHave = 0,
+  Unassigned = 1,
+  Assigned = 2,
+  Finished = 3,
+}
+
+export enum Backlog {
+  Product = 0,
+  Sprint = 1
 }
 
 @Entity()
@@ -36,17 +42,17 @@ export class Story {
   @Column({ type: 'tinyint' })
   businessValue: number;
 
-  @Column({ type: 'tinyint', default: Category.Unassigned })
+  @Column({ type: 'tinyint', default: Category.WontHave })
   category: number;
+
+  @Column({ type: 'tinyint', default: Backlog.Product })
+  backlog: number;
 
   @Column({ type: 'integer', default: 0 })
   timeComplexity: number
 
   @Column({ type: 'boolean', default: false })
   isRealized: boolean;
-
-  @Column({ type: 'boolean', default: false })
-  rejected: boolean;
 
   @OneToMany(type => Task, task => task.story)
   tasks: Task[];
@@ -57,8 +63,8 @@ export class Story {
   @OneToMany(type => SprintStory, sprint => sprint.story)
   sprintStories: SprintStory[];
 
-  // @OneToMany(type => StoryNotification, notification => notification.story)
-  // notifications: StoryNotification[];
+  @OneToMany(type => StoryNotification, notification => notification.story)
+  notifications: StoryNotification[];
 
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;
