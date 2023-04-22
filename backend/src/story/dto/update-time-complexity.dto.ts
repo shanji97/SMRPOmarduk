@@ -14,6 +14,6 @@ export class UpdateStoryTimeComplexityDto {
   }
   
   export const UpdateStoryTimeComplexitySchema = Joi.object().keys({
-    timeComplexity: Joi.number().min(1).required().default(1),
+    timeComplexity: Joi.number().min(0).required().default(1),
   });
   

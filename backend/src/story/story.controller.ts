@@ -20,9 +20,9 @@ import { StoryNotification } from 'src/story-notification/story-notification.ent
 import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -164,8 +164,8 @@ export class StoryController {
     if (!story)
       throw new BadRequestException('The story by this ID does not exist.');
 
-    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
-      throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
+    // if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
+    //   throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
 
     if (await this.storyService.isStoryInActiveSprint(storyId))
       throw new BadRequestException('Cannot update time complexity. The story is already in active sprint.')
