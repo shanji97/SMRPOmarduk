@@ -21,6 +21,9 @@ export class Project {
   @OneToMany(type => Sprint, sprint => sprint.project)
   sprints: Sprint[];
 
+  @Column({ type: 'boolean', default: false })
+  isActive: boolean;
+
   @OneToMany(type => Story, story => story.project)
   stories: Story[];
 

@@ -16,11 +16,12 @@ import { TokenDto } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 import { ProjectDto } from './dto/project.dto';
+import { throwError } from 'rxjs';
 
 @ApiTags('project')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
@@ -99,7 +100,7 @@ export class ProjectController {
       }
 
       let existingProject: Project = await this.projectService.getProjectById(projectId);
-      if (existingProject == null) {
+      if (!existingProject) {
         throw new NotFoundException('Project with the given ID not found.');
       }
 
@@ -120,6 +121,38 @@ export class ProjectController {
       }
     }
   }
+
+  @ApiOperation({ summary: "Toggles the active flag for the project." })
+  @ApiOkResponse()
+  @Patch(':projectId/set-active')
+  async setActiveProject(@Param('projectId', ParseIntPipe) projectId: number) {
+    try {
+
+      let existingProject: Project = await this.projectService.getProjectById(projectId);
+      if (!existingProject) {
+        throw new NotFoundException('Project with the given ID not found.');
+      }
+      if (existingProject.isActive)
+        throw new BadRequestException('Project is already active.');
+
+      let toggledActive: boolean = !existingProject.isActive;
+
+      await this.projectService.setActiveProject(projectId, toggledActive);
+    }
+    catch (ex) {
+      if (ex instanceof ConflictException) {
+        throw new ConflictException(ex.message);
+      }
+      else if (ex instanceof NotFoundException) {
+        throw new NotFoundException(ex.message);
+      }
+      else {
+        throw new BadRequestException(ex.message);
+      }
+    }
+  }
+
+
 
   @ApiOperation({ summary: 'Update the scrum master / product owner.' })
   @ApiOkResponse()

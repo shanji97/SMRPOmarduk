@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import { DeepPartial, EntityManager, In, QueryFailedError } from 'typeorm';
+import { DeepPartial, EntityManager, In, Not, QueryFailedError } from 'typeorm';
 
 import { CreateProjectDto } from './dto/create-project.dto';
 import { Project } from './project.entity';
@@ -96,6 +96,11 @@ export class ProjectService {
 
   async deleteProjectById(projectId: number) {
     await this.entityManager.delete(Project, { id: projectId });
+  }
+
+  async setActiveProject(projectId: number, isActive: boolean){
+    await this.entityManager.update(Project,{id: Not(projectId)},{isActive:false})
+    await this.entityManager.update(Project,{id: projectId},{isActive:true})
   }
 
   createProjectObject(project: CreateProjectDto): Project {
