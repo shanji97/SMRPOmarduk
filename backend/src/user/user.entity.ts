@@ -3,6 +3,9 @@ import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, Up
 import { ProjectUserRole } from '../project/project-user-role.entity';
 import { Task } from '../task/task.entity';
 import { UserLogin } from '../auth/user-login.entity';
+import { type } from 'os';
+import { Story } from 'src/story/story.entity';
+import { StoryNotification } from 'src/story-notification/story-notification.entity';
 
 @Entity()
 export class User {
@@ -53,4 +56,7 @@ export class User {
 
   @OneToMany(type => Task, task => task.assignedUser)
   tasks: Task[];
+
+  @OneToMany(type => StoryNotification, StoryNotification=> StoryNotification.author)
+  storyNotifications: StoryNotification[];
 }

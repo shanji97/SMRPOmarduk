@@ -14,17 +14,22 @@ import { UserRole } from '../project/project-user-role.entity';
 import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/update-story-category.dto';
 import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
+import { RejectStoryDto, RejectStroySchema } from './dto/reject-story.dto';
+import { StoryNotificationService } from 'src/story-notification/story-notification.service';
+import { StoryNotification } from 'src/story-notification/story-notification.entity';
+import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
     private readonly storyService: StoryService,
     private readonly testService: StoryTestService,
     private readonly projectService: ProjectService,
+    private readonly storyNotificationService: StoryNotificationService,
   ) { }
 
   @ApiOperation({ summary: 'List stories.' })
@@ -53,6 +58,18 @@ export class StoryController {
       throw new NotFoundException('Tests for story not found.');
     return storyTests;
   }
+
+  @ApiOperation({ summary: 'Get notifications for a particular story.' })
+  @ApiOkResponse()
+  @ApiNotFoundResponse()
+  @Get(':storyId/notifications')
+  async getNotificationsForStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<StoryNotification[]> {
+    const storyNotifications: StoryNotification[] = await this.storyNotificationService.getNotificationsByStoryId(storyId);
+    if (!storyNotifications)
+      throw new NotFoundException('Notifications for story not found.');
+    return storyNotifications;
+  }
+
 
   @ApiOperation({ summary: 'Create story.' })
   @ApiCreatedResponse()
@@ -109,6 +126,27 @@ export class StoryController {
     }
   }
 
+  @ApiOperation({ summary: 'Update story backlog.' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Patch(':storyId/backlog')
+  async updateStoryBacklog(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryBacklogSchema)) updateData: UpdateStoryBacklogDto): Promise<void> {
+    try {
+      const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(updateData.projectId)).filter(users => users.userId == token.sid);
+      if (usersOnProject == null)
+        throw new BadRequestException('This project doesn\'t exist.');
+
+      await this.storyService.updateStoryBacklog(storyId, updateData.backlog);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex)
+      else if (ex instanceof NotFoundException)
+        throw new NotFoundException(ex)
+      throw ex
+    }
+  }
+
   @ApiOperation({ summary: 'Update time complexity of a story.' })
   @ApiOkResponse()
   @Patch(':storyId/time-complexity')
@@ -132,6 +170,10 @@ export class StoryController {
   @Patch(':storyId/confirm')
   async confirmStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
     let story: Story = await this.storyService.getStoryById(storyId);
+    if (!story) {
+      throw new BadRequestException('The story by the given ID does not exist.');
+    }
+
     if (story.isRealized)
       throw new BadRequestException('Story is already realized.');
 
@@ -144,14 +186,19 @@ export class StoryController {
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
-    this.storyService.realizeStory(storyId);
+    await this.storyService.setRealizeFlag(storyId, true);
   }
 
   @ApiOperation({ summary: 'Reject story.' })
   @ApiOkResponse()
   @Patch(':storyId/reject')
-  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number) {
+  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(RejectStroySchema)) rejectStoryData: RejectStoryDto) {
     let story: Story = await this.storyService.getStoryById(storyId);
+
+    if(!story){
+      throw new BadRequestException('The story by the given ID does not exist.');
+    }
+
     if (!story.isRealized)
       throw new BadRequestException('Story is not realized.');
 
@@ -164,7 +211,10 @@ export class StoryController {
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
-    this.storyService.realizeStory(storyId);
+    await this.storyService.setRealizeFlag(storyId, false);
+    if (rejectStoryData.description) {
+      await this.storyNotificationService.setRejectionDescription(rejectStoryData.description, token.sid, storyId);
+    }
   }
 
   @ApiOperation({ summary: 'Update story.' })
@@ -183,6 +233,11 @@ export class StoryController {
         throw new BadRequestException('The story has been already added to sprint.');
 
       await this.storyService.updateStoryById(storyId, story);
+
+      await this.testService.deleteTestsByStoryId(storyId);
+
+      await this.testService.createTest(storyId, story.tests);
+
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new ConflictException(ex.message);
