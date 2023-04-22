@@ -90,6 +90,10 @@ export class ProjectService {
     }
   }
 
+  async getActiveProject(): Promise<Project> {
+    return await this.entityManager.findOneBy(Project, { isActive: true });
+  }
+
   async deleteProjectById(projectId: number) {
     await this.entityManager.delete(Project, { id: projectId });
   }
