@@ -17,6 +17,7 @@ import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from '.
 import { RejectStoryDto, RejectStroySchema } from './dto/reject-story.dto';
 import { StoryNotificationService } from 'src/story-notification/story-notification.service';
 import { StoryNotification } from 'src/story-notification/story-notification.entity';
+import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
 
 @ApiTags('story')
 // @ApiBearerAuth()
@@ -125,26 +126,26 @@ export class StoryController {
     }
   }
 
-  // @ApiOperation({ summary: 'Update story backlog.' })
-  // @ApiOkResponse()
-  // @ApiBadRequestResponse()
-  // @ApiNotFoundResponse()
-  // @Patch(':storyId/backlog')
-  // async updateStoryBacklog(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryBacklogStorySchema)) updateData: UpdateStoryBacklogDto): Promise<void> {
-  //   try {
-  //     const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(updateData.projectId)).filter(users => users.userId == token.sid);
-  //     if (usersOnProject == null)
-  //       throw new BadRequestException('This project doesn\'t exist.');
+  @ApiOperation({ summary: 'Update story backlog.' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Patch(':storyId/backlog')
+  async updateStoryBacklog(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(UpdateStoryBacklogSchema)) updateData: UpdateStoryBacklogDto): Promise<void> {
+    try {
+      const usersOnProject = (await this.projectService.listUsersWithRolesOnProject(updateData.projectId)).filter(users => users.userId == token.sid);
+      if (usersOnProject == null)
+        throw new BadRequestException('This project doesn\'t exist.');
 
-  //     await this.storyService.updateStoryBacklog(storyId, updateData.backlog);
-  //   } catch (ex) {
-  //     if (ex instanceof ValidationException)
-  //       throw new BadRequestException(ex)
-  //     else if (ex instanceof NotFoundException)
-  //       throw new NotFoundException(ex)
-  //     throw ex
-  //   }
-  // }
+      await this.storyService.updateStoryBacklog(storyId, updateData.backlog);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex)
+      else if (ex instanceof NotFoundException)
+        throw new NotFoundException(ex)
+      throw ex
+    }
+  }
 
   @ApiOperation({ summary: 'Update time complexity of a story.' })
   @ApiOkResponse()
