@@ -16,7 +16,6 @@ import { TokenDto } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 import { ProjectDto } from './dto/project.dto';
-import { throwError } from 'rxjs';
 
 @ApiTags('project')
 @ApiBearerAuth()
