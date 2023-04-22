@@ -4,11 +4,13 @@ import {Form} from "react-bootstrap";
 
 import classes from './Post.module.css';
 import {Button} from "react-bootstrap";
+import {Comment} from "../classes/wallData";
+import {X} from "react-bootstrap-icons";
 
 interface PostProps {
   content: string,
   author: string,
-  comments?: string[],
+  comments?: Comment[],
   created: string
 }
 
@@ -31,32 +33,44 @@ const Post: React.FC<PostProps> = ({content, author, comments, created}) => {
     setCommentContent(e.currentTarget.value);
   }
 
+  const handleDeletePost = () => {
+    console.log('delete')
+  }
+
   const submitNewComment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log(commentContent);
-
+    setCommentContent('');
     setShowTextbox(false);
   }
 
   return (
     <Card classNames={classes.postCard}>
-      <span><b>{author}, </b></span>
-      <span>{formattedDate}</span>
-      <p>{content}</p>
-      {/* TODO show comments*/}
-      {showTextbox &&
-        <Form.Group className="mb-3" controlId="commentContent" onSubmit={submitNewComment}>
-            <Form.Control
-                as='textarea'
-                rows={3}
-                value={commentContent}
-                onChange={commentContentChanged}
-            />
-            <Button type='submit' className={classes.btn}>Post</Button>
-        </Form.Group>
-      }
-      {!showTextbox && <Button onClick={showCommentsTextbox}>Comment</Button>}
+      <div>
+        <span><b>{author}, </b></span>
+        <span>{formattedDate}</span>
+        <X onClick={handleDeletePost} size={30} style={{ float: 'right', cursor: 'pointer' }} />
+      </div>
 
+      <p>{content}</p>
+      <h4><b>Comments:</b></h4>
+      {comments?.map(comment => {
+        return <p><b>{comment.author}</b>: {comment.content}</p>
+      })}
+      {!showTextbox && <Button onClick={showCommentsTextbox}>Comment</Button>}
+      {showTextbox &&
+         <Form onSubmit={submitNewComment}>
+            <Form.Group className="mb-3" controlId="commentContent">
+                <Form.Control
+                    as='textarea'
+                    rows={3}
+                    value={commentContent}
+                    onChange={commentContentChanged}
+                />
+                <Button type='submit' className={classes.btn}>Post</Button>
+            </Form.Group>
+         </Form>
+      }
     </Card>
   );
 }

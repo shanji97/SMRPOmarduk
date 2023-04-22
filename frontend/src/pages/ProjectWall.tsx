@@ -15,7 +15,7 @@ const DUMMY_POSTS: PostData[] = [
     postContent: 'Nov park',
     author: 'mlapajne',
     created: Date.now().toString(),
-    comments: ['kr neki']
+    comments: [{author: "tinec", content: "Zanimiva ideja"}, {author: "mlapajne", content: "Vem ja"}]
   },
   {
     postContent: 'Izgradnja novega igrisca',

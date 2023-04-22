@@ -3,6 +3,12 @@
     margin-bottom: 1rem;
 }
 
+.postHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .btn {
     margin-top: .5rem;
 }

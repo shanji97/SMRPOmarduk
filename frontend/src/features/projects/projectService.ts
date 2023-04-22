@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ProjectData } from "../../classes/projectData";
+import { ProjectData, ProjectDataEdit } from "../../classes/projectData";
 import { getBaseUrl } from "../../helpers/helpers";
 
 
@@ -19,8 +19,50 @@ const create = async (projectData: ProjectData, token: string) => {
     return response.data;
 }
 
-const userService = {
-    create
+const getAllProjects = async (token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${PROJECTS_API_URL}/withData`, config);
+
+    return response.data;
 }
 
-export default userService;
+const getProjectUserRoles = async (id: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${PROJECTS_API_URL}/${id}/user`, config);
+
+    return response.data;
+}
+
+const editProject = async (projectData: ProjectDataEdit, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    let projectID = projectData.id;
+    delete projectData.id;
+    // console.log("BEFORE CALL: ", projectData)
+
+    const response = await axios.patch(`${PROJECTS_API_URL}/${projectID}`, projectData, config);
+    return response.data;
+}
+
+
+
+const projectService = {
+    create,
+    getAllProjects,
+    getProjectUserRoles,
+    editProject,
+}
+
+export default projectService;

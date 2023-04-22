@@ -9,6 +9,8 @@ export interface TokenDto {
 
 	sid: number;
 	sub: string;
+	sname: string;
+	isAdmin: boolean;
 }
 
 export const tokenSchema = Joi.object().keys({

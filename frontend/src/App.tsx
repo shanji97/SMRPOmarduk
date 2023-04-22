@@ -1,30 +1,37 @@
-import React, {Fragment} from "react";
+import React, { Fragment, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import {ToastContainer} from "react-toastify";
+import { ToastContainer } from "react-toastify";
 
 import AddSubtask from "./pages/AddSubtask";
+import Home from "./pages/Home";
 import AddUser from "./pages/AddUser";
 import Login from "./pages/Login";
 import ChangePassword from "./pages/ChangePassword";
 import AddStory from "./pages/AddStory";
 import Users from "./pages/Users";
-import Dashboard from './pages/Dashboard';
-import Header from './components/Header';
+import Header from "./components/Header";
 import AddProject from "./pages/AddProject";
 import AddSprint from "./pages/AddSprint";
 import Profile from "./pages/Profile";
 import ProjectWall from "./pages/ProjectWall";
+import Projects from "./pages/Projects";
+import Sprints from "./pages/Sprints";
 
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'react-toastify/dist/ReactToastify.css';
+import ProductBacklog from './pages/ProductBacklog';
+import SprintBacklog from './pages/SprintBacklog';
+import MyTasks from './pages/MyTasks';
+
+import "bootstrap/dist/css/bootstrap.min.css";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+
 function App() {
   return (
     <Fragment>
       <Router>
         <Header />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<ProductBacklog />} />
           <Route path="/add-user" element={
             <AddUser
               isEdit={false}
@@ -41,15 +48,30 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/add-subtask" element={<AddSubtask />} />
-          <Route path='/add-story' element={<AddStory />} />
-          <Route path='/users' element={<Users />} />
-          <Route path='/add-project' element={<AddProject />} />
-          <Route path='/add-sprint' element={<AddSprint />} />
-          <Route path='/profile' element={<Profile />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/add-project" element={<AddProject />} />
+          <Route path="/:projectID/add-sprint" element={<AddSprint
+            isEdit={false}
+            sprintId=''
+            nameInit=''
+            velocityInit={0}
+            dateRangeInit={{
+              startDate: new Date(),
+              endDate: new Date(),
+              key: 'selection'
+            }}
+          />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:projectID/sprints" element={<Sprints />} />
+          <Route path="/:projectID/add-story" element={<AddStory />} />
+          <Route path='/product-backlog' element={<ProductBacklog />} />
+          <Route path='/sprint-backlog' element={<SprintBacklog />} />
+          <Route path='/my-tasks' element={<MyTasks />} />
           <Route path='/project-wall' element={<ProjectWall />} />
         </Routes>
       </Router>
-      <ToastContainer autoClose={2000} />
+      <ToastContainer position="top-center" autoClose={1000} />
     </Fragment>
   );
 }
