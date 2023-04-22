@@ -164,7 +164,7 @@ export class StoryController {
     if (!story)
       throw new BadRequestException('The story by this ID does not exist.');
 
-    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
+    if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
 
     if (await this.storyService.isStoryInActiveSprint(storyId))
