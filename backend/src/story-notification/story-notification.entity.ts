@@ -3,8 +3,9 @@ import { Story } from '../story/story.entity';
 import { User } from '../user/user.entity';
 
 export enum NotificationStatus {
-   Rejected = 0,
-   Accepted = 1
+   Rejected = 0, //26 kartica
+   Info = 1, //10 kartica
+   Accepted = 2,
   }
   
 @Entity()
@@ -26,6 +27,9 @@ export class StoryNotification {
 
     @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
     created: string;
+    
+    @Column({type: 'boolean', default: true})
+    approved: boolean;
 
     @ManyToOne(type => Story, story => story.notifications, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
     story: Story;
