@@ -16,16 +16,19 @@ import { TokenDto } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 import { ProjectDto } from './dto/project.dto';
+import { ProjectWallNotification } from 'src/project-wall-notification/project-wall-notification.entity';
+import { ProjectWallNotificationService } from 'src/project-wall-notification/project-wall-notification.service';
 
 @ApiTags('project')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
     private readonly userService: UserService,
+    private readonly projectWallNotificationService: ProjectWallNotificationService,
   ) { }
 
   @ApiOperation({ summary: 'List projects.' })
@@ -37,16 +40,36 @@ export class ProjectController {
 
   @ApiOperation({ summary: 'List projects with user data.' })
   @ApiOkResponse()
-  @Get('/withData')
+  @Get('/with-data')
   async listProjectsAndUserData(): Promise<ProjectDto[]> {
     return await this.projectService.getAllProjectsWithUserData();
   }
 
-  @ApiOperation({summary: 'Get the active project.'})
+  @ApiOperation({ summary: 'Get the active project.' })
   @ApiOkResponse()
   @Get('/active')
-  async getActiveProject():Promise<Project>{
+  async getActiveProject(): Promise<Project> {
     return await this.projectService.getActiveProject();
+  }
+
+  @ApiOperation({ summary: 'List wall notifications for all projects.' })
+  @ApiOkResponse()
+  @Get('/notifications')
+  async listWalls(): Promise<ProjectWallNotification[]> {
+    const projectWallNotifications = await this.projectWallNotificationService.getAll();
+    if (!projectWallNotifications)
+      throw new NotFoundException('No project wall notifications.');
+    return projectWallNotifications;
+  }
+
+  @ApiOperation({ summary: 'List wall notifications for all projects.' })
+  @ApiOkResponse()
+  @Get(':projectId/notifications')
+  async listProjectWallNotifications(@Param('projectId',ParseIntPipe) projectId:number): Promise<ProjectWallNotification[]> {
+    const projectWallNotifications = await this.projectWallNotificationService.getProjectWallNotificationByProjectId(projectId);
+    if (!projectWallNotifications)
+      throw new NotFoundException('No project wall notifications with this project ID.');
+    return projectWallNotifications;
   }
 
   @ApiOperation({ summary: 'Get project by ID.' })
