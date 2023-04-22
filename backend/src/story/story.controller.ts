@@ -19,9 +19,9 @@ import { StoryNotificationService } from 'src/story-notification/story-notificat
 import { StoryNotification } from 'src/story-notification/story-notification.entity';
 
 @ApiTags('story')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -212,7 +212,7 @@ export class StoryController {
 
     await this.storyService.setRealizeFlag(storyId, false);
     if (rejectStoryData.description) {
-      await this.storyNotificationService.setRejectionDescription(rejectStoryData.description, 1, storyId);
+      await this.storyNotificationService.setRejectionDescription(rejectStoryData.description, token.sid, storyId);
     }
   }
 
