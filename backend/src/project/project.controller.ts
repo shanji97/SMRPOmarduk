@@ -42,6 +42,13 @@ export class ProjectController {
     return await this.projectService.getAllProjectsWithUserData();
   }
 
+  @ApiOperation({summary: 'Get the active project.'})
+  @ApiOkResponse()
+  @Get('/active')
+  async getActiveProject():Promise<Project>{
+    return await this.projectService.getActiveProject();
+  }
+
   @ApiOperation({ summary: 'Get project by ID.' })
   @ApiOkResponse()
   @ApiNotFoundResponse()
@@ -150,8 +157,6 @@ export class ProjectController {
       }
     }
   }
-
-
 
   @ApiOperation({ summary: 'Update the scrum master / product owner.' })
   @ApiOkResponse()

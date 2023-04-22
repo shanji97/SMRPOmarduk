@@ -20,9 +20,9 @@ import { StoryNotification } from 'src/story-notification/story-notification.ent
 import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
 
 @ApiTags('story')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -63,10 +63,19 @@ export class StoryController {
   @ApiOkResponse()
   @ApiNotFoundResponse()
   @Get(':storyId/notifications')
-  async getNotificationsForStory(@Param('storyId', ParseIntPipe) storyId: number): Promise<StoryNotification[]> {
+  async getNotificationsForStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number): Promise<StoryNotification[]> {
+
     const storyNotifications: StoryNotification[] = await this.storyNotificationService.getNotificationsByStoryId(storyId);
     if (!storyNotifications)
       throw new NotFoundException('Notifications for story not found.');
+
+    const story: Story = await this.storyService.getStoryById(storyId);
+    if (!story)
+      throw new NotFoundException('Story for the given ID not found.');
+
+    //If the user is only a developer he can see only approved notifications.
+    if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]))
+      return storyNotifications.filter(sn => sn.approved == true);
     return storyNotifications;
   }
 
@@ -195,7 +204,7 @@ export class StoryController {
   async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(RejectStroySchema)) rejectStoryData: RejectStoryDto) {
     let story: Story = await this.storyService.getStoryById(storyId);
 
-    if(!story){
+    if (!story) {
       throw new BadRequestException('The story by the given ID does not exist.');
     }
 
