@@ -24,9 +24,9 @@ import { ProjectWallNotificationCommentService } from '../project-wall-notificat
 import { CreateProjectWallNotificationCommentSchema, CreateProjectWallNotificationCommentDto } from '../project-wall-notification-comment/dto/create-notification-comment.dto';
 
 @ApiTags('project')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
@@ -136,7 +136,7 @@ export class ProjectController {
       if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
         throw new ForbiddenException('User is not on this project, so he/she can not add a notification.');
 
-      await this.projectWallNotificationService.createNotification(wallNotification, projectId, token.sid);
+      await this.projectWallNotificationService.createNotification(wallNotification, projectId, wallNotification.userId);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
