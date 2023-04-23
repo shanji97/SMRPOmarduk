@@ -42,7 +42,7 @@ export class ProjectWallNotificationCommentService {
     createProjectWallNotificationObject(projectWallNotificationComment: CreateProjectWallNotificationCommentDto, NotificationId: number, userId): ProjectWallNotificationComment {
         let projectNotificationCommentObject = new ProjectWallNotificationComment();
         projectNotificationCommentObject.author = projectWallNotificationComment.author;
-        projectNotificationCommentObject.content = projectWallNotificationComment.postContent;
+        projectNotificationCommentObject.content = projectWallNotificationComment.content;
         projectNotificationCommentObject.projectWallNotificationId = NotificationId
         projectNotificationCommentObject.userId = userId;
         return projectNotificationCommentObject;
