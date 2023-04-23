@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, In, Not, QueryFailedError } from 'typeorm';
 import { ProjectWallNotification } from './project-wall-notification.entity';
+import { ProjectWallNotificationComment } from '../project-wall-notification-comment/comment.entity';
 import { CreateProjectWallNotificationDto } from './dto/create-notification.dto';
 import { ProjectWallNotificationDto } from './dto/project-wall-notification.dto';
 
@@ -20,8 +21,9 @@ export class ProjectWallNotificationService {
         return await this.entityManager.find(ProjectWallNotification);
     }
 
-    async createNotification(projectWallNotification: CreateProjectWallNotificationDto, projectId: number, userId: number): Promise<void> {
-        await this.entityManager.insert(ProjectWallNotification, this.createProjectWallNotificationObject(projectWallNotification, projectId, userId));
+    async createNotification(projectWallNotification: CreateProjectWallNotificationDto, projectId: number, userId: number): Promise<any> {
+        const inserted = await this.entityManager.insert(ProjectWallNotification, this.createProjectWallNotificationObject(projectWallNotification, projectId, userId));
+        return inserted.identifiers[0];
     }
 
     async getProjectWallNotificationById(projectWallNotificationId: number): Promise<ProjectWallNotification> {
@@ -36,6 +38,7 @@ export class ProjectWallNotificationService {
         const data = await this.entityManager.createQueryBuilder(ProjectWallNotification, 'notification')
             .leftJoinAndSelect('notification.comments', 'comment')
             .leftJoinAndSelect('comment.user', 'commentUser')
+            .where('notification.projectId = :projectId', { projectId })
             .select([
                 'notification.id',
                 'notification.author',
@@ -52,7 +55,7 @@ export class ProjectWallNotificationService {
                 'commentUser.id',
                 'commentUser.username',
             ])
-            .where("projectId = :projectId", { projectId })
+
             .orderBy('notification.created', 'DESC')
             .addOrderBy('comment.created', 'ASC')
             .getMany();
