@@ -23,7 +23,7 @@ import {
 } from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
-import { createTask, reset } from "../features/tasks/taskSlice";
+import { createTask, editTask, reset } from "../features/tasks/taskSlice";
 
 // for testing
 const userRoles = [
@@ -34,20 +34,16 @@ const userRoles = [
   { userId: 9, role: 2 },
 ];
 
-interface TaskProps {
-  id?: string;
-  storyId: number;
+interface EditTaskProps {
+  id: string;
   descriptionInit: string;
   timeRequiredInit: string; // 'remaining' on backend
-  assignedUserIdInit: string;
 }
 
-const TaskForm: React.FC<TaskProps> = ({
+const EditTaskForm: React.FC<EditTaskProps> = ({
   id,
-  storyId,
   descriptionInit,
   timeRequiredInit,
-  assignedUserIdInit,
 }) => {
   const dispatch = useAppDispatch();
   let { isSuccess, isError, isLoading, message } = useAppSelector(
@@ -57,29 +53,12 @@ const TaskForm: React.FC<TaskProps> = ({
   const { users } = useAppSelector((state) => state.users);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    dispatch(getAllUsers());
-  }, []);
-
-  useEffect(() => {
-    setDevelopersOnProject([]);
-    userRoles.forEach((user: any) => {
-      if (user.role === 0) {
-        setDevelopersOnProject((prevDevelopers) => {
-          const newDevelopers = [...prevDevelopers];
-          newDevelopers.push(user.userId.toString());
-          return newDevelopers;
-        });
-      }
-    });
-  }, []);
-
   // NOTE: this is temporary, waiting for other cards to be finished
   const { storyID } = useParams();
 
   useEffect(() => {
     if (isSuccess && !isLoading) {
-      toast.success("Task successfully created!");
+      toast.success("Task successfully updated!");
       resetInputs();
       dispatch(reset());
       // dispatch(getAllStory);
@@ -117,29 +96,18 @@ const TaskForm: React.FC<TaskProps> = ({
 
   const [description, setDescription] = useState(descriptionInit);
   const [timeRequired, setTimeRequired] = useState(timeRequiredInit);
-  const [assignedUserId, setAssignedUserId] = useState(assignedUserIdInit);
-
-  const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
 
   const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [timeRequiredTouched, setTimeRequiredTouched] = useState(false);
-  const [assignedUserIdTouched, setAssignedUserIdTouchedTouched] =
-    useState(false);
 
   const enteredDescriptionValid = description.trim() !== "";
   const enteredTimeRequiredValid =
     +timeRequired > 0 && +timeRequired < 100 && timeRequired.trim() !== ""; // TODO check for absurd numbers
-  const enteredAssignedUserIdValid = true;
 
   const descriptionInvalid = descriptionTouched && !enteredDescriptionValid;
   const timeRequiredInvalid = timeRequiredTouched && !enteredTimeRequiredValid;
-  const assignedUserIdInvalid =
-    assignedUserIdTouched && !enteredAssignedUserIdValid;
 
-  const formIsValid =
-    enteredDescriptionValid &&
-    enteredAssignedUserIdValid &&
-    enteredTimeRequiredValid;
+  const formIsValid = enteredDescriptionValid && enteredTimeRequiredValid;
 
   const descriptionChangedHandler = (e: any) => {
     setDescription(e.target.value);
@@ -157,24 +125,34 @@ const TaskForm: React.FC<TaskProps> = ({
     setTimeRequiredTouched(true);
   };
 
-  const assignedUserIdChangedHandler = (e: any) => {
-    setAssignedUserId(e.target.value);
-  };
-
-  const assignedUserIdBlurHandler = (e: any) => {
-    setAssignedUserIdTouchedTouched(true);
-  };
-
   const resetInputs = () => {
     // set inputs to default values
     setDescription("");
     setTimeRequired("");
-    setAssignedUserId("");
 
     // set touch states values back to default
     setDescriptionTouched(false);
     setTimeRequiredTouched(false);
-    setAssignedUserIdTouchedTouched(false);
+  };
+
+  // handle submit
+  const handleSubmit = () => {
+    setDescriptionTouched(true);
+    setTimeRequiredTouched(true);
+
+    // display error msg if form is invalid
+    if (!formIsValid) {
+      toast.error("Make sure to properly fill out all required fields.");
+      return;
+    }
+
+    const updatedTask: any = {
+      id: id,
+      name: description,
+      remaining: timeRequired,
+    };
+    console.log(updatedTask);
+    dispatch(editTask(updatedTask));
   };
 
   // utility function, takes in user id and returns username
@@ -185,104 +163,49 @@ const TaskForm: React.FC<TaskProps> = ({
     return u[0] ? u[0].username : ""; // TODO handle this better
   };
 
-  // handle submit
-  const handleSubmit = () => {
-    setDescriptionTouched(true);
-    setTimeRequiredTouched(true);
-    setAssignedUserIdTouchedTouched(true);
-
-    // display error msg if form is invalid
-    if (!formIsValid) {
-      toast.error("Make sure to properly fill out all required fields.");
-      return;
-    }
-
-    const newTask: any = {
-      // storyId: storyId,
-      storyId: storyID,
-      name: description,
-      remaining: timeRequired,
-      // assignedUserId: assignedUserId, TODO
-    };
-    console.log(newTask);
-    dispatch(createTask(newTask));
-  };
-
   return (
     <Modal show={true}>
       <Modal.Header closeButton>
-        <Modal.Title>Add task</Modal.Title>
+        <Modal.Title>Edit task</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
-          <Row className="d-flex">
-            <Col className="mb-3">
-              <Form.Group className="mb-1" controlId="form-business-value">
-                <Form.Label>Time required (hrs)</Form.Label>
-                <Form.Control
-                  className=""
-                  isInvalid={timeRequiredInvalid}
-                  placeholder="Enter time in hours"
-                  name="sequenceNumber"
-                  value={timeRequired}
-                  onChange={timeRequiredChangedHandler}
-                  onBlur={timeRequiredBlurHandler}
-                  type="number"
-                />
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group>
-                <Form.Label>Assign task (optional)</Form.Label>
-                <Form.Select
-                  value={assignedUserId}
-                  onChange={(e) => {
-                    assignedUserIdChangedHandler(e);
-                  }}
-                  onBlur={assignedUserIdBlurHandler}
-                  isInvalid={assignedUserIdInvalid}
-                  // disabled={users.length < developers.length + 2}
-                >
-                  <option key={-1} value={""}>
-                    Select developer
-                  </option>
-                  {developersOnProject.map((userId) => {
-                    {
-                      return (
-                        <option key={userId} value={userId}>
-                          {displayUsername(userId)}
-                        </option>
-                      );
-                    }
-                    return null;
-                  })}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Form.Group className="" controlId="form-description">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                placeholder="Add story description"
-                name="description"
-                value={description}
-                onChange={descriptionChangedHandler}
-                onBlur={descriptionBlurHandler}
-                isInvalid={descriptionInvalid}
-              />
-            </Form.Group>
-          </Row>
+          <Form.Group className="mb-1" controlId="form-business-value">
+            <Form.Label>Time required (hrs)</Form.Label>
+            <Form.Control
+              className="w-25"
+              isInvalid={timeRequiredInvalid}
+              placeholder="Enter time in hours"
+              name="sequenceNumber"
+              value={timeRequired}
+              onChange={timeRequiredChangedHandler}
+              onBlur={timeRequiredBlurHandler}
+              type="number"
+            />
+          </Form.Group>
+          <Form.Group className="mb-4" controlId="form-description">
+            <Form.Label>Description</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              placeholder="Add story description"
+              name="description"
+              value={description}
+              onChange={descriptionChangedHandler}
+              onBlur={descriptionBlurHandler}
+              isInvalid={descriptionInvalid}
+            />
+          </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="default">Cancel</Button>
         <Button variant="primary" onClick={handleSubmit}>
-          Add task
+          Update task
         </Button>
       </Modal.Footer>
     </Modal>
   );
 };
 
-export default TaskForm;
+export default EditTaskForm;

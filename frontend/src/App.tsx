@@ -24,6 +24,9 @@ import TaskForm from "./components/TaskForm"; // temporary
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+import EditTaskForm from "./components/EditTaskForm";
+import AssignUserForm from "./components/AssignUserForm";
+import DeleteTaskModal from "./components/DeleteTaskModal";
 
 function App() {
   return (
@@ -76,18 +79,37 @@ function App() {
           <Route path="/product-backlog" element={<ProductBacklog />} />
           <Route path="/sprint-backlog" element={<SprintBacklog />} />
           <Route path="/my-tasks" element={<MyTasks />} />
+
+          {
+            // this is for testing
+          }
+
           <Route
             path="/add-task/:storyID/"
             element={
               <TaskForm
                 storyId={1}
-                isEdit={false}
                 descriptionInit=""
                 timeRequiredInit=""
                 assignedUserIdInit=""
               />
             }
           />
+          <Route
+            path="/edit-task/"
+            element={
+              <EditTaskForm
+                id={"1"}
+                descriptionInit="Prepare UI"
+                timeRequiredInit="1"
+              />
+            }
+          />
+          <Route
+            path="/assign-user/"
+            element={<AssignUserForm id={"2"} assignedUserIdInit="" />}
+          />
+          <Route path="/delete-task/" element={<DeleteTaskModal id={"13"} />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />

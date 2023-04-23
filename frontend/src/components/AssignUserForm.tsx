@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
-import Card from "../components/Card";
+import Card from "./Card";
 import { Form, Modal } from "react-bootstrap";
 
 import classes from "./StoryForm.module.css";
@@ -23,7 +23,7 @@ import {
 } from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
-import { createTask, reset } from "../features/tasks/taskSlice";
+import { assignUser, createTask, reset } from "../features/tasks/taskSlice";
 
 // for testing
 const userRoles = [
@@ -34,19 +34,13 @@ const userRoles = [
   { userId: 9, role: 2 },
 ];
 
-interface TaskProps {
-  id?: string;
-  storyId: number;
-  descriptionInit: string;
-  timeRequiredInit: string; // 'remaining' on backend
+interface AssignUserProps {
+  id: string;
   assignedUserIdInit: string;
 }
 
-const TaskForm: React.FC<TaskProps> = ({
+const AssignUserForm: React.FC<AssignUserProps> = ({
   id,
-  storyId,
-  descriptionInit,
-  timeRequiredInit,
   assignedUserIdInit,
 }) => {
   const dispatch = useAppDispatch();
@@ -74,12 +68,9 @@ const TaskForm: React.FC<TaskProps> = ({
     });
   }, []);
 
-  // NOTE: this is temporary, waiting for other cards to be finished
-  const { storyID } = useParams();
-
   useEffect(() => {
     if (isSuccess && !isLoading) {
-      toast.success("Task successfully created!");
+      toast.success("User successfully changed!");
       resetInputs();
       dispatch(reset());
       // dispatch(getAllStory);
@@ -115,47 +106,19 @@ const TaskForm: React.FC<TaskProps> = ({
   //     }
   //   }, [projectsState.userRoles]);
 
-  const [description, setDescription] = useState(descriptionInit);
-  const [timeRequired, setTimeRequired] = useState(timeRequiredInit);
   const [assignedUserId, setAssignedUserId] = useState(assignedUserIdInit);
 
   const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
 
-  const [descriptionTouched, setDescriptionTouched] = useState(false);
-  const [timeRequiredTouched, setTimeRequiredTouched] = useState(false);
   const [assignedUserIdTouched, setAssignedUserIdTouchedTouched] =
     useState(false);
 
-  const enteredDescriptionValid = description.trim() !== "";
-  const enteredTimeRequiredValid =
-    +timeRequired > 0 && +timeRequired < 100 && timeRequired.trim() !== ""; // TODO check for absurd numbers
   const enteredAssignedUserIdValid = true;
 
-  const descriptionInvalid = descriptionTouched && !enteredDescriptionValid;
-  const timeRequiredInvalid = timeRequiredTouched && !enteredTimeRequiredValid;
   const assignedUserIdInvalid =
     assignedUserIdTouched && !enteredAssignedUserIdValid;
 
-  const formIsValid =
-    enteredDescriptionValid &&
-    enteredAssignedUserIdValid &&
-    enteredTimeRequiredValid;
-
-  const descriptionChangedHandler = (e: any) => {
-    setDescription(e.target.value);
-  };
-
-  const descriptionBlurHandler = (e: any) => {
-    setDescriptionTouched(true);
-  };
-
-  const timeRequiredChangedHandler = (e: any) => {
-    setTimeRequired(e.target.value);
-  };
-
-  const timeRequiredBlurHandler = (e: any) => {
-    setTimeRequiredTouched(true);
-  };
+  const formIsValid = enteredAssignedUserIdValid;
 
   const assignedUserIdChangedHandler = (e: any) => {
     setAssignedUserId(e.target.value);
@@ -167,13 +130,8 @@ const TaskForm: React.FC<TaskProps> = ({
 
   const resetInputs = () => {
     // set inputs to default values
-    setDescription("");
-    setTimeRequired("");
     setAssignedUserId("");
-
     // set touch states values back to default
-    setDescriptionTouched(false);
-    setTimeRequiredTouched(false);
     setAssignedUserIdTouchedTouched(false);
   };
 
@@ -185,10 +143,7 @@ const TaskForm: React.FC<TaskProps> = ({
     return u[0] ? u[0].username : ""; // TODO handle this better
   };
 
-  // handle submit
   const handleSubmit = () => {
-    setDescriptionTouched(true);
-    setTimeRequiredTouched(true);
     setAssignedUserIdTouchedTouched(true);
 
     // display error msg if form is invalid
@@ -197,92 +152,58 @@ const TaskForm: React.FC<TaskProps> = ({
       return;
     }
 
-    const newTask: any = {
-      // storyId: storyId,
-      storyId: storyID,
-      name: description,
-      remaining: timeRequired,
-      // assignedUserId: assignedUserId, TODO
+    const assignedUserData: any = {
+      taskId: id,
+      userId: assignedUserId,
     };
-    console.log(newTask);
-    dispatch(createTask(newTask));
+    console.log(assignedUserData);
+    dispatch(assignUser(assignedUserData));
   };
 
   return (
     <Modal show={true}>
       <Modal.Header closeButton>
-        <Modal.Title>Add task</Modal.Title>
+        <Modal.Title>Assign User</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
-          <Row className="d-flex">
-            <Col className="mb-3">
-              <Form.Group className="mb-1" controlId="form-business-value">
-                <Form.Label>Time required (hrs)</Form.Label>
-                <Form.Control
-                  className=""
-                  isInvalid={timeRequiredInvalid}
-                  placeholder="Enter time in hours"
-                  name="sequenceNumber"
-                  value={timeRequired}
-                  onChange={timeRequiredChangedHandler}
-                  onBlur={timeRequiredBlurHandler}
-                  type="number"
-                />
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group>
-                <Form.Label>Assign task (optional)</Form.Label>
-                <Form.Select
-                  value={assignedUserId}
-                  onChange={(e) => {
-                    assignedUserIdChangedHandler(e);
-                  }}
-                  onBlur={assignedUserIdBlurHandler}
-                  isInvalid={assignedUserIdInvalid}
-                  // disabled={users.length < developers.length + 2}
-                >
-                  <option key={-1} value={""}>
-                    Select developer
-                  </option>
-                  {developersOnProject.map((userId) => {
-                    {
-                      return (
-                        <option key={userId} value={userId}>
-                          {displayUsername(userId)}
-                        </option>
-                      );
-                    }
-                    return null;
-                  })}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Form.Group className="" controlId="form-description">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                placeholder="Add story description"
-                name="description"
-                value={description}
-                onChange={descriptionChangedHandler}
-                onBlur={descriptionBlurHandler}
-                isInvalid={descriptionInvalid}
-              />
-            </Form.Group>
-          </Row>
+          <Form.Group>
+            <Form.Label>Select user to work on task</Form.Label>
+            <Form.Select
+              className="w-75"
+              value={assignedUserId}
+              onChange={(e) => {
+                assignedUserIdChangedHandler(e);
+              }}
+              onBlur={assignedUserIdBlurHandler}
+              isInvalid={assignedUserIdInvalid}
+              // disabled={users.length < developers.length + 2}
+            >
+              <option key={-1} value={""}>
+                Select developer
+              </option>
+              {developersOnProject.map((userId) => {
+                {
+                  return (
+                    <option key={userId} value={userId}>
+                      {displayUsername(userId)}
+                    </option>
+                  );
+                }
+                return null;
+              })}
+            </Form.Select>
+          </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="default">Cancel</Button>
         <Button variant="primary" onClick={handleSubmit}>
-          Add task
+          Save changes
         </Button>
       </Modal.Footer>
     </Modal>
   );
 };
 
-export default TaskForm;
+export default AssignUserForm;

@@ -41,10 +41,20 @@ export const deleteTask = createAsyncThunk('/task/deleteTask', async (taskId: st
     }
 });
 
-export const editTask= createAsyncThunk('/task/editTask', async (taskData: any, thunkAPI: any) => {
+export const editTask = createAsyncThunk('/task/editTask', async (taskData: any, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.editTask(taskData, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const assignUser = createAsyncThunk('/task/assignUser', async (assignUserData: any, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.assignUser(assignUserData, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -106,6 +116,21 @@ export const taskSlice = createSlice({
                 state.message = '';
             })
             .addCase(editTask.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(assignUser.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(assignUser.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+            })
+            .addCase(assignUser.rejected, (state, action) => {
                 state.isLoading = false
                 state.isSuccess = false;
                 state.isError = true
