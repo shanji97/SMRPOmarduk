@@ -81,7 +81,7 @@ export class ProjectWallNotificationService {
                     projectId,
                     userId,
                     postContent,
-                    created: created.toString(),
+                    created: created,
                     comments: commentDto ? [commentDto] : [],
                 });
             }
