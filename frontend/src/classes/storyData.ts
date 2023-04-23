@@ -54,3 +54,9 @@ export interface UpdateStoryCategory {
     storyId: string
 }
 
+export interface UpdateTimeComplexity {
+    id?:       string,
+    timeComplexity: number
+    storyId: string
+}
+

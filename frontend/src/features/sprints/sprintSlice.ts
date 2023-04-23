@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import sprintService from "./sprintService";
-import {SprintBody} from "../../classes/sprintData";
+import {SprintBody, StorySprint} from "../../classes/sprintData";
 
 interface SprintState {
     sprints: SprintBody[]
@@ -26,6 +26,16 @@ export const createSprint = createAsyncThunk('sprint/create', async (sprintBody:
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await sprintService.createSprint(sprintBody, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const addStoryToSprint = createAsyncThunk('sprint/addStoryToSprint', async (storySprint: StorySprint, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.addStoryToSprint(storySprint, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -90,6 +100,22 @@ export const sprintSlice = createSlice({
             state.sprints.push(action.payload);
         })
         .addCase(createSprint.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(addStoryToSprint.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(addStoryToSprint.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.sprints.push(action.payload);
+        })
+        .addCase(addStoryToSprint.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

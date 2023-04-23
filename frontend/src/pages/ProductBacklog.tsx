@@ -44,12 +44,17 @@ import {
   getAllStory,
   deleteStory,
   reset,
-  updateStoryCategory
+  updateStoryCategory,
+  updateTimeComplexity
 } from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
+import { getActiveProject } from "../features/projects/projectSlice";
+import {addStoryToSprint, getAllSprints } from "../features/sprints/sprintSlice";
+import { StorySprint } from "../classes/sprintData";
+
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -107,17 +112,42 @@ const defaultItems = {
   [ProductBacklogItemStatus.DONE]: [],
 };
 
+console.log(Object.keys(defaultItems))
+
 type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
   const {activeProject} = useAppSelector(state =>  state.projects);
-  
+  //dispatch(getActiveProject());
+  //helper funkcija za updatat useState
+  const [sgs, setSgs] = useState("undefined");
 
   let { stories, isSuccess, isLoading, isError } = useAppSelector((state) => state.stories);
 
+  let SprintSelector = useAppSelector((state) => state.sprints);
+
+
+  //console.log(SprintSelector)
+  useEffect(() => {
+    if (isSuccess && !isLoading) {
+      dispatch(reset);
+      console.log("kul")
+    }
+    if (isError && !isLoading) {
+      dispatch(reset);
+      console.log("error")
+    }
+  }, [isSuccess, isError, isLoading]);
+
+
+
+
+
   useEffect(() => {
     dispatch(getAllStory());
+    dispatch(getActiveProject());
+    dispatch(getAllSprints(activeProject.id!));
   }, []);
 
 
@@ -156,17 +186,20 @@ function ProductBacklog() {
     defaultItems
     //stories
   );
+  const resetState = () => {
+    setItemsByStatus(defaultItems);
+  };
 
   const stringPriority = (priority: number): string[] => {
     switch (priority) {
       case 0:
-        return ["Must have", "badge-light-must"];
+        return ["Won't have this time", "badge-light-wont"];
       case 1:
         return ["Could have", "badge-light-could"];
       case 2:
         return ["Should have", "badge-light-should"];
       default:
-        return ["Won't have this time", "badge-light-wont"];
+        return ["Must have", "badge-light-must"];
     }
   };
   const category = (category: number): string => {
@@ -203,38 +236,43 @@ function ProductBacklog() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
-        console.log(activeProject)
         if (!destination) {
           return;
         }
-        const [removed] = draft[
+        
+        
+        
+        /*
+        const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
-                ].splice(source.index, 1);
+                ][source.index];
+                */  
+        const [removed] = draft[
+            source.droppableId as ProductBacklogItemStatus
+                        ].splice(source.index, 1);
 
-
-        console.log(categoryChange(destination.droppableId))
-        console.log(parseInt(activeProject?.id || ""))
-        console.log(removed.id)
+        draft[destination.droppableId as ProductBacklogItemStatus].splice(
+                  destination.index,
+                  0,
+                  removed
+        );
         let projectRoleData = {
           projectId: parseInt(activeProject?.id || ""),
           category: categoryChange(destination.droppableId),
           storyId: removed.id || ""
         };
         dispatch(updateStoryCategory(projectRoleData));
-      
-        
 
-
-        
-        
-       
-        draft[destination.droppableId as ProductBacklogItemStatus].splice(
-          destination.index,
-          0,
-          removed
-        );
-
+        /*if (destination.droppableId === "Allocated" && destination.droppableId != source.droppableId) {
+          const storySprint: StorySprint = {
+            sprintId: number,
+            storyId: removed.id
+          
+        };
+        dispatch(updateSprint(sprintBody)); 
+        } */
       })
+      
     );
   };
 
@@ -255,29 +293,73 @@ function ProductBacklog() {
       })
     );
 
+
+  //za beleženje časa
+  const [itemVisibility, setItemVisibility] = useState<{[itemId: string]: boolean}>({});
+
+  const handleFormToggle = (itemId: string) => {
+    setItemVisibility((prev) => {
+      const newState = {...prev};
+      newState[itemId] = !newState[itemId];
+      return newState;
+    });
+  };
+  const handleSubmit = (itemId: string) => (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleFormToggle(itemId);
+    
+  };
+  const handleKeyDown = (e: any) => {
+    e.preventDefault();
+    
+    const val =  e.target.value
+    let projectRoleData1 = {
+      timeComplexity: val,
+      storyId: e.target.id
+    };
+   
+    console.log(projectRoleData1)
+    if (val.length > 0 && /^\d+$/.test(val)) { dispatch(updateTimeComplexity(projectRoleData1));}
+    //else if (e.target.value == '') dispatch(updateTimeComplexity(projectRoleData2));
+    //dispatch(getAllStory());
+  };
+  //const handleChangeTime: 
   //doda začetne elemnte
 
   useEffect(() => {
     //console.log(ProductBacklogItemStatus)
     //console.log(itemsByStatus)
-
-  
+    
+    //console.log("doblejni podatki1")
     if (isSuccess) {
+      resetState()
       setItemsByStatus((current) =>
         produce(current, (draft) => {
           //for (const status of Object.values(ProductBacklogItemStatus)) {
           //  draft[status] = draft[status].filter(() => false);
           //}
-          console.log(current)
+          
           const isEmpty = Object.values(current).every(
             (value) => value.length === 0
           );
           
-          if (isEmpty) {
+          
           // Adding new item as "to do"
-
+          //console.log("zgodbice ob updatu")
+          //console.log(stories)
           stories.forEach((story: StoryData) => {
-            const cat = category(story.category)
+            //za beleženje časa init values
+            const visibilityObject: {[itemId: string]: boolean} = {};
+            visibilityObject[story.id!] = false;
+            setItemVisibility(visibilityObject);
+            //storyi
+            let cat;
+            if (story.priority === 0) {
+              cat = category(0)
+            } else {
+              cat = category(story.category)
+            }
+
             draft[ProductBacklogItemStatus[cat as keyof typeof ProductBacklogItemStatus]].push({
               id: story.id?.toString(),
               title: story.title,
@@ -291,7 +373,7 @@ function ProductBacklog() {
               isRealized: story.isRealized
             });
           });
-        }
+       
         })
       );
     }
@@ -299,6 +381,7 @@ function ProductBacklog() {
 
   //{Object.values.map(([columnId, column], index) => {
 
+  
   //modal za delete
   const [show, setShow] = useState(false);
 
@@ -333,26 +416,20 @@ function ProductBacklog() {
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
   const getDataStory = (item: StoryData) => {
     setTempDataStory(item);
-    console.log(item);
+    //console.log(item);
     return setShowStory(true);
   };
 
-  const [points, setPonts] = useState("");
-  const [visiblePoints, setVisiblePonts] = useState(true);
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    setVisiblePonts((prev) => !prev);
-  };
-  const handleKeyDown = (e: any) => {
-    const val = e.target.value;
-    if (e.target.validity.valid) setPonts(e.target.value);
-    else if (val === "") setPonts(val);
-  };
+  
 
   // utility function for edit story
   function getTestsForEdit(items: any): string[] {
     return items.map((item: any) => item.description);
   }
+
+
+
+  //{if Object.keys(defaultItems).includes(status)}
 
   return (
     <>
@@ -363,13 +440,12 @@ function ProductBacklog() {
         <DragDropContext onDragEnd={handleDragEnd}>
           {Object.values(ProductBacklogItemStatus).map((status) => {
             return (
-              <>
                 <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
                   <Card className="bg-light border-0 ">
                     <div className="pt-3 hstack gap-2 mx-3">
                       <Card.Title className="fs-6 my-0">{status}</Card.Title>
                       <div className="vr my-0"></div>
-                      <p className="fs-6 my-0">6</p>
+                      <p className="fs-6 my-0">{itemsByStatus[status].length}</p>
                       {status === ProductBacklogItemStatus.UNALLOCATED && (
                         <Button className="ms-auto" variant="light">
                           New Card
@@ -399,7 +475,7 @@ function ProductBacklog() {
                                   draggableId={item.id!}
                                   index={index}
                                   isDragDisabled={
-                                    status === ProductBacklogItemStatus.DONE
+                                    status === ProductBacklogItemStatus.WONTHAVE || !Boolean(item.timeComplexity)
                                   }
                                 >
                                   {(provided, snapshot) => {
@@ -432,6 +508,8 @@ function ProductBacklog() {
                                                 <Dropdown.Item
                                                   onClick={() =>
                                                     openEditStoryModal(item)
+                                                    
+                                                    
                                                   }
                                                 >
                                                   <Pencil /> Edit
@@ -507,7 +585,7 @@ function ProductBacklog() {
                                               </p>
 
                                               <p className="  ms-auto fs-6  text-muted my-0">
-                                                BV: {item.businessValue}
+                                                Business Value: {item.businessValue}
                                               </p>
 
                                               
@@ -521,9 +599,9 @@ function ProductBacklog() {
                                                   Time complexity:{" "}
                                                 </Col>
                                                 <Col sm={5}>
-                                                  {visiblePoints && (
+                                                  {itemVisibility[item.id!] && (
                                                     <Form
-                                                      onSubmit={handleSubmit}
+                                                      onSubmit={handleSubmit(item.id!)}
                                                       className=" ms-auto"
                                                     >
                                                       <InputGroup size="sm">
@@ -531,12 +609,10 @@ function ProductBacklog() {
                                                           className="mobileBox"
                                                           size="sm"
                                                           pattern="[0-9]*"
-                                                          required
-                                                          placeholder="PT"
-                                                          onChange={
-                                                            handleKeyDown
-                                                          }
-                                                          value={points}
+                                                          defaultValue="0"
+                                                          id={item.id}
+                                                          onChange={handleKeyDown}
+
                                                           type="tel"
                                                           maxLength={2}
                                                         />
@@ -546,17 +622,15 @@ function ProductBacklog() {
                                                       </InputGroup>
                                                     </Form>
                                                   )}
-                                                  {!visiblePoints && (
-                                                    <Button
+                                                  {!itemVisibility[item.id!] && (
+                                                    <Button id={item.id}
                                                       onClick={() =>
-                                                        setVisiblePonts(
-                                                          (prev) => !prev
-                                                        )
+                                                        handleFormToggle(item.id!)
                                                       }
                                                       variant="link"
                                                       className="m-0 p-0 float-end text-decoration-none"
                                                     >
-                                                      {points}
+                                                      {item.timeComplexity}
                                                     </Button>
                                                   )}
                                                 </Col>
@@ -578,7 +652,6 @@ function ProductBacklog() {
                     </Droppable>
                   </Card>
                 </div>
-              </>
             );
           })}
         </DragDropContext>

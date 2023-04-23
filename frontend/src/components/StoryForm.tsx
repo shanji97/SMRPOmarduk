@@ -274,6 +274,9 @@ const StoryForm: React.FC<StoryProps> = ({
         businessValue: parseInt(businessValue),
         projectID,
         userId,
+        category: 0,
+        timeComplexity: 0,
+        isRealized: false
       };
       console.log(updatedStory);
       dispatch(editStory(updatedStory));
@@ -287,6 +290,9 @@ const StoryForm: React.FC<StoryProps> = ({
         businessValue: parseInt(businessValue),
         projectID,
         userId,
+        category: 0,
+        timeComplexity: 0,
+        isRealized: false
       };
 
       dispatch(createStory(newStory));

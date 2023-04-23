@@ -249,9 +249,9 @@ const AddStory = () => {
       businessValue: parseInt(businessValue),
       projectID,
       userId,
-      category: parseInt(category),
-      timeComplexity: parseInt(timeComplexity),
-      isRealized
+      category: 0,
+      timeComplexity: 0,
+      isRealized: false
     };
 
     // console.log(newStory);

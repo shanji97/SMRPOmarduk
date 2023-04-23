@@ -1,5 +1,5 @@
 import axios from "axios";
-import { StoryData, UpdateStoryCategory } from "../../classes/storyData";
+import { StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
 import { getBaseUrl } from "../../helpers/helpers";
 
 
@@ -27,12 +27,21 @@ const create = async (storyData: StoryData, token: string) => {
         }
     }
     let projectID = storyData.projectID;
-    delete storyData.projectID;
-    delete storyData.userId;
+    
+    
 
+    const createStoryData = {
+        title:  storyData.title,
+        description:  storyData.description,
+        tests: storyData.tests,
+        priority:  storyData.priority,
+        businessValue:     storyData.businessValue,
+        sequenceNumber: storyData.sequenceNumber,
+    
+    }
     // console.log(storyData);
 
-    const response = await axios.post(`${STORY_API_URL}/${projectID}`, storyData, config);
+    const response = await axios.post(`${STORY_API_URL}/${projectID}`, createStoryData, config);
 
     return response.data;
 }
@@ -81,16 +90,29 @@ const updateStoryCategory = async (updateStoryCategory: UpdateStoryCategory, tok
     return response.data;
 }
 
+const updateTimeComplexity = async (updateTimeComplexity: UpdateTimeComplexity, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const updatedTimeComplexity = {
+        timeComplexity: updateTimeComplexity.timeComplexity,
+
+    }
+
+    const response = await axios.patch(`${STORY_API_URL}/${updateTimeComplexity.storyId}/time-complexity`, updatedTimeComplexity, config);
+    return response.data;
+}
 
 const storyService = {
     create,
     getAllStory,
     deleteStory,
-<<<<<<< HEAD
-    updateStoryCategory
-=======
-    editStory
->>>>>>> b09a8bed2b717cea689a4a7fe807d394a6c2137f
+    updateStoryCategory,
+    editStory,
+    updateTimeComplexity
 }
 
 export default storyService;
