@@ -23,18 +23,20 @@ import { parseJwt } from "../helpers/helpers";
 
 interface StoryProps {
   id?: string;
+  projectId?: string;
   isEdit: boolean;
-  sequenceNumberInit: number;
+  sequenceNumberInit: string;
   titleInit: string;
   descriptionInit: string;
   testsInit: string[];
-  priorityInit: number;
-  businessValueInit: number;
+  priorityInit: string;
+  businessValueInit: string;
   closeModal: () => void;
 }
 
 const StoryForm: React.FC<StoryProps> = ({
   id,
+  projectId,
   isEdit,
   sequenceNumberInit,
   titleInit,
@@ -54,19 +56,23 @@ const StoryForm: React.FC<StoryProps> = ({
   const [userId, setUserId] = useState(-1);
 
   useEffect(() => {
-    if (storyState.isSuccess && !storyState.isLoading) {
+    if (storyState.isUpdateSuccess && !storyState.isLoading) {
       toast.success(
         isEdit ? "Story successfully updated!" : "Story successfully created!"
       );
       resetInputs();
       dispatch(reset());
-      // dispatch(getAllStory);
+      dispatch(getAllStory());
       closeModal();
     }
-    if (storyState.isError && !storyState.isLoading) {
+    if (storyState.isUpdateError && !storyState.isLoading) {
       toast.error(storyState.message);
     }
-  }, [storyState.isSuccess, storyState.isError, storyState.isLoading]);
+  }, [
+    storyState.isUpdateSuccess,
+    storyState.isUpdateError,
+    storyState.isLoading,
+  ]);
 
   useEffect(() => {
     if (projectID !== undefined) {
@@ -276,7 +282,7 @@ const StoryForm: React.FC<StoryProps> = ({
         userId,
         category: 0,
         timeComplexity: 0,
-        isRealized: false
+        isRealized: false,
       };
       console.log(updatedStory);
       dispatch(editStory(updatedStory));
@@ -288,11 +294,11 @@ const StoryForm: React.FC<StoryProps> = ({
         tests,
         priority: parseInt(priority),
         businessValue: parseInt(businessValue),
-        projectID,
+        projectID: projectId,
         userId,
         category: 0,
         timeComplexity: 0,
-        isRealized: false
+        isRealized: false,
       };
 
       dispatch(createStory(newStory));

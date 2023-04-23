@@ -111,14 +111,14 @@ export const storySlice = createSlice({
             })
             .addCase(createStory.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isUpdateSuccess = true;
+                state.isUpdateError = false;
                 state.message = '';
             })
             .addCase(createStory.rejected, (state, action) => {
                 state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
+                state.isUpdateSuccess = false;
+                state.isUpdateError = true
                 state.message = action.payload
             })
             .addCase(getAllStory.pending, (state) => {
@@ -159,14 +159,14 @@ export const storySlice = createSlice({
             })
             .addCase(editStory.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isUpdateSuccess = true;
+                state.isUpdateError = false;
                 state.message = '';
             })
             .addCase(editStory.rejected, (state, action) => {
                 state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
+                state.isUpdateSuccess = false;
+                state.isUpdateError = true
                 state.message = action.payload
             })
             .addCase(updateStoryCategory.pending, (state) => {

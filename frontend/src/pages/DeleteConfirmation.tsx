@@ -40,6 +40,7 @@ function DeleteConfirmation({
   }, [isDeleteSuccess, isDeleteError, isLoading]);
 
   const handleDelete = () => {
+    console.log("Delete: ", item.id);
     dispatch(deleteStory(item.id!)); // NOTE CHECK THIS !!!!
   };
 

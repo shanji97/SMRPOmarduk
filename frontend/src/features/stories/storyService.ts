@@ -26,10 +26,8 @@ const create = async (storyData: StoryData, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    let projectID = storyData.projectID;
+    console.log(storyData)
     
-    
-
     const createStoryData = {
         title:  storyData.title,
         description:  storyData.description,
@@ -41,7 +39,7 @@ const create = async (storyData: StoryData, token: string) => {
     }
     // console.log(storyData);
 
-    const response = await axios.post(`${STORY_API_URL}/${projectID}`, createStoryData, config);
+    const response = await axios.post(`${STORY_API_URL}/${storyData.projectID}`, createStoryData, config);
 
     return response.data;
 }
@@ -52,13 +50,20 @@ const editStory = async (storyData: StoryData, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    delete storyData.projectID;
-    delete storyData.userId;
-    delete storyData.id
 
-    // console.log(storyData);
+    const editStoryData = {
+        title:  storyData.title,
+        description:  storyData.description,
+        tests: storyData.tests,
+        priority:  storyData.priority,
+        businessValue:     storyData.businessValue,
+        sequenceNumber: storyData.sequenceNumber,
+    
+    }
 
-    const response = await axios.patch(`${STORY_API_URL}/${storyData.id}/update`, storyData, config);
+    console.log(storyData);
+
+    const response = await axios.patch(`${STORY_API_URL}/${storyData.id}/update`, editStoryData, config);
 
     return response.data;
 }
