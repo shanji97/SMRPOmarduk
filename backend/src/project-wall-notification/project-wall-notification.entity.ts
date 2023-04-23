@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Project } from '../project/project.entity';
 import { User } from '../user/user.entity';
-import { ProjectWallNotificationComment } from 'src/project-wall-notification-comment/comment.entity';
+import { ProjectWallNotificationComment } from '../project-wall-notification-comment/comment.entity';
 
 @Entity()
 export class ProjectWallNotification {
