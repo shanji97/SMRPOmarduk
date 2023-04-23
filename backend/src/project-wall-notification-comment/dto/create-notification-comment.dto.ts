@@ -1,16 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 
-export class CreateProjectWallNotificationDto {
-
-    @ApiProperty({
-        example: 'Title.',
-        description: 'Title.',
-        minLength: 1,
-        type: String,
-        required: true
-    })
-    title: string;
+export class CreateProjectWallNotificationCommentDto {
 
     @ApiProperty({
         example: 'Post content.',
@@ -42,8 +33,7 @@ export class CreateProjectWallNotificationDto {
     userId: number;
 }
 
-export const CreateProjectWallNotificationSchema = Joi.object().keys({
-    title: Joi.string().min(1).max(200).required().default('Work on a project.'),
+export const CreateProjectWallNotificationCommentSchema = Joi.object().keys({
     postContent: Joi.string().min(1).required().default('Work on a project.'),
     author: Joi.string().min(1).max(200).default('shanji'),
     userId: Joi.number().min(1).required().default(1)
