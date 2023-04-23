@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { NotificationComment } from '../notification-comments/wallNotification.entity';
 import { Project } from '../project/project.entity';
 import { User } from '../user/user.entity';
+import { ProjectWallNotificationComment } from 'src/project-wall-notification-comment/comment.entity';
 
 @Entity()
 export class ProjectWallNotification {
@@ -29,8 +29,8 @@ export class ProjectWallNotification {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created: string;
 
-  @OneToMany(type => NotificationComment, comment => comment.notifications)
-  comments: NotificationComment[];
+  @OneToMany(type => ProjectWallNotificationComment, comment => comment.projectWallNotification)
+  comments: ProjectWallNotificationComment[];
 
   @ManyToOne(type => User, user => user.projectWallNotifications)
   user: User;
