@@ -1,31 +1,19 @@
 import Card from "../components/Card";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Button, Form} from "react-bootstrap";
 import Post from "../components/Post";
 import {PostData} from '../classes/wallData'
-
-const DUMMY_POSTS: PostData[] = [
-  {
-    postContent: 'Izgradnja novega tobogana',
-    author: 'tinec',
-    created: Date.now().toString(),
-    comments: [],
-  },
-  {
-    postContent: 'Nov park',
-    author: 'mlapajne',
-    created: Date.now().toString(),
-    comments: [{author: "tinec", content: "Zanimiva ideja"}, {author: "mlapajne", content: "Vem ja"}]
-  },
-  {
-    postContent: 'Izgradnja novega igrisca',
-    author: 'simonk',
-    created: Date.now().toString()
-  }
-];
+import {useAppDispatch, useAppSelector} from "../app/hooks";
+import {getAllWallPosts} from "../features/projects/projectWallSlice";
 
 const ProjectWall = () => {
+  const dispatch = useAppDispatch();
+  const {wallPosts} = useAppSelector(state => state.projectWall);
   const [postContent, setPostContent] = useState('');
+
+  useEffect(() => {
+    // dispatch(getAllWallPosts());
+  }, []);
 
   const postContentChanged = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPostContent(e.currentTarget.value);
@@ -39,7 +27,7 @@ const ProjectWall = () => {
     <Card style={{ marginTop: '1rem' }}>
       <h1 className='text-primary'>Project Wall</h1>
 
-      {DUMMY_POSTS.map((post, i) => {
+      {wallPosts.map((post, i) => {
         return <Post
                   key={i}
                   content={post.postContent}

@@ -1,4 +1,6 @@
 export interface PostData {
+  id?: string,
+  projectId: string,
   postContent: string,
   author: string,
   created: string,
