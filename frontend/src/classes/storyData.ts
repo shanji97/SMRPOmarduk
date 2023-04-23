@@ -14,7 +14,10 @@ export interface StoryData {
     businessValue:     number,
     sequenceNumber: number,
     projectID?: any,
-    userId?: number
+    userId?: number,
+    category: number
+    timeComplexity: number,
+    isRealized: boolean
 }
 
 export interface StoryDataOfProject {
@@ -38,8 +41,22 @@ export enum SprintBacklogItemStatus {
   }
 
 export enum ProductBacklogItemStatus {
+    WONTHAVE = "Won't have this time",
     UNALLOCATED = 'Unallocated',
     ALLOCATED = 'Allocated',
     DONE = 'Done',
+}
+
+export interface UpdateStoryCategory {
+    id?:       string,
+    category: number,
+    projectId: number,
+    storyId: string
+}
+
+export interface UpdateTimeComplexity {
+    id?:       string,
+    timeComplexity: number
+    storyId: string
 }
 

@@ -77,6 +77,11 @@ const AddStory = () => {
   const [tests, setTests] = useState([""]);
   const [priority, setPriority] = useState(""); // 3 => must have, 0 => won't have this time
   const [businessValue, setBusinessValue] = useState("");
+  //nove
+  const [category, setCategory] = useState("");
+  const [timeComplexity, setimeComplexity] = useState("");
+  const [isRealized, setisRealized] = useState(false);
+  
 
   const [sequenceNumberTouched, setSequenceNumberTouched] = useState(false);
   const [titleTouched, setTitleTouched] = useState(false);
@@ -244,6 +249,9 @@ const AddStory = () => {
       businessValue: parseInt(businessValue),
       projectID,
       userId,
+      category: 0,
+      timeComplexity: 0,
+      isRealized: false
     };
 
     // console.log(newStory);

@@ -42,7 +42,7 @@ export class Story {
   @Column({ type: 'tinyint' })
   businessValue: number;
 
-  @Column({ type: 'tinyint', default: Category.WontHave })
+  @Column({ type: 'tinyint', default: Category.Unassigned })
   category: number;
 
   @Column({ type: 'tinyint', default: Backlog.Product })

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {StoryData} from "../../classes/storyData";
+import { StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
 import storyService from "./storyService";
 
 let user = JSON.parse(localStorage.getItem('user')!);
@@ -70,6 +70,24 @@ export const editStory = createAsyncThunk('/story/editStory', async (storyData: 
     }
 });
 
+export const updateStoryCategory = createAsyncThunk('/story/updateCategory', async (updateStoryCategory: UpdateStoryCategory, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.updateStoryCategory(updateStoryCategory, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+export const updateTimeComplexity = createAsyncThunk('/story/timeCompl', async (updatedTimeComplexity: UpdateTimeComplexity, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.updateTimeComplexity(updatedTimeComplexity, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
 
 export const storySlice = createSlice({
     name: 'stories',
@@ -146,6 +164,40 @@ export const storySlice = createSlice({
                 state.message = '';
             })
             .addCase(editStory.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(updateStoryCategory.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(updateStoryCategory.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.stories = action.payload;
+
+            })
+            .addCase(updateStoryCategory.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(updateTimeComplexity.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(updateTimeComplexity.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.stories = action.payload;
+
+            })
+            .addCase(updateTimeComplexity.rejected, (state, action) => {
                 state.isLoading = false
                 state.isSuccess = false;
                 state.isError = true
