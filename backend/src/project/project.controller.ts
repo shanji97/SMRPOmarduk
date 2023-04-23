@@ -18,8 +18,8 @@ import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-ro
 import { ProjectDto } from './dto/project.dto';
 import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
 import { ProjectWallNotificationService } from '../project-wall-notification/project-wall-notification.service';
-import { CreateProjectWallNotificationDto, CreateProjectWallNotificationSchema } from 'src/project-wall-notification/dto/create-notification.dto';
-import { ignoreElements } from 'rxjs';
+import { CreateProjectWallNotificationDto, CreateProjectWallNotificationSchema } from '../project-wall-notification/dto/create-notification.dto';
+import { ProjectWallNotificationDto } from '../project-wall-notification/dto/project-wall-notification.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -67,8 +67,8 @@ export class ProjectController {
   @ApiOperation({ summary: 'List wall notifications for single project.' })
   @ApiOkResponse()
   @Get(':projectId/notifications')
-  async listProjectWallNotifications(@Param('projectId', ParseIntPipe) projectId: number): Promise<ProjectWallNotification[]> {
-    const projectWallNotifications = await this.projectWallNotificationService.getProjectWallNotificationByProjectId(projectId);
+  async listProjectWallNotifications(@Param('projectId', ParseIntPipe) projectId: number): Promise<ProjectWallNotificationDto[]> {
+    const projectWallNotifications = await this.projectWallNotificationService.getAllProjectWallNotificationsWithComments(projectId);
     if (!projectWallNotifications)
       throw new NotFoundException('No project wall notifications with this project ID.');
     return projectWallNotifications;

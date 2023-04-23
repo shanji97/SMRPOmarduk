@@ -54,6 +54,7 @@ export class ProjectService {
 
     return Array.from(projectMap.values()) as ProjectDto[];
   }
+  
   async getProjectCount(): Promise<number> {
     return await this.entityManager.count(Project);
   }
