@@ -128,7 +128,7 @@ export class ProjectController {
   @ApiBadRequestResponse()
   @ApiForbiddenResponse()
   @Post(':projectId/notification')
-  async createProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(CreateProjectWallNotificationSchema)) wallNotification: CreateProjectWallNotificationDto) {
+  async createProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(CreateProjectWallNotificationSchema)) wallNotification: CreateProjectWallNotificationDto): Promise<number> {
     try {
       if (!await this.projectService.getProjectById(projectId))
         throw new BadRequestException('Project by the given ID does not exists.');
@@ -136,7 +136,8 @@ export class ProjectController {
       if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
         throw new ForbiddenException('User is not on this project, so he/she can not add a notification.');
 
-      await this.projectWallNotificationService.createNotification(wallNotification, projectId, wallNotification.userId);
+      const row = await this.projectWallNotificationService.createNotification(wallNotification, projectId, 1);
+      return (<any>row).id;
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
