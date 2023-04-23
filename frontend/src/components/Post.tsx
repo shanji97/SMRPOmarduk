@@ -9,17 +9,18 @@ import {X} from "react-bootstrap-icons";
 
 interface PostProps {
   content: string,
+  title: string,
   author: string,
   comments?: Comment[],
   created: string
 }
 
-const Post: React.FC<PostProps> = ({content, author, comments, created}) => {
+const Post: React.FC<PostProps> = ({content, title, author, comments, created}) => {
   const [showTextbox, setShowTextbox] = useState(false);
   const [commentContent, setCommentContent] = useState('');
 
   const formattedDate = useMemo(() => {
-    const date = new Date(Number(created));
+    const date = new Date(created);
     const formattedDate = date.toLocaleDateString();
     const formattedTime = date.toLocaleTimeString();
     return `${formattedDate} ${formattedTime}`;
@@ -51,9 +52,9 @@ const Post: React.FC<PostProps> = ({content, author, comments, created}) => {
         <span>{formattedDate}</span>
         <X onClick={handleDeletePost} size={30} style={{ float: 'right', cursor: 'pointer' }} />
       </div>
-
+      <h4 style={{marginTop: '1rem'}}>{title}</h4>
       <p>{content}</p>
-      <h4><b>Comments:</b></h4>
+      <h4>Comments:</h4>
       {comments?.map(comment => {
         return <p><b>{comment.author}</b>: {comment.content}</p>
       })}

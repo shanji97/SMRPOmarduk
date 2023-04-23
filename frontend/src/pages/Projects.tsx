@@ -8,8 +8,8 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import {
   getAllProjects,
-  setActiveProject,
   reset,
+  activateProject
 } from "../features/projects/projectSlice";
 import { UserRole } from "../classes/projectData";
 import ProjectDataForm from "../components/ProjectDataForm";
@@ -56,10 +56,6 @@ const Projects = () => {
     dispatch(reset());
   }, [isSuccess, isError]);
 
-  const activateProject = (projectID: string) => {
-    dispatch(setActiveProject(projectID));
-  };
-
   const redirectToAddStory = (projectID: any) => {
     navigate(`/${projectID}/add-story`);
   };
@@ -69,8 +65,7 @@ const Projects = () => {
   };
 
   const handleActivateProject = (projectId: string) => {
-    activateProject(projectId!);
-    navigate(`?activeProject=${projectId}`);
+    dispatch(activateProject(projectId));
     toast.info("Project active");
   };
 

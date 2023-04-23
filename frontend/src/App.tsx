@@ -68,7 +68,7 @@ function App() {
           <Route path='/product-backlog' element={<ProductBacklog />} />
           <Route path='/sprint-backlog' element={<SprintBacklog />} />
           <Route path='/my-tasks' element={<MyTasks />} />
-          <Route path='/project-wall' element={<ProjectWall />} />
+          <Route path='/projects/:projectID/wall' element={<ProjectWall />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />

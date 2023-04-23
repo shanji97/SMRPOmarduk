@@ -1,9 +1,11 @@
 export interface PostData {
   id?: string,
-  projectId: string,
+  userId?: string,
+  projectId?: string,
+  title: string,
   postContent: string,
   author: string,
-  created: string,
+  created?: string,
   comments?: Comment[]
 }
 

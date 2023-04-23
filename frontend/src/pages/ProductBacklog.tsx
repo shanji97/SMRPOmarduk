@@ -48,6 +48,7 @@ import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
+import {getActiveProject} from "../features/projects/projectSlice";
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -108,10 +109,12 @@ type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
+  const {activeProject} = useAppSelector(state => state.projects);
   let storyState = useAppSelector((state) => state.stories);
 
   useEffect(() => {
     dispatch(getAllStory());
+    dispatch(getActiveProject());
   }, []);
 
   // NOTE: temporary fix, change this if needed
@@ -290,7 +293,7 @@ function ProductBacklog() {
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3">
         <div className="text-center col-sm-4 col-md-3 col-xl-3 mt-3">
-          <Button size="lg" variant="light" onClick={() => navigate('/project-wall')}>
+          <Button size="lg" variant="light" onClick={() => navigate(`/projects/${activeProject.id}/wall`)}>
             Wall
           </Button>
         </div>

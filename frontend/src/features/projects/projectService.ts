@@ -25,7 +25,7 @@ const getAllProjects = async (token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    const response = await axios.get(`${PROJECTS_API_URL}/withData`, config);
+    const response = await axios.get(`${PROJECTS_API_URL}/with-data`, config);
 
     return response.data;
 }
@@ -56,13 +56,35 @@ const editProject = async (projectData: ProjectDataEdit, token: string) => {
     return response.data;
 }
 
+const activateProject = async (projectId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
 
+    const response = await axios.patch(`${PROJECTS_API_URL}/${projectId}/set-active`, {}, config);
+    return response.data;
+}
+
+const getActiveProject = async (token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${PROJECTS_API_URL}/active`, config);
+    return response.data;
+}
 
 const projectService = {
     create,
     getAllProjects,
     getProjectUserRoles,
     editProject,
+    activateProject,
+    getActiveProject,
 }
 
 export default projectService;

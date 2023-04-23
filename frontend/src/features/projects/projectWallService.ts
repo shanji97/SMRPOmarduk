@@ -16,15 +16,19 @@ const getAllWallPosts = async (projectId: string, token: string) => {
   return response.data;
 }
 
-const createNewPost = async (postBody: PostData, token: string) => {
+const createPost = async (postBody: PostData, token: string) => {
   const config = {
     headers: {
       Authorization: `JWT ${token}`
     }
   }
-  // const response = await axios.post(`${PROJECTS_API_URL}/${projectId}/notifications`, {}, config);
 
-  // return response.data;
+  const reqBody = {...postBody};
+  delete reqBody.projectId;
+
+  const response = await axios.post(`${PROJECTS_API_URL}/${postBody.projectId}/notification`, reqBody, config);
+
+  return response.data;
 }
 
 const deletePost = async (body: {projectId: string, postId: string}, token: string) => {
@@ -41,6 +45,7 @@ const deletePost = async (body: {projectId: string, postId: string}, token: stri
 const projectWallService = {
   getAllWallPosts,
   deletePost,
+  createPost,
 }
 
 export default projectWallService;
