@@ -13,5 +13,5 @@ export class NotificationComment {
   projectWallNotificationId: number;
 
   @ManyToOne(type => ProjectWallNotification, notification => notification.comments, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
-  mainNotification: ProjectWallNotification;
+  notifications: ProjectWallNotification;
 }
