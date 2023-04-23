@@ -8,6 +8,7 @@ import {createPost, getAllWallPosts} from "../features/projects/projectWallSlice
 import {getActiveProject} from "../features/projects/projectSlice";
 import {parseJwt} from "../helpers/helpers";
 import {useParams} from "react-router-dom";
+import {toast} from "react-toastify";
 
 const ProjectWall = () => {
   const params = useParams();
@@ -51,6 +52,7 @@ const ProjectWall = () => {
       projectId: params.projectID!,
     };
     dispatch(createPost(newPost));
+    toast.info('Post created!');
     setTitle('');
     setPostContent('');
   }

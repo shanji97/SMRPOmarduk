@@ -8,6 +8,7 @@ import {Comment} from "../classes/wallData";
 import {X} from "react-bootstrap-icons";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {addComment, deletePost} from "../features/projects/projectWallSlice";
+import {toast} from "react-toastify";
 
 interface PostProps {
   id: string,
@@ -45,6 +46,7 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
 
   const handleDeletePost = () => {
     dispatch(deletePost({projectId: activeProject.id!, postId: id}));
+    toast.info('Post deleted!');
   }
 
   const submitNewComment = (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,7 +81,7 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
             return <p><b>{comment.author}</b>: {comment.content}</p>
           })}
         </Fragment> :
-        <p>No comments</p>
+        <p className='text-secondary'>No comments</p>
       }
 
       {!showTextbox && <Button onClick={showCommentsTextbox}>Comment</Button>}

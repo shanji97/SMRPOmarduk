@@ -19,6 +19,7 @@ const initialState: ProjectWallState = {
 }
 
 interface PostBody {
+  id?: string,
   title: string,
   postContent: string,
   author: string,
@@ -120,8 +121,8 @@ export const projectRoleSlice = createSlice({
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
-        //debugger;
         const newPost: PostBody = {
+          id: action.payload,
           author: action.meta.arg.author,
           projectId: action.meta.arg.projectId,
           postContent: action.meta.arg.postContent,
@@ -155,17 +156,18 @@ export const projectRoleSlice = createSlice({
           notificationId: payloadComment.notificationId,
         };
 
-        const oldPost: PostData = state.wallPosts.find(post => post.projectId === newComment.projectId)!;
-        const oldIndex = state.wallPosts.findIndex(post => post.projectId === newComment.projectId);
-        const oldPosts = [...state.wallPosts];
-        const newPost: PostData = {...oldPost};
 
-        const newComments = newPost.comments;
-        newComments!.push(newComment);
+        const oldPost: PostData = state.wallPosts.find(post => post.id === newComment.notificationId)!;
+        const oldIndex = state.wallPosts.findIndex(post => post.id === newComment.notificationId);
+        const oldPosts = state.wallPosts.map(post => ({
+          ...post,
+          author: post.author,
+          comments: post.comments ? post.comments.slice() : []
+        }));
+        const newPost = {...oldPost, comments: [...oldPost.comments!, newComment]};
+        const newPosts = oldPosts.map((post, index) => index === oldIndex ? newPost : post);
 
-        newPost.comments = newComments;
-        oldPosts[oldIndex] = newPost;
-        state.wallPosts = oldPosts;
+        state.wallPosts = newPosts;
       })
       .addCase(addComment.rejected, (state, action) => {
         state.isLoading = false
