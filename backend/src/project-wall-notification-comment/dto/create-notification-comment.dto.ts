@@ -10,7 +10,7 @@ export class CreateProjectWallNotificationCommentDto {
         type: String,
         required: true
     })
-    postContent: string;
+    content: string;
 
     @ApiProperty({
         example: 'shanji',
@@ -34,7 +34,7 @@ export class CreateProjectWallNotificationCommentDto {
 }
 
 export const CreateProjectWallNotificationCommentSchema = Joi.object().keys({
-    postContent: Joi.string().min(1).required().default('Work on a project.'),
+    content: Joi.string().min(1).required().default('Work on a project.'),
     author: Joi.string().min(1).max(200).default('shanji'),
     userId: Joi.number().min(1).required().default(1)
 });
