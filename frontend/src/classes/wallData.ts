@@ -10,6 +10,9 @@ export interface PostData {
 }
 
 export interface Comment {
-  content: string,
-  author: string
+  projectId?: string,
+  notificationId?: string,
+  postContent: string,
+  author: string,
+  userId: string,
 }

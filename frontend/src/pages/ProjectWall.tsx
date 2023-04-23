@@ -2,7 +2,7 @@ import Card from "../components/Card";
 import React, {useEffect, useState} from "react";
 import {Button, Form} from "react-bootstrap";
 import Post from "../components/Post";
-import {PostData} from '../classes/wallData'
+import {Comment, PostData} from '../classes/wallData'
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {createPost, getAllWallPosts} from "../features/projects/projectWallSlice";
 import {getActiveProject} from "../features/projects/projectSlice";
@@ -17,8 +17,8 @@ const ProjectWall = () => {
   const [title, setTitle] = useState('');
   const [postContent, setPostContent] = useState('');
   const [user, setUser] = useState({
-    sid: '',
-    sub: ''
+    sub: '',
+    sid: ''
   });
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const ProjectWall = () => {
   }
 
   return (
-    <Card style={{ marginTop: '1rem' }}>
+    <Card style={{marginTop: '1rem'}}>
       <h1 className='text-primary'>Project Wall</h1>
 
       {wallPosts.map((post, i) => {
@@ -68,6 +68,7 @@ const ProjectWall = () => {
                   author={post.author}
                   created={post.created!}
                   comments={post.comments}
+                  user={user}
               />
       })}
       <Form onSubmit={submitNewPost}>

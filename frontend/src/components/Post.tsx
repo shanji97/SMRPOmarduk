@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {Fragment, useEffect, useMemo, useState} from "react";
 import Card from "./Card";
 import {Form} from "react-bootstrap";
 
@@ -7,7 +7,7 @@ import {Button} from "react-bootstrap";
 import {Comment} from "../classes/wallData";
 import {X} from "react-bootstrap-icons";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {deletePost} from "../features/projects/projectWallSlice";
+import {addComment, deletePost} from "../features/projects/projectWallSlice";
 
 interface PostProps {
   id: string,
@@ -15,10 +15,14 @@ interface PostProps {
   title: string,
   author: string,
   comments?: Comment[],
-  created: string
+  created: string,
+  user: {
+    sid: string,
+    sub: string
+  }
 }
 
-const Post: React.FC<PostProps> = ({id, content, title, author, comments, created}) => {
+const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, created}) => {
   const dispatch = useAppDispatch();
   const {activeProject} = useAppSelector(state => state.projects);
   const [showTextbox, setShowTextbox] = useState(false);
@@ -40,13 +44,21 @@ const Post: React.FC<PostProps> = ({id, content, title, author, comments, create
   }
 
   const handleDeletePost = () => {
-    console.log('delete')
     dispatch(deletePost({projectId: activeProject.id!, postId: id}));
   }
 
   const submitNewComment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(commentContent);
+    const commentBody: Comment = {
+      projectId: activeProject.id,
+      notificationId: id,
+      postContent: commentContent,
+      author: user.sub,
+      userId: user.sid
+    }
+
+    dispatch(addComment(commentBody));
+
     setCommentContent('');
     setShowTextbox(false);
   }
@@ -60,10 +72,16 @@ const Post: React.FC<PostProps> = ({id, content, title, author, comments, create
       </div>
       <h4 style={{marginTop: '1rem'}}>{title}</h4>
       <p>{content}</p>
-      <h4>Comments:</h4>
-      {comments?.map(comment => {
-        return <p><b>{comment.author}</b>: {comment.content}</p>
-      })}
+      {comments?.length! > 0 ?
+        <Fragment>
+          <h4>Comments:</h4>
+          {comments?.map(comment => {
+            return <p><b>{comment.author}</b>: {comment.content}</p>
+          })} :
+        </Fragment> :
+        <p>No comments</p>
+      }
+
       {!showTextbox && <Button onClick={showCommentsTextbox}>Comment</Button>}
       {showTextbox &&
          <Form onSubmit={submitNewComment}>

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {PostData} from "../../classes/wallData";
+import {Comment, PostData} from "../../classes/wallData";
 import projectWallService from "./projectWallService";
 
 interface ProjectWallState {
@@ -56,6 +56,15 @@ export const deletePost = createAsyncThunk('projectRole/deletePost', async (body
   }
 });
 
+export const addComment = createAsyncThunk('projectRole/createComment', async (body: Comment, thunkAPI: any) => {
+  try {
+    const token = JSON.parse(localStorage.getItem('user')!).token;
+    return await projectWallService.addComment(body, token);
+  } catch (error: any) {
+    const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+    return thunkAPI.rejectWithValue(message)
+  }
+});
 
 export const projectRoleSlice = createSlice({
   name: 'projectWall',
@@ -120,6 +129,22 @@ export const projectRoleSlice = createSlice({
         state.wallPosts.push(newPost);
       })
       .addCase(createPost.rejected, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = false;
+        state.isError = true
+        state.message = action.payload
+      })
+      .addCase(addComment.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(addComment.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = '';
+        debugger;
+      })
+      .addCase(addComment.rejected, (state, action) => {
         state.isLoading = false
         state.isSuccess = false;
         state.isError = true

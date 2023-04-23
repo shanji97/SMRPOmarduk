@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ProjectData, ProjectDataEdit } from "../../classes/projectData";
 import { getBaseUrl } from "../../helpers/helpers";
-import {PostData} from "../../classes/wallData";
+import {Comment, PostData} from "../../classes/wallData";
 
 const PROJECTS_API_URL = `${getBaseUrl()}/api/project`;
 
@@ -42,10 +42,27 @@ const deletePost = async (body: {projectId: string, postId: string}, token: stri
   return response.data;
 }
 
+const addComment = async (commentBody: Comment, token: string) => {
+  const config = {
+    headers: {
+      Authorization: `JWT ${token}`
+    }
+  }
+
+  const reqBody = {...commentBody};
+  delete reqBody.projectId;
+  delete reqBody.notificationId
+
+  const response = await axios.post(`${PROJECTS_API_URL}/${commentBody.projectId}/notification/${commentBody.notificationId}/comment`, reqBody, config);
+
+  return response.data;
+}
+
 const projectWallService = {
   getAllWallPosts,
   deletePost,
   createPost,
+  addComment,
 }
 
 export default projectWallService;
