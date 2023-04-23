@@ -16,8 +16,10 @@ import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 import { ProjectDto } from './dto/project.dto';
-import { ProjectWallNotification } from 'src/project-wall-notification/project-wall-notification.entity';
-import { ProjectWallNotificationService } from 'src/project-wall-notification/project-wall-notification.service';
+import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
+import { ProjectWallNotificationService } from '../project-wall-notification/project-wall-notification.service';
+import { CreateProjectWallNotificationDto, CreateProjectWallNotificationSchema } from 'src/project-wall-notification/dto/create-notification.dto';
+import { ignoreElements } from 'rxjs';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -62,7 +64,7 @@ export class ProjectController {
     return projectWallNotifications;
   }
 
-  @ApiOperation({ summary: 'List wall notifications for all projects.' })
+  @ApiOperation({ summary: 'List wall notifications for single project.' })
   @ApiOkResponse()
   @Get(':projectId/notifications')
   async listProjectWallNotifications(@Param('projectId', ParseIntPipe) projectId: number): Promise<ProjectWallNotification[]> {
@@ -111,6 +113,27 @@ export class ProjectController {
       for (const userRole of project.userRoles)
         for (const role of userRole.role)
           await this.projectService.addUserToProject(projectId, userRole.userId, role);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Create project notification.' })
+  @ApiCreatedResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @Post(':projectId/notification')
+  async createProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(CreateProjectWallNotificationSchema)) wallNotification: CreateProjectWallNotificationDto) {
+    try {
+      if (!await this.projectService.getProjectById(projectId))
+        throw new BadRequestException('Project by the given ID does not exists.');
+
+      if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
+        throw new ForbiddenException('User is not on this project, so he/she can not add a notification.');
+
+      await this.projectWallNotificationService.createNotification(wallNotification, projectId, token.sid);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
