@@ -24,6 +24,7 @@ interface PostBody {
   author: string,
   userId?: string,
   projectId?: string,
+  created?: string,
 }
 
 export const getAllWallPosts = createAsyncThunk('projectRole/getAllPosts', async (projectId: string, thunkAPI: any) => {
@@ -119,12 +120,14 @@ export const projectRoleSlice = createSlice({
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
+        //debugger;
         const newPost: PostBody = {
           author: action.meta.arg.author,
           projectId: action.meta.arg.projectId,
           postContent: action.meta.arg.postContent,
           title: action.meta.arg.title,
           userId: action.meta.arg.userId,
+          created: new Date().toString()
         }
         state.wallPosts.push(newPost);
       })
@@ -142,7 +145,27 @@ export const projectRoleSlice = createSlice({
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
-        debugger;
+
+        const payloadComment = action.meta.arg;
+        const newComment: Comment = {
+          content: payloadComment.content,
+          projectId: payloadComment.projectId,
+          userId: payloadComment.userId,
+          author: payloadComment.author,
+          notificationId: payloadComment.notificationId,
+        };
+
+        const oldPost: PostData = state.wallPosts.find(post => post.projectId === newComment.projectId)!;
+        const oldIndex = state.wallPosts.findIndex(post => post.projectId === newComment.projectId);
+        const oldPosts = [...state.wallPosts];
+        const newPost: PostData = {...oldPost};
+
+        const newComments = newPost.comments;
+        newComments!.push(newComment);
+
+        newPost.comments = newComments;
+        oldPosts[oldIndex] = newPost;
+        state.wallPosts = oldPosts;
       })
       .addCase(addComment.rejected, (state, action) => {
         state.isLoading = false

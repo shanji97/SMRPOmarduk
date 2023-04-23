@@ -48,7 +48,7 @@ const ProjectWall = () => {
       postContent,
       author: user.sub,
       userId: user.sid,
-      projectId: params.projectID!
+      projectId: params.projectID!,
     };
     dispatch(createPost(newPost));
     setTitle('');

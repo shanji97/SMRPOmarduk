@@ -52,7 +52,7 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
     const commentBody: Comment = {
       projectId: activeProject.id,
       notificationId: id,
-      postContent: commentContent,
+      content: commentContent,
       author: user.sub,
       userId: user.sid
     }
@@ -77,7 +77,7 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
           <h4>Comments:</h4>
           {comments?.map(comment => {
             return <p><b>{comment.author}</b>: {comment.content}</p>
-          })} :
+          })}
         </Fragment> :
         <p>No comments</p>
       }
