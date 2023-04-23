@@ -94,7 +94,7 @@ export const projectRoleSlice = createSlice({
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
-        // state.wallPosts = state.wallPosts.filter(post => post.id !==)
+        state.wallPosts = state.wallPosts.filter(post => post.id !== action.meta.arg.postId);
       })
       .addCase(deletePost.rejected, (state, action) => {
         state.isLoading = false

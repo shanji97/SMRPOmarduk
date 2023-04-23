@@ -62,6 +62,7 @@ const ProjectWall = () => {
       {wallPosts.map((post, i) => {
         return <Post
                   key={i}
+                  id={post.id!}
                   title={post.title}
                   content={post.postContent}
                   author={post.author}

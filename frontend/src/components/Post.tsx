@@ -6,8 +6,11 @@ import classes from './Post.module.css';
 import {Button} from "react-bootstrap";
 import {Comment} from "../classes/wallData";
 import {X} from "react-bootstrap-icons";
+import {useAppDispatch, useAppSelector} from "../app/hooks";
+import {deletePost} from "../features/projects/projectWallSlice";
 
 interface PostProps {
+  id: string,
   content: string,
   title: string,
   author: string,
@@ -15,7 +18,9 @@ interface PostProps {
   created: string
 }
 
-const Post: React.FC<PostProps> = ({content, title, author, comments, created}) => {
+const Post: React.FC<PostProps> = ({id, content, title, author, comments, created}) => {
+  const dispatch = useAppDispatch();
+  const {activeProject} = useAppSelector(state => state.projects);
   const [showTextbox, setShowTextbox] = useState(false);
   const [commentContent, setCommentContent] = useState('');
 
@@ -36,6 +41,7 @@ const Post: React.FC<PostProps> = ({content, title, author, comments, created}) 
 
   const handleDeletePost = () => {
     console.log('delete')
+    dispatch(deletePost({projectId: activeProject.id!, postId: id}));
   }
 
   const submitNewComment = (e: React.FormEvent<HTMLFormElement>) => {
