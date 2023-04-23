@@ -5,7 +5,7 @@ import { Story } from './story.entity';
 import { StoryController } from './story.controller';
 import { StoryService } from './story.service';
 import { TestModule } from '../test/test.module';
-import { StoryNotificationModule } from 'src/story-notification/story-notification.module';
+import { StoryNotificationModule } from '../story-notification/story-notification.module';
 
 @Module({
  imports: [

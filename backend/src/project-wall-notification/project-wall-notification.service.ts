@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, In, Not, QueryFailedError } from 'typeorm';
 import { ProjectWallNotification } from './project-wall-notification.entity';
+import { CreateProjectWallNotificationDto } from './dto/create-notification.dto';
 
 @Injectable()
 export class ProjectWallNotificationService {
@@ -16,6 +17,10 @@ export class ProjectWallNotificationService {
 
     async getAll(): Promise<ProjectWallNotification[]> {
         return await this.entityManager.find(ProjectWallNotification);
+    }
+
+    async createNotification(projectWallNotification: CreateProjectWallNotificationDto, projectId: number, userId: number): Promise<void> {
+        await this.entityManager.insert(ProjectWallNotification, this.createProjectWallNotificationObject(projectWallNotification, projectId, userId));
     }
 
     async getProjectWallNotificationById(projectWallNotificationId: number): Promise<ProjectWallNotification> {
@@ -32,5 +37,15 @@ export class ProjectWallNotificationService {
 
     async deleteProjectWallNotificationByProjectId(projectId: number) {
         return await this.entityManager.delete(ProjectWallNotification, { projectId: projectId });
+    }
+
+    createProjectWallNotificationObject(projectWallNotification: CreateProjectWallNotificationDto, projectId: number, userId): ProjectWallNotification {
+        let projectNotificationObject = new ProjectWallNotification();
+        projectNotificationObject.title = projectWallNotification.title;
+        projectNotificationObject.author = projectWallNotification.author;
+        projectNotificationObject.postContent = projectWallNotification.postContent;
+        projectNotificationObject.projectId = projectId;
+        projectNotificationObject.userId = userId;
+        return projectNotificationObject;
     }
 }

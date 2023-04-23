@@ -1,12 +1,9 @@
 import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-
 import { ProjectUserRole } from '../project/project-user-role.entity';
 import { Task } from '../task/task.entity';
 import { UserLogin } from '../auth/user-login.entity';
-import { type } from 'os';
-import { Story } from 'src/story/story.entity';
-import { StoryNotification } from 'src/story-notification/story-notification.entity';
-import { ProjectWallNotification } from 'src/project-wall-notification/project-wall-notification.entity';
+import { StoryNotification } from '../story-notification/story-notification.entity';
+import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
 
 @Entity()
 export class User {

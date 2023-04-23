@@ -1,15 +1,18 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { NotificationComment } from '../notification-comments/wallNotification.entity';
 import { Project } from '../project/project.entity';
-import { User } from 'src/user/user.entity';
+import { User } from '../user/user.entity';
 
 @Entity()
 export class ProjectWallNotification {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({ length: 128, unique: true })
+  @Column({ length: 200 })
   author: string;
+
+  @Column({ length: 200 })
+  title: string;
 
   @Column({ unsigned: true, type: 'int' })
   projectId: number;

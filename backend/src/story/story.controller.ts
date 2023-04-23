@@ -15,8 +15,8 @@ import { UpdateStoryCategoryDto, UpdateStoryCategoryStorySchema } from './dto/up
 import { StoryTest } from '../test/test.entity';
 import { UpdateStoryTimeComplexityDto, UpdateStoryTimeComplexitySchema } from './dto/update-time-complexity.dto';
 import { RejectStoryDto, RejectStroySchema } from './dto/reject-story.dto';
-import { StoryNotificationService } from 'src/story-notification/story-notification.service';
-import { StoryNotification } from 'src/story-notification/story-notification.entity';
+import { StoryNotificationService } from '../story-notification/story-notification.service';
+import { StoryNotification } from '../story-notification/story-notification.entity';
 import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
 
 @ApiTags('story')
