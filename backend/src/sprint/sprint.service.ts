@@ -53,6 +53,10 @@ export class SprintService {
     if (moment(sprint.startDate, 'YYYY-MM-DD').isBefore(moment(), 'd'))
       throw new ValidationException('Can\'t start sprint in the past');
 
+    // Sprint can't start on the weekend
+    if ([0, 6].includes(moment(sprint.startDate).weekday()))
+      throw new ValidationException('Sprint can\'t start on weekend');
+    
     // Check if velocity to high for the sprint
     let sprintDurationDays: number = moment(sprint.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate, 'YYYY-MM-DD'), 'd') + 1;
     if (sprintDurationDays > 6) {
@@ -93,6 +97,10 @@ export class SprintService {
       // End date can't be in the past
       if (sprint.endDate && moment(sprint.endDate, 'YYYY-MM-DD').isBefore(moment(), 'd'))
         throw new ValidationException('Can\'t end sprint in the past');
+
+      // Sprint can't start on the weekend
+      if ([0, 6].includes(moment(sprint.startDate || sprintRecord.startDate).weekday()))
+        throw new ValidationException('Sprint can\'t start on weekend');
 
       // Only one sprint can be at same time
       if (await this.getOverlappingSprint(sprintRecord.projectId, sprint.startDate || sprintRecord.startDate, sprint.endDate || sprintRecord.endDate, sprintId) !== null)

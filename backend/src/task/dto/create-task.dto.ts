@@ -18,6 +18,13 @@ export class CreateTaskDto {
     required: true,
   })
   remaining: number;
+
+  @ApiProperty({
+    minimum: 1,
+    nullable: true,
+    required: false,
+  })
+  assignedUserId?: number | null;
 }
 
 export const CreateTaskSchema = Joi.object().keys({
@@ -33,4 +40,7 @@ export const CreateTaskSchema = Joi.object().keys({
   dateUpdated: Joi.any().strip(),
   storyId: Joi.any().strip(),
   story: Joi.any().strip(),
+  assignedUserId: Joi.number().min(1).allow(null),
+  assignedUser: Joi.any().strip(),
+  userTime: Joi.any().strip(),
 });
