@@ -1,4 +1,6 @@
 import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
+import { PlanningPokerVote } from '../story/planning-poker-vote.entity';
 import { ProjectUserRole } from '../project/project-user-role.entity';
 import { Task } from '../task/task.entity';
 import { TaskUserTime } from '../task/task-user-time.entity';
@@ -68,4 +70,7 @@ export class User {
 
   @OneToMany(type => TaskUserTime, taskTime => taskTime.user)
   taskTime: TaskUserTime[];
+
+  @OneToMany(type => PlanningPokerVote, votes => votes.user)
+  planningPockerVotes: PlanningPokerVote[];
 }
