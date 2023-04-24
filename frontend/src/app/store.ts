@@ -5,6 +5,7 @@ import storySlice from '../features/stories/storySlice';
 import userSlice from "../features/users/userSlice";
 import sprintSlice from "../features/sprints/sprintSlice";
 import projectRoleSlice from '../features/projects/projectRoleSlice';
+import projectWall from "../features/projects/projectWallSlice";
 import taskSlice from '../features/tasks/taskSlice';
 
 export const store = configureStore({
@@ -12,6 +13,7 @@ export const store = configureStore({
         users: userSlice,
         projects: projectSlice,
         projectRoles: projectRoleSlice,
+        projectWall: projectWall,
         stories: storySlice,
         sprints: sprintSlice,
         tasks: taskSlice

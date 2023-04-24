@@ -3,7 +3,7 @@ import {
   HouseDoorFill,
   PersonCircle,
   Calendar,
-  Journals, Stack,
+  Journals, Stack, Sticky,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
@@ -105,6 +105,9 @@ function Header() {
   const redirectToEditProfile = () => {
     navigate("/profile");
   };
+  const redirectToWall = (projectId: string) => {
+    navigate(`/projects/${projectId}/wall`);
+  }
 
   return (
     <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
@@ -156,6 +159,13 @@ function Header() {
                     Add Project
                   </NavDropdown.Item>
               )}
+              {
+                activeProject.id !== '' && (
+                  <NavDropdown.Item onClick={() => {redirectToWall(activeProject.id!)}}>
+                    <Sticky /> Wall
+                  </NavDropdown.Item>
+                )
+              }
             </NavDropdown>
             <NavDropdown
               id="sprint-dropdown"

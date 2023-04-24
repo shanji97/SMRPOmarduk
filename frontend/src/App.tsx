@@ -12,6 +12,7 @@ import Header from "./components/Header";
 import AddProject from "./pages/AddProject";
 import AddSprint from "./pages/AddSprint";
 import Profile from "./pages/Profile";
+import ProjectWall from "./pages/ProjectWall";
 import Projects from "./pages/Projects";
 import Sprints from "./pages/Sprints";
 
@@ -76,6 +77,10 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectID/sprints" element={<Sprints />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
+          <Route path='/product-backlog' element={<ProductBacklog />} />
+          <Route path='/sprint-backlog' element={<SprintBacklog />} />
+          <Route path='/my-tasks' element={<MyTasks />} />
+          <Route path='/projects/:projectID/wall' element={<ProjectWall />} />
           <Route path="/product-backlog" element={<ProductBacklog />} />
           <Route path="/sprint-backlog" element={<SprintBacklog />} />
           <Route path="/my-tasks" element={<MyTasks />} />

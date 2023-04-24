@@ -17,10 +17,6 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  getProject,
-  setActiveProject,
-} from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
 import { assignUser, createTask, reset } from "../features/tasks/taskSlice";
