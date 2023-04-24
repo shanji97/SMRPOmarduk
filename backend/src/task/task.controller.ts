@@ -190,7 +190,7 @@ export class TaskController {
 
     const projectId: number = await this.taskService.getTaskProjectId(taskId);
 
-    // Check if task exitsts
+    // Check if task exists
     const task = await this.taskService.getTaskById(taskId);
     
     // User can accept task; admin and scrum master can reassign people

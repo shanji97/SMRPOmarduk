@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { ProjectModule } from '../project/project.module';
 import { Story } from './story.entity';
 import { StoryController } from './story.controller';
@@ -10,6 +9,7 @@ import { PlanningPokerService } from './planning-poker.service';
 import { PlanningPokerController } from './planning-poker.controller';
 import { PlanningPokerRound } from './planning-poker-round.entity';
 import { PlanningPokerVote } from './planning-poker-vote.entity';
+import { StoryNotificationModule } from '../story-notification/story-notification.module';
 
 @Module({
  imports: [
@@ -20,6 +20,7 @@ import { PlanningPokerVote } from './planning-poker-vote.entity';
     ]),
     ProjectModule,
     TestModule,
+    StoryNotificationModule,
   ],
   controllers: [
     StoryController,

@@ -24,3 +24,11 @@ export function getBaseUrl(): string {
             'http://localhost:3000' : 
             `${window.location.protocol}//${window.location.hostname}`;
 }
+
+export function getCestDate(date: string): string {
+    const now = new Date(date);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}

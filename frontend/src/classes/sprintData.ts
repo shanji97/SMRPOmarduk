@@ -4,6 +4,8 @@ export interface SprintData {
 }
 
 export interface SprintBody {
+    projectId: string,
+    id?: string,
     name: string,
     velocity: number,
     startDate: string,

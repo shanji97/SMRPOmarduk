@@ -5,13 +5,19 @@ import { Project } from '../project/project.entity';
 import { Task } from '../task/task.entity';
 import { StoryTest } from '../test/test.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
+import { StoryNotification } from '../story-notification/story-notification.entity';
 
 export enum Category {
-  Unassigned = 0,
-  Assigned = 1,
-  Finished = 2,
+  WontHave = 0,
+  Unassigned = 1,
+  Assigned = 2,
+  Finished = 3,
 }
 
+export enum Backlog {
+  Product = 0,
+  Sprint = 1
+}
 
 @Entity()
 @Unique(['title', 'projectId'])
@@ -41,7 +47,10 @@ export class Story {
   @Column({ type: 'tinyint', default: Category.Unassigned })
   category: number;
 
-  @Column({ type: 'float', default: 1 })
+  @Column({ type: 'tinyint', default: Backlog.Product })
+  backlog: number;
+
+  @Column({ type: 'float', default: 0 })
   timeComplexity: number
 
   @Column({ type: 'boolean', default: false })
@@ -50,11 +59,14 @@ export class Story {
   @OneToMany(type => Task, task => task.story)
   tasks: Task[];
 
-  @OneToMany(type => StoryTest, test => test.story, {eager: true})
+  @OneToMany(type => StoryTest, test => test.story, { eager: true })
   tests: StoryTest[];
 
   @OneToMany(type => SprintStory, sprint => sprint.story)
   sprintStories: SprintStory[];
+
+  @OneToMany(type => StoryNotification, notification => notification.story)
+  notifications: StoryNotification[];
 
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;
