@@ -6,7 +6,7 @@ export class UpdateStoryCategoryDto {
     description: 'Category.',
     example: 1,
     minimum: 0,
-    maximum: 2,
+    maximum: 3,
     default: 1,
     type: Number,
     required: true
