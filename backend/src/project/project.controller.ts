@@ -24,9 +24,9 @@ import { ProjectWallNotificationCommentService } from '../project-wall-notificat
 import { CreateProjectWallNotificationCommentSchema, CreateProjectWallNotificationCommentDto } from '../project-wall-notification-comment/dto/create-notification-comment.dto';
 
 @ApiTags('project')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'), AdminOnlyGuard)
 @Controller('project')
 export class ProjectController {
   constructor(
@@ -172,7 +172,7 @@ export class ProjectController {
   async updateProject(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(UpdateProjectSchema)) project: UpdateProjectDto) {
     try {
 
-      if (!token.isAdgmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster)) {
+      if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster)) {
         throw new ForbiddenException('User must be either an administrator or a scrum master to have any permission.');
       }
 
