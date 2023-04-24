@@ -25,7 +25,7 @@ const getAllProjects = async (token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    const response = await axios.get(`${PROJECTS_API_URL}/with-data`, config);
+    const response = await axios.get(`${PROJECTS_API_URL}/withData`, config);
 
     return response.data;
 }
