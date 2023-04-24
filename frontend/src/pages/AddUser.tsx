@@ -90,7 +90,7 @@ const AddUser: React.FC<AddUserProps> = (
 
     useEffect(() => {
         if (message !== '') {
-            alert(message);
+            toast.error(message);
             dispatch(reset());
         }
     }, [isError, message]);
@@ -209,6 +209,7 @@ const AddUser: React.FC<AddUserProps> = (
                 <Form.Group className="mb-3" controlId="formBasicUserName">
                     <Form.Label>Username</Form.Label>
                     <Form.Control
+                        disabled={editProfile && !isAdminRadio}
                         placeholder="Enter username"
                         name="username"
                         value={username}
@@ -298,6 +299,7 @@ const AddUser: React.FC<AddUserProps> = (
 
                 <div className={classes.radioButtonContainer}>
                     <Form.Check
+                        disabled={editProfile && !isAdminRadio}
                         type='radio'
                         id='admin'
                         label='Administrator'

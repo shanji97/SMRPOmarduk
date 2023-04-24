@@ -7,7 +7,7 @@ import classes from "./AddStory.module.css";
 
 import { StoryData } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { createStory } from "../features/stories/storySlice";
+import { createStory, reset } from "../features/stories/storySlice";
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -33,6 +33,7 @@ const AddStory = () => {
     if (storyState.isSuccess && !storyState.isLoading) {
       toast.success("Story successfully created!");
       resetInputs();
+      dispatch(reset());
     }
     if (storyState.isError && !storyState.isLoading) {
       toast.error(storyState.message);
@@ -93,7 +94,7 @@ const AddStory = () => {
   const enteredPriorityValid = priority.trim() !== "";
   const enteredBusinessValueValid =
     businessValue.trim() !== "" &&
-    parseInt(businessValue) >= 0 &&
+    parseInt(businessValue) >= 1 &&
     parseInt(businessValue) <= 10;
   const enteredTestsValid = tests.map((test) => test.trim() !== "");
 
@@ -245,7 +246,7 @@ const AddStory = () => {
       userId,
     };
 
-    console.log(newStory);
+    // console.log(newStory);
 
     // send to backend
     dispatch(createStory(newStory));
@@ -395,7 +396,7 @@ const AddStory = () => {
                   type="number"
                 />
                 <Form.Text className="text-secondary">
-                  Enter a number between 0 and 10.
+                  Enter a number between 1 and 10.
                 </Form.Text>
               </Form.Group>
             </Col>
