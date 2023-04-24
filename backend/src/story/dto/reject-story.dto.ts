@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 
-export class RejectStoryDto {
+export class StoryNotificationDto {
     @ApiProperty({
         example: 'Optional rejection description.',
         minLength: 1,
@@ -11,6 +11,6 @@ export class RejectStoryDto {
     description?: string | null;
 }
 
-export const RejectStroySchema = Joi.object().keys({
+export const StoryNotificationSchema = Joi.object().keys({
     description: Joi.string().trim().min(1).allow(null),
 });
