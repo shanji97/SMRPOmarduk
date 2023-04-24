@@ -5,7 +5,7 @@ import {Form} from "react-bootstrap";
 import classes from './Post.module.css';
 import {Button} from "react-bootstrap";
 import {Comment} from "../classes/wallData";
-import {X} from "react-bootstrap-icons";
+import {Trash, X} from "react-bootstrap-icons";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {addComment, deletePost} from "../features/projects/projectWallSlice";
 import {toast} from "react-toastify";
@@ -70,7 +70,7 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
       <div>
         <span><b>{author}, </b></span>
         <span>{formattedDate}</span>
-        <X onClick={handleDeletePost} size={30} style={{ float: 'right', cursor: 'pointer' }} />
+        <Trash onClick={handleDeletePost} size={30} style={{ float: 'right', cursor: 'pointer' }} />
       </div>
       <h4 style={{marginTop: '1rem'}}>{title}</h4>
       <p>{content}</p>

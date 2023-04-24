@@ -26,6 +26,7 @@ interface PostBody {
   userId?: string,
   projectId?: string,
   created?: string,
+  comments?: Comment[]
 }
 
 export const getAllWallPosts = createAsyncThunk('projectRole/getAllPosts', async (projectId: string, thunkAPI: any) => {
@@ -128,7 +129,8 @@ export const projectRoleSlice = createSlice({
           postContent: action.meta.arg.postContent,
           title: action.meta.arg.title,
           userId: action.meta.arg.userId,
-          created: new Date().toString()
+          created: new Date().toString(),
+          comments: []
         }
         state.wallPosts.push(newPost);
       })
@@ -158,6 +160,7 @@ export const projectRoleSlice = createSlice({
 
 
         const oldPost: PostData = state.wallPosts.find(post => post.id === newComment.notificationId)!;
+        console.log(JSON.stringify(oldPost));
         const oldIndex = state.wallPosts.findIndex(post => post.id === newComment.notificationId);
         const oldPosts = state.wallPosts.map(post => ({
           ...post,
