@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards, Logger, UnauthorizedException, ConflictException } from '@nestjs/common';
-import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse, ApiNoContentResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminOnly } from '../auth/decorator/admin-only.decorator';
 import { CreateProjectDto, CreateProjectSchema } from './dto/create-project.dto';
@@ -12,10 +12,16 @@ import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { AdminOnlyGuard } from '../auth/guard/admin-only.guard';
 import { UserService } from '../user/user.service';
-import { TokenDto } from '../auth/dto/token.dto';
+import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateProjectSchema, UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateSuperiorUser, UpdateSuperiorUserSchema } from './dto/edit-user-role.dto';
 import { ProjectDto } from './dto/project.dto';
+import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
+import { ProjectWallNotificationService } from '../project-wall-notification/project-wall-notification.service';
+import { CreateProjectWallNotificationDto, CreateProjectWallNotificationSchema } from '../project-wall-notification/dto/create-notification.dto';
+import { ProjectWallNotificationDto } from '../project-wall-notification/dto/project-wall-notification.dto';
+import { ProjectWallNotificationCommentService } from '../project-wall-notification-comment/project-wall-notification-comment.service';
+import { CreateProjectWallNotificationCommentSchema, CreateProjectWallNotificationCommentDto } from '../project-wall-notification-comment/dto/create-notification-comment.dto';
 
 @ApiTags('project')
 @ApiBearerAuth()
@@ -26,6 +32,8 @@ export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
     private readonly userService: UserService,
+    private readonly projectWallNotificationService: ProjectWallNotificationService,
+    private readonly projectWallNotificationCommentService: ProjectWallNotificationCommentService,
   ) { }
 
   @ApiOperation({ summary: 'List projects.' })
@@ -37,16 +45,36 @@ export class ProjectController {
 
   @ApiOperation({ summary: 'List projects with user data.' })
   @ApiOkResponse()
-  @Get('/withData')
+  @Get('/with-data')
   async listProjectsAndUserData(): Promise<ProjectDto[]> {
     return await this.projectService.getAllProjectsWithUserData();
   }
 
-  @ApiOperation({summary: 'Get the active project.'})
+  @ApiOperation({ summary: 'Get the active project.' })
   @ApiOkResponse()
   @Get('/active')
-  async getActiveProject():Promise<Project>{
+  async getActiveProject(): Promise<Project> {
     return await this.projectService.getActiveProject();
+  }
+
+  @ApiOperation({ summary: 'List wall notifications for all projects.' })
+  @ApiOkResponse()
+  @Get('/notifications')
+  async listWalls(): Promise<ProjectWallNotification[]> {
+    const projectWallNotifications = await this.projectWallNotificationService.getAll();
+    if (!projectWallNotifications)
+      throw new NotFoundException('No project wall notifications.');
+    return projectWallNotifications;
+  }
+
+  @ApiOperation({ summary: 'List wall notifications for single project.' })
+  @ApiOkResponse()
+  @Get(':projectId/notifications')
+  async listProjectWallNotifications(@Param('projectId', ParseIntPipe) projectId: number): Promise<ProjectWallNotificationDto[]> {
+    const projectWallNotifications = await this.projectWallNotificationService.getAllProjectWallNotificationsWithComments(projectId);
+    if (!projectWallNotifications)
+      throw new NotFoundException('No project wall notifications with this project ID.');
+    return projectWallNotifications;
   }
 
   @ApiOperation({ summary: 'Get project by ID.' })
@@ -88,6 +116,49 @@ export class ProjectController {
       for (const userRole of project.userRoles)
         for (const role of userRole.role)
           await this.projectService.addUserToProject(projectId, userRole.userId, role);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Create project notification.' })
+  @ApiCreatedResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @Post(':projectId/notification')
+  async createProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Body(new JoiValidationPipe(CreateProjectWallNotificationSchema)) wallNotification: CreateProjectWallNotificationDto): Promise<number> {
+    try {
+      if (!await this.projectService.getProjectById(projectId))
+        throw new BadRequestException('Project by the given ID does not exists.');
+
+      if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
+        throw new ForbiddenException('User is not on this project, so he/she can not add a notification.');
+
+      const row = await this.projectWallNotificationService.createNotification(wallNotification, projectId, token.sid);
+      return (<any>row).id;
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Create project notification comment.' })
+  @ApiCreatedResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @Post(':projectId/notification/:notificationId/comment')
+  async createProjectWallNotificationComment(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('notificationId', ParseIntPipe) notificationId: number, @Body(new JoiValidationPipe(CreateProjectWallNotificationCommentSchema)) wallNotificationComment: CreateProjectWallNotificationCommentDto) {
+    try {
+      if (!await this.projectWallNotificationService.getProjectWallNotificationById(notificationId))
+        throw new BadRequestException('Notification by the given ID does not exists.');
+
+      if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
+        throw new ForbiddenException('User is not on this project, so he/she can not add a notification.');
+
+      await this.projectWallNotificationCommentService.createNotificationComment(wallNotificationComment, notificationId, token.sid);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
@@ -251,6 +322,33 @@ export class ProjectController {
         throw new BadRequestException(ex.message);
       throw ex;
     }
+  }
+
+  @ApiOperation({ summary: 'Delete a single notification.' })
+  @ApiNoContentResponse()
+  @Delete(':projectId/notification/:notificationId')
+  async deleteProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('notificationId', ParseIntPipe) notificationId: number) {
+    if (!this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+      throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
+    await this.projectWallNotificationService.deleteProjectWallNotification(notificationId);
+  }
+
+  @ApiOperation({ summary: 'Delete all notifications for a project.' })
+  @ApiNoContentResponse()
+  @Delete(':projectId/notifications')
+  async deleteProjectWallNotifications(@Token() token, @Param('projectId', ParseIntPipe) projectId: number) {
+    if (!this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+      throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
+    await this.projectWallNotificationService.deleteProjectWallNotificationByProjectId(projectId);
+  }
+
+  @ApiOperation({ summary: 'Delete a single notification comment.' })
+  @ApiNoContentResponse()
+  @Delete(':projectId/notification-comments/:commentId')
+  async deleteProjectWallNotificationComment(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('commentId', ParseIntPipe) commentId: number) {
+    if (!this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+      throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
+    await this.projectWallNotificationCommentService.deleteProjectWallNotificationComment(commentId);
   }
 
   @ApiOperation({ summary: 'Remove developer from project.' })

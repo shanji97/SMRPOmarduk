@@ -1,11 +1,10 @@
 import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-
 import { ProjectUserRole } from '../project/project-user-role.entity';
 import { Task } from '../task/task.entity';
 import { UserLogin } from '../auth/user-login.entity';
-import { type } from 'os';
-import { Story } from 'src/story/story.entity';
-import { StoryNotification } from 'src/story-notification/story-notification.entity';
+import { StoryNotification } from '../story-notification/story-notification.entity';
+import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
+import { ProjectWallNotificationComment } from '../project-wall-notification-comment/comment.entity';
 
 @Entity()
 export class User {
@@ -57,6 +56,12 @@ export class User {
   @OneToMany(type => Task, task => task.assignedUser)
   tasks: Task[];
 
-  @OneToMany(type => StoryNotification, StoryNotification=> StoryNotification.author)
+  @OneToMany(type => StoryNotification, storyNotification => storyNotification.author)
   storyNotifications: StoryNotification[];
+
+  @OneToMany(type => ProjectWallNotification, projectWallNotification => projectWallNotification.user)
+  projectWallNotifications: ProjectWallNotification[];
+
+  @OneToMany(type => ProjectWallNotificationComment, projectWallNotificationComment => projectWallNotificationComment.user)
+  projectWallNotificationComments: ProjectWallNotificationComment[];
 }

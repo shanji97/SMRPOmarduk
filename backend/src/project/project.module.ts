@@ -5,6 +5,8 @@ import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
 import { ProjectUserRole } from './project-user-role.entity';
 import { UserModule } from '../user/user.module';
+import { ProjectWallNotificationModule } from '../project-wall-notification/project-wall-notification.module';
+import { ProjectWallNotificationCommentModule } from '../project-wall-notification-comment/project-wall-notification-comment.module';
 
 @Module({
   imports: [
@@ -12,7 +14,9 @@ import { UserModule } from '../user/user.module';
       Project,
       ProjectUserRole,
     ]),
-    UserModule
+    UserModule,
+    ProjectWallNotificationModule,
+    ProjectWallNotificationCommentModule
   ],
   controllers: [
     ProjectController,

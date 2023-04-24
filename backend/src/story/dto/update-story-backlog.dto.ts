@@ -15,7 +15,7 @@ export class UpdateStoryBacklogDto {
   backlog: number;
   
   @ApiProperty({
-    description: 'User ID.',
+    description: 'Project id.',
     example: 1,
     minimum: 1,
     default: 1,
