@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import * as moment from 'moment';
+
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
+import { SprintStory } from './sprint-story.entity';
+import { Story } from '../story/story.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { SprintStory } from './sprint-story.entity';
 
 @Injectable()
 export class SprintService {
@@ -28,6 +30,13 @@ export class SprintService {
 
   async getSprintById(sprintId: number): Promise<Sprint> {
     return await this.sprintRepository.findOneBy({ id: sprintId });
+  }
+
+  async getStoriesForSprintById(sprintId: number): Promise<Story[]> {
+    return await this.entityManager.createQueryBuilder(Story, 's')
+      .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
+      .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .getMany();
   }
 
   async getActiveSprintForProject(projectId: number): Promise<Sprint> {

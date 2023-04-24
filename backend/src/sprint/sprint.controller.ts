@@ -5,12 +5,13 @@ import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
 import { SprintService } from './sprint.service';
+import { Story } from '../story/story.entity';
+import { StoryService } from '../story/story.service';
 import { Token } from '../auth/decorator/token.decorator';
 import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { StoryService } from '../story/story.service';
 
 @ApiTags('sprint')
 @ApiBearerAuth()
@@ -36,6 +37,20 @@ export class SprintController {
       throw new ForbiddenException();
 
     return await this.sprintService.listSprintsForProject(projectId);
+  }
+
+  @ApiOperation({ summary: 'List stories for sprint' })
+  @ApiOkResponse()
+  @Get(':sprintId/story')
+  async listStoriesForSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<Story[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    return await this.sprintService.getStoriesForSprintById(sprintId);
   }
 
   @ApiOperation({ summary: 'Get sprint by ID.' })
