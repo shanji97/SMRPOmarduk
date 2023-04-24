@@ -5,6 +5,7 @@ import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
 import { ProjectService } from '../project/project.service';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
+import { TaskUserTime } from './task-user-time.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
@@ -17,6 +18,8 @@ export class TaskService {
     private readonly storyService: StoryService,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(TaskUserTime)
+    private readonly taskUserTimeRepository: Repository<TaskUserTime>,
   ) {}
 
   async getTasksForStory(storyId: number): Promise<Task[]> {
@@ -170,4 +173,18 @@ export class TaskService {
     return await this.storyService.hasUserPermissionForStory(userId, storyId);
   }
 
+  async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' }})
+  }
+
+  async setWorkOnTask(date: string, taskId: number, userId: number, work: DeepPartial<TaskUserTime>): Promise<void> {
+    work.date = date;
+    work.taskId = taskId;
+    work.userId = userId;
+    await this.taskUserTimeRepository.upsert(work, ['date', 'taskId', 'userId']);
+  }
+
+  async removeWorkOnTask(date: string, taskId: number, userId: number): Promise<void> {
+    await this.taskUserTimeRepository.delete({ date: date, taskId: taskId, userId: userId });
+  }
 }

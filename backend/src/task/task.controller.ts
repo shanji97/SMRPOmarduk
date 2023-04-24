@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, HttpCode, NotFoundException, Param, ParseBoolPipe, ParseIntPipe, Patch, Post, UseGuards, InternalServerErrorException, HttpException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import * as Joi from 'joi';
 
 import { CreateTaskDto, CreateTaskSchema } from './dto/create-task.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
@@ -9,6 +10,8 @@ import { SprintService } from '../sprint/sprint.service';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
 import { TaskService } from './task.service';
+import { TaskUserTime } from './task-user-time.entity';
+import { TaskUserTimeDto, TaskUserTimeSchema } from './dto/task-user-time.dto';
 import { Token } from '../auth/decorator/token.decorator';
 import { TokenDto } from '../auth/dto/token.dto';
 import { UpdateTaskDto, UpdateTaskSchema } from './dto/update-task.dto';
@@ -245,5 +248,74 @@ export class TaskController {
       }
       throw ex;
     }
+  }
+
+  @ApiOperation({ summary: 'Get work on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Get(':taskId/time')
+  async getWorkOnTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<TaskUserTime[]> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+      throw new ForbiddenException();
+
+    return await this.taskService.getWorkOnTask(taskId);
+  }
+
+  @ApiOperation({ summary: 'Set work of user on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Post(':taskId/time/:userId/:date')
+  async setWorkOnTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('date', new JoiValidationPipe(Joi.date())) date: string,
+    @Body(new JoiValidationPipe(TaskUserTimeSchema)) work: TaskUserTimeDto
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+      throw new ForbiddenException();
+
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
+    // Check if user assigned to task
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if ((token.sid !== userId || userId !== task.assignedUserId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Can't assign time on task");
+
+    await this.taskService.setWorkOnTask(date, taskId, userId, work);
+  }
+
+  @ApiOperation({ summary: 'Delete work of user on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Delete(':taskId/time/:userId/:date')
+  async deleteWorkOnTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('date', new JoiValidationPipe(Joi.date())) date: string,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+      throw new ForbiddenException();
+
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
+    // Check if user assigned to task
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can remove only his time, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Can't rime time on task");
+
+    await this.taskService.removeWorkOnTask(date, taskId, userId);
   }
 }

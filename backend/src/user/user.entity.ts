@@ -2,6 +2,7 @@ import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, Up
 
 import { ProjectUserRole } from '../project/project-user-role.entity';
 import { Task } from '../task/task.entity';
+import { TaskUserTime } from '../task/task-user-time.entity';
 import { UserLogin } from '../auth/user-login.entity';
 
 @Entity()
@@ -53,4 +54,7 @@ export class User {
 
   @OneToMany(type => Task, task => task.assignedUser)
   tasks: Task[];
+
+  @OneToMany(type => TaskUserTime, taskTime => taskTime.user)
+  taskTime: TaskUserTime[];
 }

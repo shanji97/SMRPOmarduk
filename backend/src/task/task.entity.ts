@@ -1,6 +1,7 @@
-import { Entity, Column, CreateDateColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 
 import { Story } from '../story/story.entity';
+import { TaskUserTime } from './task-user-time.entity';
 import { User } from '../user/user.entity';
 
 export enum TaskCategory {
@@ -55,4 +56,7 @@ export class Task {
 
   @ManyToOne(type => User, user => user.tasks, { onUpdate: 'CASCADE', onDelete: 'SET NULL' })
   assignedUser: User | null;
+
+  @OneToMany(type => TaskUserTime, userTime => userTime.task)
+  userTime: TaskUserTime[];
 }
