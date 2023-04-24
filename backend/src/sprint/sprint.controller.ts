@@ -11,12 +11,11 @@ import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { StoryService } from '../story/story.service';
-import { throwError } from 'rxjs';
 
 @ApiTags('sprint')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('sprint')
 export class SprintController {
   constructor(
@@ -24,6 +23,18 @@ export class SprintController {
     private readonly sprintService: SprintService,
     private readonly storyService: StoryService
   ) { }
+
+  @ApiOperation({ summary: 'Get sprint by ID.' })
+  @ApiOkResponse()
+  @Get('/active-sprint')
+  async getActiveSprint(
+  ): Promise<Sprint[]> {
+    // Check permissions
+    const sprint = await this.sprintService.getActiveSprint();
+    if (!sprint)
+      throw new NotFoundException();
+    return sprint;
+  }
 
   @ApiOperation({ summary: 'List sprints for project.' })
   @ApiOkResponse()
