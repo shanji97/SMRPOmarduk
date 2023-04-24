@@ -92,6 +92,8 @@ function App() {
                 descriptionInit=""
                 timeRequiredInit=""
                 assignedUserIdInit=""
+                closeModal={() => {}}
+                showModal={true}
               />
             }
           />

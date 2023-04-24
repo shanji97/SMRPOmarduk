@@ -40,6 +40,8 @@ interface TaskProps {
   descriptionInit: string;
   timeRequiredInit: string; // 'remaining' on backend
   assignedUserIdInit: string;
+  closeModal: () => void;
+  showModal: boolean;
 }
 
 const TaskForm: React.FC<TaskProps> = ({
@@ -48,6 +50,8 @@ const TaskForm: React.FC<TaskProps> = ({
   descriptionInit,
   timeRequiredInit,
   assignedUserIdInit,
+  closeModal,
+  showModal,
 }) => {
   const dispatch = useAppDispatch();
   let { isSuccess, isError, isLoading, message } = useAppSelector(
@@ -82,8 +86,8 @@ const TaskForm: React.FC<TaskProps> = ({
       toast.success("Task successfully created!");
       resetInputs();
       dispatch(reset());
-      // dispatch(getAllStory);
-      // closeModal();
+      // dispatch(getAllStory); TODO !!!
+      closeModal();
     }
     if (isError && !isLoading) {
       toast.error(message);
@@ -198,8 +202,7 @@ const TaskForm: React.FC<TaskProps> = ({
     }
 
     const newTask: any = {
-      // storyId: storyId,
-      storyId: storyID,
+      storyId: storyId,
       name: description,
       remaining: timeRequired,
       // assignedUserId: assignedUserId, TODO
@@ -209,7 +212,7 @@ const TaskForm: React.FC<TaskProps> = ({
   };
 
   return (
-    <Modal show={true}>
+    <Modal show={showModal} onHide={closeModal}>
       <Modal.Header closeButton>
         <Modal.Title>Add task</Modal.Title>
       </Modal.Header>
