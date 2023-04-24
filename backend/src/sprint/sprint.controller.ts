@@ -53,6 +53,23 @@ export class SprintController {
     return await this.sprintService.getStoriesForSprintById(sprintId);
   }
 
+  @ApiOperation({ summary: 'Get active sprint for porject.' })
+  @ApiOkResponse()
+  @Get('project/:projectId/active')
+  async getActiveSprintByProjectId(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<Sprint> {
+    // Check permissions
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+
+    const sprint = await this.sprintService.getActiveSprintForProject(projectId);
+    if (!sprint)
+      throw new NotFoundException();
+    return sprint;
+  }
+
   @ApiOperation({ summary: 'Get sprint by ID.' })
   @ApiOkResponse()
   @Get(':sprintId')
