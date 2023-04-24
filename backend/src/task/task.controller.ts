@@ -44,7 +44,7 @@ export class TaskController {
     return await this.taskService.getTasksForStory(storyId);
   }
 
-  @ApiOperation({ summary: 'List tasks for sprint (WIP)'})
+  @ApiOperation({ summary: 'List tasks for sprint'})
   @ApiOkResponse()
   @Get('sprint/:sprintId')
   async listTasksForSprint(
@@ -86,9 +86,21 @@ export class TaskController {
   ): Promise<void> {
     if (!token.isAdmin && !await this.storyService.hasUserPermissionForStory(token.sid, storyId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
+    
+    // Check if story part of active sprint
+    if (!await this.storyService.isStoryInActiveSprint(storyId) && !token.isAdmin && !await this.storyService.hasUserPermissionForStory(storyId, token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
 
+    const assignedUserId: number = task.assignedUserId;
+    if (assignedUserId || task.assignedUserId === null)
+      delete task.assignedUserId;
+    
     try {
-      await this.taskService.createTask(storyId, task);
+      const taskId = await this.taskService.createTask(storyId, task);
+      if (!taskId)
+        throw new InternalServerErrorException('Failed to create task');
+
+      await this.assignTask(token, taskId, assignedUserId);
     } catch (ex) {
       if (ex instanceof ValidationException) {
         throw new BadRequestException(ex.message);
@@ -110,6 +122,10 @@ export class TaskController {
     if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
       throw new ForbiddenException();
     
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
     try {
       await this.taskService.updateTask(taskId, task);
     } catch (ex) {
@@ -131,6 +147,10 @@ export class TaskController {
     if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
       throw new ForbiddenException();
     
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
     // Can't delete active or ended tasks
     const task = await this.taskService.getTaskById(taskId);
     
@@ -163,6 +183,10 @@ export class TaskController {
   ): Promise<void> {
     if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
       throw new ForbiddenException();
+
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
 
     const projectId: number = await this.taskService.getTaskProjectId(taskId);
 
@@ -203,6 +227,10 @@ export class TaskController {
     if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
       throw new ForbiddenException();
     
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
     const task = await this.taskService.getTaskById(taskId);
 
     // User can only accept tasks that were assigned to him
@@ -232,6 +260,10 @@ export class TaskController {
   ): Promise<void> {
     if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
       throw new ForbiddenException();
+
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
 
     // Check if someone is already assigned to task or if task even exitsts
     const task = await this.taskService.getTaskById(taskId);

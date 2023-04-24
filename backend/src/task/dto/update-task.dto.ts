@@ -33,4 +33,7 @@ export const UpdateTaskSchema = Joi.object().keys({
   dateUpdated: Joi.any().strip(),
   storyId: Joi.any().strip(),
   story: Joi.any().strip(),
+  assignedUserId: Joi.any().strip(),
+  assignedUser: Joi.any().strip(),
+  userTime: Joi.any().strip(),
 });

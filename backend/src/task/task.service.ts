@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
+import * as moment from 'moment';
 
 import { ProjectService } from '../project/project.service';
 import { StoryService } from '../story/story.service';
@@ -23,17 +24,17 @@ export class TaskService {
   ) {}
 
   async getTasksForStory(storyId: number): Promise<Task[]> {
-    return await this.taskRepository.find({ where: { storyId: storyId } });
+    return await this.taskRepository.find({ where: { storyId: storyId }, relations: ['assignedUser'] });
   }
 
   async getTasksForSprint(sprintId: number): Promise<Task[]> {
     const storyIds: number[] = await this.storyService.getStoryIdsForSprint(sprintId);
 
-    return await this.taskRepository.findBy({ storyId: In(storyIds) });
+    return await this.taskRepository.find({ where: { storyId: In(storyIds) }, relations: ['assignedUser'] });
   }
 
   async getTaskById(taskId: number): Promise<Task> {
-    return await this.taskRepository.findOneBy({ id: taskId });
+    return await this.taskRepository.findOne({ where: { id: taskId }, relations: ['assignedUser'] });
   }
 
   async getStoryIdForTaskById(taskId: number): Promise<number | null> {
@@ -41,19 +42,23 @@ export class TaskService {
     return result.storyId || null;
   }
 
-  async createTask(storyId: number, task: DeepPartial<Task>): Promise<void> {
+  async createTask(storyId: number, task: DeepPartial<Task>): Promise<number> {
     // Check if we are trying to insert task into active sprint
     if (!await this.storyService.isStoryInActiveSprint(storyId))
       throw new ValidationException('Story not in active sprint');
 
     // TODO: Check remaining value
+    
 
     task.storyId = storyId;
     
-    if (task.assignedUserId)
+    if (task.assignedUserId) {
       task.category = TaskCategory.ASSIGNED;
+      task.dateAssigned = moment().format('YYYY-MM-DD');
+    }
 
-    await this.taskRepository.insert(task);
+    const result = await this.taskRepository.insert(task);
+    return result.raw.insertId || null;
   }
 
   async updateTask(taskId: number, task: DeepPartial<Task>): Promise<void> {
