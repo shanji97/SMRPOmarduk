@@ -12,7 +12,7 @@ import { getLastLogin, logout } from "../features/users/userSlice";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { parseDate, parseJwt } from "../helpers/helpers";
 import { useNavigate } from "react-router-dom";
-import {getAllSprints} from "../features/sprints/sprintSlice";
+import {getAllSprints, setActiveSprint} from "../features/sprints/sprintSlice";
 
 function Header() {
   const dispatch = useAppDispatch();
@@ -49,13 +49,17 @@ function Header() {
   useEffect(() => {}, [userData]);
 
   const activeSprint = useMemo(() => {
-    return sprints.find(sprint => {
+    const activeSpr = sprints.find(sprint => {
       const startDate = new Date(sprint.startDate);
       const endDate = new Date(sprint.endDate);
       const today = new Date();
 
       return today >= startDate && today <= endDate;
     });
+
+    dispatch(setActiveSprint(activeSpr));
+    
+    return activeSpr;
   }, [sprints]);
 
   useEffect(() => {}, [sprints]);
