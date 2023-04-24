@@ -30,15 +30,19 @@ const AddStory = () => {
   const [userId, setUserId] = useState(-1);
 
   useEffect(() => {
-    if (storyState.isSuccess && !storyState.isLoading) {
+    if (storyState.isUpdateSuccess && !storyState.isLoading) {
       toast.success("Story successfully created!");
       resetInputs();
       dispatch(reset());
     }
-    if (storyState.isError && !storyState.isLoading) {
+    if (storyState.isUpdateError && !storyState.isLoading) {
       toast.error(storyState.message);
     }
-  }, [storyState.isSuccess, storyState.isError, storyState.isLoading]);
+  }, [
+    storyState.isUpdateSuccess,
+    storyState.isUpdateError,
+    storyState.isLoading,
+  ]);
 
   useEffect(() => {
     if (projectID !== undefined) {
@@ -81,7 +85,6 @@ const AddStory = () => {
   const [category, setCategory] = useState("");
   const [timeComplexity, setimeComplexity] = useState("");
   const [isRealized, setisRealized] = useState(false);
-  
 
   const [sequenceNumberTouched, setSequenceNumberTouched] = useState(false);
   const [titleTouched, setTitleTouched] = useState(false);
@@ -251,7 +254,7 @@ const AddStory = () => {
       userId,
       category: 0,
       timeComplexity: 0,
-      isRealized: false
+      isRealized: false,
     };
 
     // console.log(newStory);
