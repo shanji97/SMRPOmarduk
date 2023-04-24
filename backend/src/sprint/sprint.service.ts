@@ -84,12 +84,12 @@ export class SprintService {
     if (!sprintRecord)
       throw new ValidationException('Invalid sprint ID');
 
-    // Can't edit sprints that have already started
-    if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment(), 'd'))
-      throw new ValidationException('Sprint has already started');
-
     // Check if end is after start
-    if (sprint.startDate || sprint.endDate) {
+    if ((sprint.startDate && sprint.startDate !== sprintRecord.startDate) || (sprint.endDate && sprint.endDate !== sprintRecord.endDate)) {
+      // Can't edit sprints that have already started
+      if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment(), 'd'))
+        throw new ValidationException('Sprint has already started');
+
       if ((sprint.endDate || sprintRecord.endDate) < (sprint.startDate || sprintRecord.startDate))
         throw new ValidationException('End date is before start date');
 
@@ -110,7 +110,7 @@ export class SprintService {
         throw new ValidationException('Sprint date overlaps with one of other sprints');
     }
 
-    if (sprint.startDate || sprint.endDate || sprint.velocity) {
+    if ((sprint.startDate && sprint.startDate !== sprintRecord.startDate) || (sprint.endDate && sprint.endDate !== sprintRecord.endDate) || (sprint.velocity && sprint.velocity !== sprintRecord.velocity)) {
       let sprintDurationDays: number = moment(sprint.endDate || sprintRecord.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate || sprintRecord.startDate, 'YYYY-MM-DD'), 'd') + 1;
       if (sprintDurationDays > 6) {
         const weekends = sprintDurationDays / 7; // Calculate weekends TODO: improve
