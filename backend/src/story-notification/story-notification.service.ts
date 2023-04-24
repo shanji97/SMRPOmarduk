@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError, EntityManager } from 'typeorm';
-import { StoryNotification } from './story-notification.entity';
+import { Repository, QueryFailedError, EntityManager, Not } from 'typeorm';
+import { NotificationStatus, StoryNotification } from './story-notification.entity';
 
 @Injectable()
 export class StoryNotificationService {
@@ -22,12 +22,12 @@ export class StoryNotificationService {
         return await this.storyNotificationRepository.findOneBy({ id: storyNotificationId })
     }
 
-    async getNotificationsByStoryId(storyId: number): Promise<StoryNotification[]> {
-        return await this.storyNotificationRepository.findBy({ stroyId: storyId });
+    async getStoryInformationByStoryId(storyId: number): Promise<StoryNotification[]> {
+        return await this.storyNotificationRepository.findBy({ storyId: storyId, notificationType: Not(NotificationStatus.Rejected) });
     }
 
     // async approveNotifications(storyNotificationId: number) {
-    //     return await this.storyNotificationRepository.update({ id: storyNotificationId }, { approved: true })
+    //     return await this.storyNotificationRepository.update(id: storyNotificationId }, { approved: true })
     // }
 
     async setRejectionDescription(description: string, userId: number, stroyId: number) {
@@ -112,7 +112,7 @@ export class StoryNotificationService {
         let newStoryNotification = new StoryNotification();
         newStoryNotification.notificationText = description;
         newStoryNotification.userId = userId;
-        newStoryNotification.stroyId = storyId;
+        newStoryNotification.storyId = storyId;
         return newStoryNotification;
     }
 

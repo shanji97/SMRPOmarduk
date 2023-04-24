@@ -13,9 +13,9 @@ import { ValidationException } from '../common/exception/validation.exception';
 import { StoryService } from '../story/story.service';
 
 @ApiTags('sprint')
-// @ApiBearerAuth()
-// @ApiUnauthorizedResponse()
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
+@ApiUnauthorizedResponse()
+@UseGuards(AuthGuard('jwt'))
 @Controller('sprint')
 export class SprintController {
   constructor(
