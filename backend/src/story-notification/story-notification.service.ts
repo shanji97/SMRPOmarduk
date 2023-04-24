@@ -22,7 +22,7 @@ export class StoryNotificationService {
         return await this.storyNotificationRepository.findOneBy({ id: storyNotificationId })
     }
 
-    async getStoryInformationByStoryId(storyId: number): Promise<StoryNotification[]> {
+    async getStoryRejectionsByStoryId(storyId: number): Promise<StoryNotification[]> {
         return await this.storyNotificationRepository.findBy({ storyId: storyId, notificationType: Not(NotificationStatus.Rejected) });
     }
 

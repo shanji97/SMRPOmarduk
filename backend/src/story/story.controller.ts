@@ -20,9 +20,9 @@ import { StoryNotification } from '../story-notification/story-notification.enti
 import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
 
 @ApiTags('story')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse()
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth()
+// @ApiUnauthorizedResponse()
+// @UseGuards(AuthGuard('jwt'))
 @Controller('story')
 export class StoryController {
   constructor(
@@ -65,7 +65,7 @@ export class StoryController {
   @Get(':storyId/notifications/information')
   async getNotificationsForStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number): Promise<StoryNotification[]> {
 
-    const storyNotifications: StoryNotification[] = await this.storyNotificationService.getStoryInformationByStoryId(storyId);
+    const storyNotifications: StoryNotification[] = await this.storyNotificationService.getStoryRejectionsByStoryId(storyId);
     if (!storyNotifications)
       throw new NotFoundException('Notifications for story not found.');
 
@@ -74,7 +74,27 @@ export class StoryController {
       throw new NotFoundException('Story for the given ID not found.');
 
     // If the user is only a developer he can see only approved notifications.
-    if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]))
+    if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
+      return storyNotifications.filter(sn => sn.approved == true);
+    return storyNotifications;
+  }
+
+  @ApiOperation({ summary: 'Get notifications for a particular story.' })
+  @ApiOkResponse()
+  @ApiNotFoundResponse()
+  @Get(':storyId/notifications/rejection')
+  async getRejetionNotificationsForStory(@Token() token, @Param('storyId', ParseIntPipe) storyId: number): Promise<StoryNotification[]> {
+
+    const storyNotifications: StoryNotification[] = await this.storyNotificationService.getStoryRejectionsByStoryId(storyId);
+    if (!storyNotifications)
+      throw new NotFoundException('Notifications for story not found.');
+
+    const story: Story = await this.storyService.getStoryById(storyId);
+    if (!story)
+      throw new NotFoundException('Story for the given ID not found.');
+
+    // If the user is only a developer he can see only approved notifications.
+    if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
       return storyNotifications.filter(sn => sn.approved == true);
     return storyNotifications;
   }

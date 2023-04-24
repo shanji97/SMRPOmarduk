@@ -26,7 +26,7 @@ export class UpdateStoryCategoryDto {
 }
 
 export const UpdateStoryCategoryStorySchema = Joi.object().keys({
-  category: Joi.number().min(0).max(2).required().default(1),
+  category: Joi.number().min(0).max(3).required().default(1),
   projectId: Joi.number().min(1).required().default(1)
 });
 
