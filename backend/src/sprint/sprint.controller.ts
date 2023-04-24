@@ -1,8 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, ForbiddenException, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBadRequestResponse, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-
-import { CreateSprintDto, CreateSprintSchema } from './dto/create-sprint.dto';
+import { AuthGuard } from '@nestjs/passport'; import { CreateSprintDto, CreateSprintSchema } from './dto/create-sprint.dto';
 import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
@@ -109,14 +107,23 @@ export class SprintController {
   @Post(':sprintId/add-story/:storyId')
   async addStoryToSprint(@Token() token: TokenDto, @Param('sprintId', ParseIntPipe) sprintId: number, @Param('storyId', ParseIntPipe) storyId: number) {
     const story = await this.storyService.getStoryById(storyId);
-    if (story == null)
+    if (!story)
       throw new BadRequestException('No story with the given ID exists');
 
-    const sprint = await this.sprintService.getSprintById(sprintId);
-    if (sprint == null)
-      throw new BadRequestException('No sprint with the given ID exists in the ')
+    if (story.timeComplexity < 1)
+      throw new BadRequestException('Time complexity of a story cannot be negative or zero.');
 
-    if(!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, UserRole.ScrumMaster))
+    if (story.isRealized)
+      throw new BadRequestException('The story is already realized.');
+
+    if (await this.storyService.isStoryInActiveSprint(storyId))
+      throw new BadRequestException('The story is already in an active sprint.');
+
+    const sprint = await this.sprintService.getSprintById(sprintId);
+    if (!sprint)
+      throw new BadRequestException('No sprint with the given ID exists in the ');
+
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the scrum master can add the story to sprint.');
 
     await this.sprintService.addStoryToSprint(sprintId, storyId);
