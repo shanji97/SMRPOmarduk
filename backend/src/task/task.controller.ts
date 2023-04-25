@@ -141,7 +141,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Body(new JoiValidationPipe(UpdateTaskSchema)) task: UpdateTaskDto,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
     
     // Check if task part of active sprint
@@ -166,7 +166,7 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
     
     // Check if task part of active sprint
@@ -203,7 +203,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Param('userId', ParseIntPipe) userId: number, 
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
@@ -246,7 +246,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Param('confirm', ParseBoolPipe) confirm: boolean,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
     
     // Check if task part of active sprint
@@ -280,7 +280,7 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
@@ -432,7 +432,7 @@ export class TaskController {
     @Param('date', new JoiValidationPipe(Joi.date())) date: string,
     @Body(new JoiValidationPipe(TaskUserTimeSchema)) work: TaskUserTimeDto
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
@@ -469,7 +469,7 @@ export class TaskController {
     @Param('userId', ParseIntPipe) userId: number,
     @Param('date', new JoiValidationPipe(Joi.date())) date: string,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint

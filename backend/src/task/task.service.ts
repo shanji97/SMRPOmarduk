@@ -51,6 +51,10 @@ export class TaskService {
     if (!await this.storyService.isStoryInActiveSprint(storyId))
       throw new ValidationException('Story not in active sprint');
 
+    // Check if story already completed
+    if (await this.storyService.isStoryFinished(storyId))
+      throw new ValidationException('Story already finished');
+    
     // TODO: Check remaining value
     
 
