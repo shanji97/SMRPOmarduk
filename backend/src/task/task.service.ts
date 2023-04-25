@@ -168,10 +168,12 @@ export class TaskService {
     // Check if task is part of active sprint
     if (!await this.isTaskInActiveSprint(taskId))
       throw new ValidationException('Task not in active sprint');
-    
+
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
+    if (await this.storyService.isStoryFinished(task.storyId)) // Check if story is finished
+      throw new ValidationException('Story already finished');
     if (task.category == TaskCategory.ACTIVE || task.dateActive)
       throw new ValidationException('Task already active'); 
     if (task.category !== TaskCategory.ACCEPTED)
