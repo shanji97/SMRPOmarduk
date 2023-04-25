@@ -59,6 +59,7 @@ export class StoryController {
     return storyTests;
   }
 
+<<<<<<< HEAD
   @ApiOperation({ summary: 'Stories written by particular user.' })
   @ApiOkResponse()
   @Get('/by-user/:userId')
@@ -70,6 +71,8 @@ export class StoryController {
   }
 
 
+=======
+>>>>>>> develop
   @ApiOperation({ summary: 'Get notifications for a particular story.' })
   @ApiOkResponse()
   @ApiNotFoundResponse()
