@@ -7,6 +7,7 @@ let user = JSON.parse(localStorage.getItem('user')!);
 interface StoryState {
     stories: StoryData[]
     storiesForSprint: StoryData[]
+    storiesForUser: StoryData[]
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -23,6 +24,7 @@ interface StoryState {
 const initialState: StoryState = {
     stories: [],
     storiesForSprint: [],
+    storiesForUser: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -51,6 +53,17 @@ export const getStoriesForSprint = createAsyncThunk('/story/getStoriesForSprint'
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.getStoriesForSprint(sprintId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        console.log(message);
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const getStoriesForUser = createAsyncThunk('/story/getStoriesForUser', async (_, thunkAPI: any) => { 
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.getStoriesForUser(token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         console.log(message);
@@ -174,6 +187,22 @@ export const storySlice = createSlice({
                 state.isError = false;
                 state.message = '';
                 state.storiesForSprint = action.payload;
+            })
+            .addCase(getStoriesForUser.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(getStoriesForUser.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getStoriesForUser.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.storiesForUser = action.payload;
             })
             .addCase(deleteStory.rejected, (state, action) => {
                 state.isLoading = false

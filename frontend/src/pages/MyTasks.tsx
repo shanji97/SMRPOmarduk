@@ -25,76 +25,15 @@ import { StoryData, SprintBacklogItemStatus } from '../classes/storyData';
 
 import produce from 'immer';
 import  DeleteConfirmation  from './DeleteConfirmation'
-import { getAllStory, deleteStory } from "../features/stories/storySlice";
+import { getAllStory, deleteStory, getStoriesForUser } from "../features/stories/storySlice";
 import classes from './Dashboard.module.css';
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 
-//const token = JSON.parse(localStorage.getItem('user')!).token;
-
-
-//StoryData
-//installed packages:
-//npm install @hello-pangea/dnd --save
-//npm install uuidv4
-//npm install react-bootstrap-icons --save
-//npm install --save react-bootstrap
-//npm install bootstrap --save
-
-
-
- 
-
-
-
-
-/*
-
-const itemsFromBackend123 = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-
-
-
-    
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: []
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
-  
-
-  
-
-*/
-
-
-
-
-
-
 
 function Dashboard() {
   const dispatch = useAppDispatch();
+  const {storiesForUser} = useAppSelector(state => state.stories);
   
   //demo
   const initialList = [
@@ -121,7 +60,7 @@ function Dashboard() {
 
 
   useEffect(() => {
-    dispatch(getAllStory())
+    dispatch(getStoriesForUser())
   }, [])
 
 
@@ -133,7 +72,6 @@ function Dashboard() {
   
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -168,8 +106,6 @@ function Dashboard() {
   //doda začetne elemnte
   
   useEffect(() => {
-    //console.log(SprintBacklogItemStatus)
-    //console.log(itemsByStatus)
 
     const isEmpty = Object.values(itemsByStatus).every(value => value);
     if (isEmpty && isSuccess) {
@@ -212,8 +148,7 @@ const initvalue: StoryData = {
     <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
     <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
       
-    {Object.values(itemsByStatus).map((item) => {
-            console.log(item)
+    {storiesForUser.map((item) => {
             return (
             
            <Card className="mt-3">
