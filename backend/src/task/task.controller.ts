@@ -57,6 +57,28 @@ export class TaskController {
     return this.taskService.getTasksForSprint(sprintId);
   }
 
+  @ApiOperation({ summary: 'List tasks for user'})
+  @ApiOkResponse()
+  @Get('user')
+  async listTasksForUser(
+    @Token() token: TokenDto,
+  ): Promise<Task[]> {   
+    return this.taskService.getTasksForUser(token.sid);
+  }
+
+  @ApiOperation({ summary: 'List tasks for some other user'})
+  @ApiOkResponse()
+  @Get('user/:userId')
+  async listTasksForOtherUser(
+    @Token() token: TokenDto,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<Task[]> {
+    if (token.sid !== userId && !token.isAdmin)
+      throw new ForbiddenException();
+    
+    return this.taskService.getTasksForUser(userId);
+  }
+
   @ApiOperation({ summary: 'Get task by ID'})
   @ApiOkResponse()
   @ApiNotFoundResponse()
