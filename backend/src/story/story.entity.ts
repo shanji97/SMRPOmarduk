@@ -30,7 +30,7 @@ export class Story {
   @Column({ unsigned: true, type: 'int' })
   projectId: number;
 
-  @Column({ unsigned: true, type: 'int', default: 0 })
+  @Column({ unsigned: true, type: 'int'})
   userId: number;
 
   @Column({ unsigned: true })
@@ -75,7 +75,7 @@ export class Story {
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;
 
-  @ManyToOne(type => Project, user => user.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  @ManyToOne(type => User, user => user.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   user: User;
   
   @OneToMany(type => PlanningPokerRound, round => round.story)
