@@ -154,15 +154,15 @@ export class StoryController {
       const story: Story = await this.storyService.getStoryById(storyId);
       if (!story)
         throw new NotFoundException('Story for the given ID not found.');
-console.log(token.sid);
+      console.log(token.sid);
       if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster, UserRole.Developer]))
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner but certainly not a developer.');
 
       // Product owner can directly approve the notification
       if (await this.projectService.hasUserRoleOnProject(storyId, token.sid, [UserRole.ProjectOwner])) {
-        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, true);
+        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, true,token.sub);
       } else {
-        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, false);
+        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, false,token.sub);
       }
     } catch (ex) {
       if (ex instanceof ConflictException) {
@@ -298,7 +298,7 @@ console.log(token.sid);
 
     await this.storyService.setRealizeFlag(storyId, false);
     if (rejectStoryData.description) {
-      await this.storyNotificationService.createNotification(rejectStoryData.description, token.sid, storyId, NotificationStatus.Rejected, true);
+      await this.storyNotificationService.createNotification(rejectStoryData.description, token.sid, storyId, NotificationStatus.Rejected, true, token.sub);
     }
   }
 

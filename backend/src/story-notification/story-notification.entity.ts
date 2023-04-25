@@ -18,6 +18,9 @@ export class StoryNotification {
   @Column({ unsigned: true, type: 'int' })
   userId: number;
 
+  @Column({ length: 200 })
+  authorName: string;
+
   @Column({ type: 'text' })
   notificationText: string;
 
