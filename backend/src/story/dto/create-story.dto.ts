@@ -54,6 +54,14 @@ export class CreateStoryDto {
     required: true
   })
   businessValue: number;
+
+  @ApiProperty({
+    description: 'Assigned user ID',
+    minimum: 1,
+    nullable: true,
+    required: false
+  })
+  assignedUserId?: number | null;
 }
 
 export const CreateStorySchema = Joi.object().keys({
@@ -64,5 +72,11 @@ export const CreateStorySchema = Joi.object().keys({
   tests: Joi.array().items(Joi.string()),
   priority: Joi.number().required().default(3),
   businessValue: Joi.number().greater(-1).less(11).required().default(5),
+
+  tasks: Joi.any().strip(),
+  user: Joi.any().strip(),
+  assignedUserId: Joi.number().min(1).allow(null),
+  assignedUser: Joi.any().strip(),
+  planningPokerRounds: Joi.any().strip(),
 });
 
