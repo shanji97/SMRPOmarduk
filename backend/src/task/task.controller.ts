@@ -290,10 +290,98 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<TaskUserTime[]> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     return await this.taskService.getWorkOnTask(taskId);
+  }
+
+  @ApiOperation({ summary: 'Start to measure time spent on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Get(':taskId/time/start')
+  async startTaskTiming(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't start timing, because not assigned to task");
+
+    try {
+      await this.taskService.startTaskTiming(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Stop to measure time spent on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Get(':taskId/time/stop')
+  async stopTaskTiming(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't stop timing, because not assigned to task");
+
+    try {
+      await this.taskService.stopTaskTiming(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'End task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Get(':taskId/end')
+  async endTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't end, because not assigned to task");
+
+    try {
+      await this.taskService.endTask(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
   }
 
   @ApiOperation({ summary: 'Set work of user on task' })
