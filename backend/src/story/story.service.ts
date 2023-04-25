@@ -5,7 +5,7 @@ import { CreateStoryDto } from './dto/create-story.dto';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from '../sprint/sprint.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
-import { Story } from './story.entity';
+import { Story, Category } from './story.entity';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
@@ -106,6 +106,13 @@ export class StoryService {
 
   async getStoryByTitle(title: string): Promise<Story> {
     return this.storyRepository.findOneBy({ title: title });
+  }
+
+  async isStoryFinished(storyId: number): Promise<boolean> {
+    const story = await this.storyRepository.findOne({ where: { id: storyId }, select: ['id', 'category'] });
+    if (!story)
+      return false;
+    return story.category == Category.Finished;
   }
 
   async getStoryProjectId(storyId: number): Promise<number | null> {
