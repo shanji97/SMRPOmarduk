@@ -192,7 +192,7 @@ export class StoryController {
         throw new BadRequestException('No story by the given ID found.');
 
       if (story.category == Category.Finished)
-        throw new BadRequestException('You cannot update the category of finished stories.')
+        throw new BadRequestException('You cannot update the category of finished stories.');
 
       await this.storyService.updateStoryCategory(storyId, updateData.category);
     } catch (ex) {
