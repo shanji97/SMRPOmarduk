@@ -74,12 +74,36 @@ const assignUser = async (assignUserData: any, token: string) => {
     return response.data;
 }
 
+const startTime = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.post(`${TASK_API_URL}/${taskId}/time/start`, config);
+
+    return response.data;
+}
+
+const stopTime = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.post(`${TASK_API_URL}/${taskId}/time/stop`, config);
+
+    return response.data;
+}
+
 const taskService = {
     getTaskForSprint,
     createTask,
     editTask,
     deleteTask,
     assignUser,
+    startTime,
+    stopTime
 }
 
 export default taskService;

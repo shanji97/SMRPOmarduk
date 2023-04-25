@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import taskService from "./taskService";
+import { start } from "repl";
 
 let user = JSON.parse(localStorage.getItem('user')!);
 
@@ -66,6 +67,26 @@ export const assignUser = createAsyncThunk('/task/assignUser', async (assignUser
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.assignUser(assignUserData, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const startTime = createAsyncThunk('/task/startTime', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.startTime(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const stopTime = createAsyncThunk('/task/stopTime', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.stopTime(taskId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -158,6 +179,36 @@ export const taskSlice = createSlice({
             state.message = '';
         })
         .addCase(assignUser.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(startTime.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(startTime.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+        })
+        .addCase(startTime.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(stopTime.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(stopTime.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+        })
+        .addCase(stopTime.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
