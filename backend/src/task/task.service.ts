@@ -59,11 +59,6 @@ export class TaskService {
     
 
     task.storyId = storyId;
-    
-    if (task.assignedUserId) {
-      task.category = TaskCategory.ASSIGNED;
-      task.dateAssigned = moment().format('YYYY-MM-DD');
-    }
 
     const result = await this.taskRepository.insert(task);
     return result.raw.insertId || null;
