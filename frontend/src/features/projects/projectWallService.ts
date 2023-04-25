@@ -42,6 +42,17 @@ const deletePost = async (body: {projectId: string, postId: string}, token: stri
   return response.data;
 }
 
+const deleteComment = async (body:  {commentId: string, projectId: string}, token: string) => {
+  const config = {
+    headers: {
+      Authorization: `JWT ${token}`
+    }
+  }
+  const response = await axios.delete(`${PROJECTS_API_URL}/${body.projectId}/notification-comments/${body.commentId}`, config);
+
+  return response.data;
+}
+
 const addComment = async (commentBody: Comment, token: string) => {
   const config = {
     headers: {
@@ -63,6 +74,7 @@ const projectWallService = {
   deletePost,
   createPost,
   addComment,
+  deleteComment,
 }
 
 export default projectWallService;

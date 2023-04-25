@@ -11,8 +11,8 @@ export class Sprint {
   @Column()
   name: string;
 
-  @Column({ unsigned: true })
-  velocity: number; // hours
+  @Column({ type: 'float', unsigned: true })
+  velocity: number; // in points
 
   @Column({ type: 'date' })
   startDate: string;
