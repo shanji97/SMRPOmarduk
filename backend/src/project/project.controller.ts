@@ -166,6 +166,7 @@ export class ProjectController {
     }
   }
 
+  //DONE
   @ApiOperation({ summary: "Update project name and description." })
   @ApiOkResponse()
   @Patch(':projectId')
@@ -199,6 +200,7 @@ export class ProjectController {
     }
   }
 
+  //DONE 
   @ApiOperation({ summary: "Toggles the active flag for the project." })
   @ApiOkResponse()
   @Patch(':projectId/set-active')
@@ -229,7 +231,7 @@ export class ProjectController {
       }
     }
   }
-
+  // DONE
   @ApiOperation({ summary: 'Update the scrum master / product owner.' })
   @ApiOkResponse()
   @Patch(':projectId/change-user/role/:role')
@@ -329,7 +331,11 @@ export class ProjectController {
   @ApiNoContentResponse()
   @Delete(':projectId/notification/:notificationId')
   async deleteProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('notificationId', ParseIntPipe) notificationId: number) {
+<<<<<<< HEAD
     if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+=======
+    if (! await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+>>>>>>> origin/9_edit-story
       throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
     await this.projectWallNotificationService.deleteProjectWallNotification(notificationId);
   }
@@ -338,7 +344,11 @@ export class ProjectController {
   @ApiNoContentResponse()
   @Delete(':projectId/notifications')
   async deleteProjectWallNotifications(@Token() token, @Param('projectId', ParseIntPipe) projectId: number) {
+<<<<<<< HEAD
     if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+=======
+    if (! await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+>>>>>>> origin/9_edit-story
       throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
     await this.projectWallNotificationService.deleteProjectWallNotificationByProjectId(projectId);
   }

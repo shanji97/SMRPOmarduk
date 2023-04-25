@@ -12,14 +12,14 @@ import { toast } from "react-toastify";
 export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
   show: boolean;
-  item: StoryData;
+  elements: {item: StoryData, status: string, index: number};
 
 }
 
 function RejectStoryModal({
   onCancel,
   show,
-  item,
+  elements,
 }: DeleteConfirmationProps) {
   const dispatch = useAppDispatch();
   let { isRejectSuccess, isLoading, isRejectError, message } = useAppSelector(
@@ -75,7 +75,7 @@ function RejectStoryModal({
     // console.log(newStory);
     const updatedRejectStory = {
       description: description,
-      storyId: item.id!
+      storyId: elements.item.id!
     }
     dispatch(rejectStory(updatedRejectStory))
   };
@@ -87,7 +87,7 @@ function RejectStoryModal({
       </Modal.Header>
       <Modal.Body>
         Are you sure you want to reject story #
-        <strong>{`${item.sequenceNumber} ${item.title}`}</strong>?
+        <strong>{`${elements.item.sequenceNumber} ${elements.item.title}`}</strong>?
         <Form onSubmit={submitFormHandler}>
         <Form.Group className="mb-4 mt-3" controlId="form-description">
             <Form.Label>Description</Form.Label>

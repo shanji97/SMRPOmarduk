@@ -103,9 +103,6 @@ export class StoryController {
     if (!story)
       throw new NotFoundException('Story for the given ID not found.');
 
-    // If the user is only a developer he can see only approved notifications.
-    if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
-      return storyNotifications.filter(sn => sn.approved == true);
     return storyNotifications;
   }
 
@@ -239,7 +236,6 @@ export class StoryController {
       throw new BadRequestException('Cannot update time complexity. The story is already in active sprint.')
 
     await this.storyService.updateStoryTimeComplexity(storyId, timeComplexityInfo.timeComplexity);
-
   }
 
   @ApiOperation({ summary: 'Realize story.' })

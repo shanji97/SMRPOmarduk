@@ -23,8 +23,8 @@ export class ProjectWallNotification {
   @ManyToOne(type => Project, project => project.wallNotifications, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;
 
-  @Column({ type: 'text', nullable: true })
-  postContent?: string | null;
+  @Column({ type: 'text' })
+  postContent: string;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created: string;

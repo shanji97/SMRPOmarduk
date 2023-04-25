@@ -7,7 +7,6 @@ export class CreateProjectWallNotificationCommentDto {
         example: 'Post content.',
         description: 'Post content.',
         minLength: 1,
-        type: String,
         required: true
     })
     content: string;

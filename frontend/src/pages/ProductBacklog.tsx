@@ -145,7 +145,7 @@ function ProductBacklog() {
   
   useEffect(() => {
     if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
-      toast.success("Story successfully created!");
+      toast.success("Story successfully Added to sprint!");
       dispatch(reset());
     }
     if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
@@ -182,9 +182,18 @@ function ProductBacklog() {
     if (activeProject.id) {
       dispatch(getAllSprints(activeProject.id!));
       dispatch(getProjectUserRoles(activeProject.id!))
-      dispatch(getActiveSprint(activeProject.id!))
+      
     }
   }, [activeProject]);
+
+  useEffect(() => {
+    
+    if (SprintSelector.isSuccessActive) {
+      console.log("active")
+      dispatch(getActiveSprint(activeProject.id!))
+    }
+  }, [SprintSelector.isSuccessActive]);
+
 
   useEffect(() => {
     
@@ -312,40 +321,41 @@ function ProductBacklog() {
   };
 
   type HandrejectFunc = (args: {
-    status: ProductBacklogItemStatus;
-    itemToDelete: StoryData;
+    status: string;
+    //itemToDelete: StoryData;
+    index: number;
   }) => void;
 
-  /* 
-  const handleReject: HandrejectFunc = ({ status, itemToDelete }) =>
+  
+  const handleReject: HandrejectFunc = ({ status, index }) =>
     setItemsByStatus((current) =>
       produce(current, (draft) => {
-        
-
+        //item, damo na unasigned
+        const destination = "Unallocated";
        
         const niki = draft[
-                  source.droppableId as ProductBacklogItemStatus
-                ][source.index];
+                  status as ProductBacklogItemStatus
+                ][index];
                 
         const [removed] = draft[
-          itemToDelete.id as ProductBacklogItemStatus
-        ].splice(source.index, 1);
+          status as ProductBacklogItemStatus
+        ].splice(index, 1);
 
-        draft[destination.droppableId as ProductBacklogItemStatus].splice(
-          destination.index,
+        draft[destination as ProductBacklogItemStatus].splice(
+          0,
           0,
           removed
         );
         let projectRoleData = {
           projectId: parseInt(activeProject?.id || ""),
-          category: categoryChange(destination.droppableId),
+          category: categoryChange(destination),
           storyId: removed.id || "",
         };
         dispatch(updateStoryCategory(projectRoleData));
       })
     );
 
-    */
+    
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
     destination,
@@ -357,11 +367,14 @@ function ProductBacklog() {
           return;
         }
 
-        /*
+        
         const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
                 ][source.index];
-                */
+                console.log("niki")
+                console.log(source.droppableId)
+              console.log(source.droppableId as ProductBacklogItemStatus)  
+              console.log(source.index)
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -538,6 +551,8 @@ function ProductBacklog() {
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
 
+  
+
   const [showNewStoryModal, setShowNewStoryModal] = useState(false);
 
   // modal za edit story
@@ -562,8 +577,8 @@ function ProductBacklog() {
   const hideEditStoryModal = () => {
     setShowEditStoryModal(false);
   };
-  const openRejectStoryModal = (item: StoryData) => {
-    setTempDataStory(item);
+  const openRejectStoryModal = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({item, status, index});
     setShowRejectStoryModal(true);
   };
   const hideRejectStoryModal = () => {
@@ -587,6 +602,12 @@ function ProductBacklog() {
     setTempDataStory(item);
     //console.log(item);
     return setShowStory(true);
+  };
+  const [tempDataReject, setTempDataReject] = useState<{item: StoryData, status: string, index: number}>();
+  const getDataReject = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({item, status, index});
+    //console.log(item);
+    return setShowRejectStoryModal(true);
   };
 
   // utility function for edit story
@@ -680,8 +701,18 @@ function ProductBacklog() {
                                             {status !==
                                                 ProductBacklogItemStatus.UNALLOCATED && (
                                                 <Dropdown.Item
-                                                  onClick={() =>
-                                                    openRejectStoryModal(item)
+                                                  onClick={() => {
+                                                    getDataReject(item, status, index)
+                                                    /*
+                                                    openRejectStoryModal(item.id!, status, index)
+                                                    let handleRejectVar = {
+                                                      status: status,
+                                                      index: index,
+                                                      
+                                                    };
+                                                    handleReject(handleRejectVar);
+                                                    */
+                                                  }
                                                   }
                                                 >
                                                   <Eraser /> Reject
@@ -874,7 +905,7 @@ function ProductBacklog() {
       )}
       {showRejectStoryModal && (
         <RejectStoryModal
-          item={tempDataStory}
+          elements={tempDataReject!}
           onCancel={() => setShowRejectStoryModal(false)}
           show={showRejectStoryModal}
         />
