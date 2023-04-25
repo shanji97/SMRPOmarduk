@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Modal, Button, Tab, Card, Nav, CloseButton, FormControl, Table, ListGroup, Row, Form, Col } from "react-bootstrap";
 import { NotificationData, StoryData } from '../classes/storyData';
-import classes from './Dashboard.module.css';
-import { X } from 'react-bootstrap-icons';
+
+
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import Users from './Users';
+
 import { getAllUsers} from "../features/users/userSlice";
-import { UserData } from '../classes/userData';
 import { parseJwt } from '../helpers/helpers';
 import { useParams } from 'react-router-dom';
 import { getActiveProject } from '../features/projects/projectSlice';
@@ -172,15 +171,15 @@ const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
               </Tab.Pane>
               <Tab.Pane eventKey="second">
 
-              <Card style={{marginTop: '1rem'}}>
-      <h1 className='text-primary'>Project Wall</h1>
+              
+     
 
        {storiesNotification.map((post, i) => {
         return <PostNotification
                   key={i}
                   id={post.id!}
                   content={post.notificationText}
-                  author={post.author}
+                  author={post.authorName}
                   created={post.created!}
                   user={currentUser}
                   approved={post.approved}
@@ -190,17 +189,17 @@ const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
 
       <Form onSubmit={submitNewPost}>
         <Form.Group className="mb-3" controlId="postContent" >
-          <Form.Label className='text-secondary'>Write a new post</Form.Label>
+          <Form.Label>Write a new post</Form.Label>
           <Form.Control
             as='textarea'
-            rows={3}
+            
             value={postContent}
             onChange={postContentChanged}
           />
           <Button type='submit' disabled={postContent === ''} style={{ marginTop: '.5rem' }}>Post</Button>
         </Form.Group>
       </Form>
-    </Card>
+ 
                 
 
                 

@@ -74,6 +74,7 @@ export interface NotificationData {
 }
 
 export interface PostDataNotification {
+    authorName: string
     id?: string,
     userId?: string,
     storyId?: string,
@@ -83,13 +84,4 @@ export interface PostDataNotification {
     approved: boolean
 }
 
-export interface Comment {
-    id?: string,
-    projectId?: string,
-    notificationId?: string,
-    content: string,
-    author: string,
-    userId: string,
-    created?: string
-    approved: boolean
-  }
+

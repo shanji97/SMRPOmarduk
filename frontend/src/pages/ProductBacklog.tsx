@@ -161,6 +161,7 @@ function ProductBacklog() {
   useEffect(() => {
     if (isSuccess && !isLoading) {
       dispatch(reset);
+      console.log("kul");
     }
     if (isError && !isLoading) {
       dispatch(reset);
@@ -331,11 +332,11 @@ function ProductBacklog() {
       produce(current, (draft) => {
         //item, damo na unasigned
         const destination = "Unallocated";
-       
+       /*
         const niki = draft[
                   status as ProductBacklogItemStatus
                 ][index];
-                
+              */  
         const [removed] = draft[
           status as ProductBacklogItemStatus
         ].splice(index, 1);
@@ -362,14 +363,18 @@ function ProductBacklog() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
-        if (!destination || destination === source) {
+        if (!destination || destination.droppableId === source.droppableId) {
+          console.log("istu")
           return;
         }
+
+        
         if (destination.droppableId === "Allocated") {
           if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
             toast.error("Sprint Velocity is full");
+      
             return;
-
+           
           }
         }
         if (source.droppableId === "Unallocated" && destination.droppableId === "Done") {
@@ -380,14 +385,11 @@ function ProductBacklog() {
           }
         }
 
-        
+        /*
         const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
                 ][source.index];
-                console.log("niki")
-                console.log(source.droppableId)
-              console.log(source.droppableId as ProductBacklogItemStatus)  
-              console.log(source.index)
+           */    
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -413,8 +415,7 @@ function ProductBacklog() {
         dispatch(addStoryToSprint(storySprint)); 
         } 
         //itemsByStatus[destination.droppableId].length
-        console.log(typeof destination.droppableId)
-        console.log(destination.droppableId === "")
+        
         if (source.droppableId === "Allocated" && destination.droppableId != "Done") {
           
         };
@@ -677,7 +678,7 @@ function ProductBacklog() {
                                 draggableId={item.id!}
                                 index={index}
                                 isDragDisabled={
-                                  
+
                                   status === ProductBacklogItemStatus.WONTHAVE ||
                                   !Boolean(itemTime[item.id!]) || !isUserScramMaster()
                                   ? true
