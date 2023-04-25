@@ -318,6 +318,21 @@ export class TaskController {
     return await this.taskService.getWorkOnTask(taskId);
   }
 
+  @ApiOperation({ summary: 'Get work on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Get(':taskId/time/user/:userId')
+  async getWorkOnTaskForUser(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<TaskUserTime[]> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+
+    return await this.taskService.getWorkOnTaskForUser(taskId, userId);
+  }
+
   @ApiOperation({ summary: 'Start to measure time spent on task' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
@@ -431,7 +446,17 @@ export class TaskController {
     if ((token.sid !== userId || userId !== task.assignedUserId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException("Can't assign time on task");
 
-    await this.taskService.setWorkOnTask(date, taskId, userId, work);
+    // Check if story is finished
+    if (await this.storyService.isStoryFinished(task.storyId))
+      throw new ValidationException("Story already finished");
+
+    try {
+      await this.taskService.setWorkOnTask(date, taskId, userId, work);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
   }
 
   @ApiOperation({ summary: 'Delete work of user on task' })
