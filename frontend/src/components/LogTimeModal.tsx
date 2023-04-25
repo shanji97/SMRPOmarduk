@@ -2,49 +2,56 @@ import {Button, Form, Modal} from "react-bootstrap";
 import React, {useEffect, useMemo, useState} from "react";
 
 import TimeInputs from "./TimeInputs";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { getWorkLogs } from "../features/tasks/taskSlice";
 
 interface LogTimeModalProps {
+  taskId: string,
   showModal: boolean,
   hideModal: () => void
 }
 
 interface TimeLog {
   date: string,
-  spentTime: number,
-  remainingTime: number
+  taskId?: string,
+  userId?: string,
+  spent: number,
+  remaining: number,
+  description?: string,
+  dateCreated?: string,
+  dateUpdated?: string,
 }
 
-const DUMMY_LOGS: TimeLog[] = [
-  {
-    date: new Date('2023-04-19').toString(),
-    spentTime: 6,
-    remainingTime: 5
-  },
-  {
-    date: new Date('2023-04-20').toString(),
-    spentTime: 5,
-    remainingTime: 2
-  },
-  {
-    date: new Date('2023-04-21').toString(),
-    spentTime: 5,
-    remainingTime: 1
-  },
-];
-
-const LogTimeModal: React.FC<LogTimeModalProps> = ({showModal, hideModal}) => {
+const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal}) => {
+  const dispatch = useAppDispatch();
+  const {workLogs} = useAppSelector(state => state.tasks);
   const [show, setShow] = useState(showModal);
   const [showTodayLog, setShowTodayLog] = useState(false);
-  const [logs, setLogs] = useState<TimeLog[]>(DUMMY_LOGS);
+  const [logs, setLogs] = useState<TimeLog[]>([]);
 
   const [initialLogs, setInitialLogs] = useState<React.ReactElement[]>([]);
 
   useEffect(() => {
-    const timelogs = DUMMY_LOGS.map((log, i) => {
-      return <TimeInputs key={i} index={i} onChange={handleChange} date={log.date} spentTimeInit={log.spentTime} remainingTimeInit={log.remainingTime} />
+    dispatch(getWorkLogs(taskId));
+  }, []);
+
+  useEffect(() => {
+    setLogs(workLogs);
+  }, [workLogs]);
+
+  useEffect(() => {
+    const timelogs = workLogs.map((log, i) => {
+      return <TimeInputs 
+                key={i} 
+                index={i} 
+                onChange={handleChange} 
+                date={log.date} 
+                spentTimeInit={log.spent} 
+                remainingTimeInit={log.remaining} 
+             />
     })
     setInitialLogs(timelogs);
-  }, []);
+  }, [workLogs]);
 
   const hasToday = useMemo(() => {
     return logs.some(log => {
@@ -62,7 +69,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({showModal, hideModal}) => {
 
   const handleShowTodayLog = () => {
     setLogs(prevLogs => {
-      const newLog: TimeLog = {date: Date.now().toString(), spentTime: 0, remainingTime: 0}
+      const newLog: TimeLog = {date: Date.now().toString(), spent: 0, remaining: 0, }
       return [...prevLogs, newLog];
     });
     setInitialLogs(prevLogs => {
@@ -79,13 +86,13 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({showModal, hideModal}) => {
       let oldLogIndex = index;
       let oldLog = prevLogs[index];
 
-      const newLog: TimeLog = {date: oldLog.date, spentTime: -1, remainingTime: -1};
+      const newLog: TimeLog = {date: oldLog.date, spent: -1, remaining: -1, taskId: oldLog.taskId, userId: oldLog.userId};
       if (spentTime === -1) {
-        newLog.spentTime = oldLog.spentTime;
-        newLog.remainingTime = remainingTime;
+        newLog.spent = oldLog.spent;
+        newLog.remaining = remainingTime;
       } else if (remainingTime === -1) {
-        newLog.spentTime = spentTime;
-        newLog.remainingTime = oldLog.remainingTime;
+        newLog.spent = spentTime;
+        newLog.remaining = oldLog.remaining;
       }
       const newHours = [...prevLogs];
       newHours[oldLogIndex] = newLog;

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { Button } from "react-bootstrap";
 import { getTasksForStory } from "../features/tasks/taskSlice";
 import LogTimeModal from "./LogTimeModal";
+import Task from "./Task";
 
 interface TasksProps {
     storyId: string
@@ -11,39 +12,16 @@ interface TasksProps {
 const Tasks: React.FC<TasksProps> = ({storyId}) => {
     const dispatch = useAppDispatch();
     const {tasksForStory} = useAppSelector(state => state.tasks);
-    const [showModal, setShowModal] = useState(false);
-
-    console.log(tasksForStory);
 
     useEffect(() => {
         dispatch(getTasksForStory(storyId));
     }, []);
 
-    const openLogTimeModal = () => {
-        setShowModal(true);
-    }
-
-    const hideModal = () => {
-        setShowModal(false);
-    }
-
     return (
         <Fragment>
             {tasksForStory.map(task => {
-                return (
-                    <tr key={task.id}>
-                        <td >{task.id}</td>
-                        <td >{task.name}</td>
-                        <td ><Button className="align-middle text-decoration-none" variant="link">{task.status}</Button></td>
-                        
-                        <td >{task.spent}</td>
-                        <td >{task.remaining}</td>
-                        <td >{task.estimatedTime}</td>
-                        <td ><Button variant="outline-primary" size="sm" onClick={openLogTimeModal}>Work History</Button></td>
-                    </tr>
-                )
+                return <Task task={task} />
             })}
-            {showModal && <LogTimeModal showModal={showModal} hideModal={hideModal} />}
         </Fragment>
     )
 

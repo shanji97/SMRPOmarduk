@@ -98,6 +98,17 @@ const assignUser = async (assignUserData: any, token: string) => {
     return response.data;
 }
 
+const getWorkLogs = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${TASK_API_URL}/${taskId}/time`, config);
+
+    return response.data;
+}
+
 const taskService = {
     getTaskForSprint,
     createTask,
@@ -106,6 +117,7 @@ const taskService = {
     assignUser,
     getTaskForUser,
     getTaskForStory,
+    getWorkLogs,
 }
 
 export default taskService;
