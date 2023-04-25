@@ -21,7 +21,7 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(TaskUserTime)
     private readonly taskUserTimeRepository: Repository<TaskUserTime>,
-  ) {}
+  ) { }
 
   async getTasksForStory(storyId: number): Promise<Task[]> {
     return await this.taskRepository.find({ where: { storyId: storyId }, relations: ['assignedUser'] });
@@ -48,10 +48,10 @@ export class TaskService {
       throw new ValidationException('Story not in active sprint');
 
     // TODO: Check remaining value
-    
+
 
     task.storyId = storyId;
-    
+
     if (task.assignedUserId) {
       task.category = TaskCategory.ASSIGNED;
       task.dateAssigned = moment().format('YYYY-MM-DD');
@@ -80,7 +80,7 @@ export class TaskService {
   }
 
   async getTaskProjectId(taskId: number): Promise<number | null> {
-    const task = await this.taskRepository.findOne({ where: { id: taskId }, relations: ['story']});
+    const task = await this.taskRepository.findOne({ where: { id: taskId }, relations: ['story'] });
     if (!task)
       return null;
     return task.story.projectId;
@@ -96,7 +96,7 @@ export class TaskService {
       throw new ValidationException('Invalid task id');
     if (task.category != TaskCategory.UNASSIGNED)
       throw new ValidationException('Task is not unassigned');
-    
+
     // Only users that have role on project, can be assigned to task
     const projectId: number = await this.getTaskProjectId(task.id);
     if (!await this.projectService.hasUserRoleOnProject(projectId, userId, [UserRole.Developer, UserRole.ScrumMaster]))
@@ -119,7 +119,7 @@ export class TaskService {
       throw new ValidationException('Invalid task id');
     if (!task.assignedUserId || task.category != TaskCategory.ASSIGNED)
       throw new ValidationException('Task not assigned to user');
-    
+
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ACCEPTED,
       dateAccepted: () => 'NOW()', // TODO: Check if working
@@ -136,7 +136,7 @@ export class TaskService {
       throw new ValidationException('Invalid task id');
     if (!task.assignedUserId || task.category != TaskCategory.ASSIGNED)
       throw new ValidationException('Task not assigned to user');
-    
+
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.UNASSIGNED,
       dateAssigned: null,
@@ -164,6 +164,35 @@ export class TaskService {
     });
   }
 
+  async getTaskDataForBD(projectId: number): Promise<any> {
+    const taskData = await this.taskRepository
+      .createQueryBuilder("task")
+      .leftJoin("task.story", "story")
+      .leftJoinAndSelect("task.userTime", "userTime")
+      .where("story.projectId = :projectId", { projectId: projectId })
+      .getMany();
+
+    return taskData.map(task => {
+      const userTime = task.userTime.reduce((acc, curr) => {
+        if (acc[curr.userId]) {
+          acc[curr.userId] += curr.spent;
+        } else {
+          acc[curr.userId] = curr.spent;
+        }
+        return acc;
+      }, {});
+
+      const remaining = task.remaining - Number(Object.values(userTime).reduce((acc, curr) => Number(acc) + Number(curr), 0));
+
+      return {
+        name: task.name,
+        userTime: userTime,
+        remaining: remaining
+      };
+    });
+  }
+
+
   async isTaskInActiveSprint(taskId: number): Promise<boolean> {
     const storyId = await this.getStoryIdForTaskById(taskId);
     if (!storyId) // Task does not exit
@@ -179,7 +208,7 @@ export class TaskService {
   }
 
   async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
-    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' }})
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' } })
   }
 
   async setWorkOnTask(date: string, taskId: number, userId: number, work: DeepPartial<TaskUserTime>): Promise<void> {
