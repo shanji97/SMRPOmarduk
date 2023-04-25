@@ -79,5 +79,5 @@ export class Story {
   user: User;
   
   @OneToMany(type => PlanningPokerRound, round => round.story)
-  planningPokerRounds: PlanningPokerRound[];
+  planningPockerRounds: PlanningPokerRound[];
 }

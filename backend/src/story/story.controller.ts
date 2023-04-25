@@ -196,6 +196,8 @@ export class StoryController {
         throw new BadRequestException(ex)
       else if (ex instanceof NotFoundException)
         throw new NotFoundException(ex)
+      else if (ex instanceof ConflictException)
+        throw new ConflictException(ex)
       throw ex
     }
   }
@@ -228,7 +230,7 @@ export class StoryController {
     let story: Story = await this.storyService.getStoryById(storyId);
     if (!story)
       throw new BadRequestException('The story by this ID does not exist.');
-
+      
     if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
 
