@@ -4,7 +4,7 @@ import {Button, Form} from "react-bootstrap";
 import Post from "../components/Post";
 import {Comment, PostData} from '../classes/wallData'
 import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {createPost, getAllWallPosts} from "../features/projects/projectWallSlice";
+import {createPost, getAllWallPosts, reset} from "../features/projects/projectWallSlice";
 import {getActiveProject} from "../features/projects/projectSlice";
 import {parseJwt} from "../helpers/helpers";
 import {useParams} from "react-router-dom";
@@ -13,7 +13,7 @@ import {toast} from "react-toastify";
 const ProjectWall = () => {
   const params = useParams();
   const dispatch = useAppDispatch();
-  const {wallPosts} = useAppSelector(state => state.projectWall);
+  const {wallPosts, message, isError} = useAppSelector(state => state.projectWall);
   const {activeProject} = useAppSelector(state => state.projects);
   const [title, setTitle] = useState('');
   const [postContent, setPostContent] = useState('');
@@ -33,6 +33,16 @@ const ProjectWall = () => {
   useEffect(() => {
     dispatch(getAllWallPosts(activeProject.id!));
   }, [activeProject]);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    return () => {
+      dispatch(reset());
+    }
+  }, [isError, message]);
 
   const postContentChanged = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPostContent(e.currentTarget.value);

@@ -46,7 +46,7 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
 
   const handleDeletePost = () => {
     dispatch(deletePost({projectId: activeProject.id!, postId: id}));
-    toast.info('Post deleted!');
+    // toast.info('Post deleted!');
   }
 
   const handleDeleteComment = (body: {commentId: string, projectId: string}) => {
