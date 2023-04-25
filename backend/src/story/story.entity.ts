@@ -6,6 +6,7 @@ import { Task } from '../task/task.entity';
 import { StoryTest } from '../test/test.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
 import { StoryNotification } from '../story-notification/story-notification.entity';
+import { User } from 'src/user/user.entity';
 
 export enum Category {
   WontHave = 0,
@@ -28,6 +29,9 @@ export class Story {
 
   @Column({ unsigned: true, type: 'int' })
   projectId: number;
+
+  @Column({ unsigned: true, type: 'int', default: 0 })
+  userId: number;
 
   @Column({ unsigned: true })
   sequenceNumber: number;
@@ -71,6 +75,9 @@ export class Story {
   @ManyToOne(type => Project, project => project.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   project: Project;
 
+  @ManyToOne(type => Project, user => user.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  user: User;
+  
   @OneToMany(type => PlanningPokerRound, round => round.story)
   planningPockerRounds: PlanningPokerRound[];
 }
