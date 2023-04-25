@@ -172,24 +172,42 @@ export class TaskService {
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
-    return taskData.map(task => {
-      const userTime = task.userTime.reduce((acc, curr) => {
-        if (acc[curr.userId]) {
-          acc[curr.userId] += curr.spent;
-        } else {
-          acc[curr.userId] = curr.spent;
-        }
-        return acc;
-      }, {});
+    // Step 1: Flatten user time for each task
+    const userTime = taskData.flatMap(task => task.userTime);
 
-      const remaining = task.remaining - Number(Object.values(userTime).reduce((acc, curr) => Number(acc) + Number(curr), 0));
+    // Step 2: Aggregate user time by date and user
+    const timeByDateAndUser = userTime.reduce((acc, cur) => {
+      const key = `${cur.date}-${cur.userId}`;
+      if (!acc[key]) {
+        acc[key] = {
+          date: cur.date,
+          userId: cur.userId,
+          spent: 0,
+          remaining: 0
+        };
+      }
+      acc[key].spent += cur.spent;
+      acc[key].remaining += cur.remaining;
+      return acc;
+    }, {});
 
-      return {
-        name: task.name,
-        userTime: userTime,
-        remaining: remaining
-      };
-    });
+    // Step 3: Aggregate user time by date and task
+    return userTime.reduce((acc, cur) => {
+      const key = `${cur.date}-${cur.taskId}`;
+      if (!acc[key]) {
+        acc[key] = {
+          date: cur.date,
+          taskId: cur.taskId,
+          spent: 0,
+          remaining: 0
+        };
+      }
+      acc[key].spent += cur.spent;
+      acc[key].remaining += cur.remaining;
+      return acc;
+    }, {});
+
+ 
   }
 
 
