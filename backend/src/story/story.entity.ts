@@ -33,6 +33,9 @@ export class Story {
   @Column({ unsigned: true, type: 'int'})
   userId: number;
 
+  @Column({ unsigned: true, nullable: true })
+  assignedUserId: number;
+
   @Column({ unsigned: true })
   sequenceNumber: number;
 
@@ -77,7 +80,10 @@ export class Story {
 
   @ManyToOne(type => User, user => user.stories, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   user: User;
+
+  @ManyToOne(type => User, user => user.assignedStories, { onUpdate: 'CASCADE', onDelete: 'SET NULL' })
+  assignedUser: User;
   
   @OneToMany(type => PlanningPokerRound, round => round.story)
-  planningPockerRounds: PlanningPokerRound[];
+  planningPokerRounds: PlanningPokerRound[];
 }
