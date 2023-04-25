@@ -141,8 +141,8 @@ export class StoryController {
       const story: Story = await this.storyService.getStoryById(storyId);
       if (!story)
         throw new NotFoundException('Story for the given ID not found.');
-
-      if (!await this.projectService.hasUserRoleOnProject(storyId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster, UserRole.Developer]))
+console.log(token.sid);
+      if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster, UserRole.Developer]))
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner but certainly not a developer.');
 
       // Product owner can directly approve the notification
@@ -230,7 +230,7 @@ export class StoryController {
     let story: Story = await this.storyService.getStoryById(storyId);
     if (!story)
       throw new BadRequestException('The story by this ID does not exist.');
-      
+
     if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the scrum master can update the time complexity of a story in a project.');
 
@@ -273,9 +273,6 @@ export class StoryController {
     if (!story) {
       throw new BadRequestException('The story by the given ID does not exist.');
     }
-
-    if (!story.isRealized)
-      throw new BadRequestException('Story is not realized.');
 
     if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner]))
       throw new ForbiddenException('Only a product owner can realize a story.');
