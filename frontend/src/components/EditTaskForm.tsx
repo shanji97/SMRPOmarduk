@@ -19,7 +19,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
-import { createTask, editTask, reset } from "../features/tasks/taskSlice";
+import {
+  createTask,
+  editTask,
+  getTasksForSprint,
+  reset,
+} from "../features/tasks/taskSlice";
 
 // for testing
 const userRoles = [
@@ -34,18 +39,23 @@ interface EditTaskProps {
   id: string;
   descriptionInit: string;
   timeRequiredInit: string; // 'remaining' on backend
+  showModal: boolean;
+  closeModal: () => void;
 }
 
 const EditTaskForm: React.FC<EditTaskProps> = ({
   id,
   descriptionInit,
   timeRequiredInit,
+  showModal,
+  closeModal,
 }) => {
   const dispatch = useAppDispatch();
   let { isSuccess, isError, isLoading, message } = useAppSelector(
     (state) => state.tasks
   );
   const { activeProject } = useAppSelector((state) => state.projects);
+  let { activeSprint } = useAppSelector((state) => state.sprints);
   const { users } = useAppSelector((state) => state.users);
   const navigate = useNavigate();
 
@@ -57,8 +67,10 @@ const EditTaskForm: React.FC<EditTaskProps> = ({
       toast.success("Task successfully updated!");
       resetInputs();
       dispatch(reset());
-      // dispatch(getAllStory);
-      // closeModal();
+      if (activeSprint != undefined) {
+        dispatch(getTasksForSprint(activeSprint.id!));
+      }
+      closeModal();
     }
     if (isError && !isLoading) {
       toast.error(message);
@@ -160,7 +172,7 @@ const EditTaskForm: React.FC<EditTaskProps> = ({
   };
 
   return (
-    <Modal show={true}>
+    <Modal show={showModal} onHide={closeModal}>
       <Modal.Header closeButton>
         <Modal.Title>Edit task</Modal.Title>
       </Modal.Header>
@@ -195,7 +207,9 @@ const EditTaskForm: React.FC<EditTaskProps> = ({
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="default">Cancel</Button>
+        <Button variant="default" onClick={closeModal}>
+          Cancel
+        </Button>
         <Button variant="primary" onClick={handleSubmit}>
           Update task
         </Button>

@@ -18,17 +18,13 @@ import Col from "react-bootstrap/Col";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { parseJwt } from "../helpers/helpers";
+import {
+  createTask,
+  getTasksForSprint,
+  reset,
+} from "../features/tasks/taskSlice";
+import { getProjectUserRoles } from "../features/projects/projectRoleSlice";
 import { getAllUsers } from "../features/users/userSlice";
-import { createTask, reset } from "../features/tasks/taskSlice";
-
-// for testing
-const userRoles = [
-  { userId: 2, role: 0 },
-  { userId: 3, role: 0 },
-  { userId: 3, role: 1 },
-  { userId: 4, role: 0 },
-  { userId: 9, role: 2 },
-];
 
 interface TaskProps {
   id?: string;
@@ -38,6 +34,7 @@ interface TaskProps {
   assignedUserIdInit: string;
   closeModal: () => void;
   showModal: boolean;
+  developersOnProject: string[];
 }
 
 const TaskForm: React.FC<TaskProps> = ({
@@ -48,30 +45,19 @@ const TaskForm: React.FC<TaskProps> = ({
   assignedUserIdInit,
   closeModal,
   showModal,
+  developersOnProject,
 }) => {
   const dispatch = useAppDispatch();
   let { isSuccess, isError, isLoading, message } = useAppSelector(
     (state) => state.tasks
   );
   const { activeProject } = useAppSelector((state) => state.projects);
+  let { activeSprint } = useAppSelector((state) => state.sprints);
   const { users } = useAppSelector((state) => state.users);
   const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getAllUsers());
-  }, []);
-
-  useEffect(() => {
-    setDevelopersOnProject([]);
-    userRoles.forEach((user: any) => {
-      if (user.role === 0) {
-        setDevelopersOnProject((prevDevelopers) => {
-          const newDevelopers = [...prevDevelopers];
-          newDevelopers.push(user.userId.toString());
-          return newDevelopers;
-        });
-      }
-    });
   }, []);
 
   // NOTE: this is temporary, waiting for other cards to be finished
@@ -82,7 +68,9 @@ const TaskForm: React.FC<TaskProps> = ({
       toast.success("Task successfully created!");
       resetInputs();
       dispatch(reset());
-      // dispatch(getAllStory); TODO !!!
+      if (activeSprint != undefined) {
+        dispatch(getTasksForSprint(activeSprint.id!));
+      }
       closeModal();
     }
     if (isError && !isLoading) {
@@ -119,7 +107,7 @@ const TaskForm: React.FC<TaskProps> = ({
   const [timeRequired, setTimeRequired] = useState(timeRequiredInit);
   const [assignedUserId, setAssignedUserId] = useState(assignedUserIdInit);
 
-  const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
+  // const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
 
   const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [timeRequiredTouched, setTimeRequiredTouched] = useState(false);
@@ -201,7 +189,7 @@ const TaskForm: React.FC<TaskProps> = ({
       storyId: storyId,
       name: description,
       remaining: timeRequired,
-      // assignedUserId: assignedUserId, TODO
+      assignedUserId: assignedUserId,
     };
     console.log(newTask);
     dispatch(createTask(newTask));
@@ -275,7 +263,9 @@ const TaskForm: React.FC<TaskProps> = ({
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="default">Cancel</Button>
+        <Button variant="default" onClick={closeModal}>
+          Cancel
+        </Button>
         <Button variant="primary" onClick={handleSubmit}>
           Add task
         </Button>

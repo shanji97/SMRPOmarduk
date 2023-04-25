@@ -36,6 +36,7 @@ function DeleteConfirmation({
     }
     if (isDeleteError && !isLoading) {
       toast.error(message);
+      dispatch(reset());
     }
   }, [isDeleteSuccess, isDeleteError, isLoading]);
 

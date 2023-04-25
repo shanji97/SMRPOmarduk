@@ -33,11 +33,17 @@ const userRoles = [
 interface AssignUserProps {
   id: string;
   assignedUserIdInit: string;
+  developersOnProject: string[];
+  showModal: boolean;
+  closeModal: () => void;
 }
 
 const AssignUserForm: React.FC<AssignUserProps> = ({
   id,
   assignedUserIdInit,
+  developersOnProject,
+  showModal,
+  closeModal,
 }) => {
   const dispatch = useAppDispatch();
   let { isSuccess, isError, isLoading, message } = useAppSelector(
@@ -51,18 +57,18 @@ const AssignUserForm: React.FC<AssignUserProps> = ({
     dispatch(getAllUsers());
   }, []);
 
-  useEffect(() => {
-    setDevelopersOnProject([]);
-    userRoles.forEach((user: any) => {
-      if (user.role === 0) {
-        setDevelopersOnProject((prevDevelopers) => {
-          const newDevelopers = [...prevDevelopers];
-          newDevelopers.push(user.userId.toString());
-          return newDevelopers;
-        });
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   setDevelopersOnProject([]);
+  //   userRoles.forEach((user: any) => {
+  //     if (user.role === 0) {
+  //       setDevelopersOnProject((prevDevelopers) => {
+  //         const newDevelopers = [...prevDevelopers];
+  //         newDevelopers.push(user.userId.toString());
+  //         return newDevelopers;
+  //       });
+  //     }
+  //   });
+  // }, []);
 
   useEffect(() => {
     if (isSuccess && !isLoading) {
@@ -70,7 +76,7 @@ const AssignUserForm: React.FC<AssignUserProps> = ({
       resetInputs();
       dispatch(reset());
       // dispatch(getAllStory);
-      // closeModal();
+      closeModal();
     }
     if (isError && !isLoading) {
       toast.error(message);
@@ -104,7 +110,7 @@ const AssignUserForm: React.FC<AssignUserProps> = ({
 
   const [assignedUserId, setAssignedUserId] = useState(assignedUserIdInit);
 
-  const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
+  // const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
 
   const [assignedUserIdTouched, setAssignedUserIdTouchedTouched] =
     useState(false);
@@ -157,7 +163,7 @@ const AssignUserForm: React.FC<AssignUserProps> = ({
   };
 
   return (
-    <Modal show={true}>
+    <Modal show={showModal} onHide={closeModal}>
       <Modal.Header closeButton>
         <Modal.Title>Assign User</Modal.Title>
       </Modal.Header>

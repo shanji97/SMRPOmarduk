@@ -41,7 +41,11 @@ import { StoryData, SprintBacklogItemStatus } from "../classes/storyData";
 
 import produce from "immer";
 import DeleteConfirmation from "./DeleteConfirmation";
-import { getAllStory, deleteStory } from "../features/stories/storySlice";
+import {
+  getAllStory,
+  deleteStory,
+  getStoriesForSprint,
+} from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
@@ -51,101 +55,87 @@ import TaskForm from "../components/TaskForm";
 import EditTaskForm from "../components/EditTaskForm";
 import DeleteTaskModal from "../components/DeleteTaskModal";
 import AssignUserForm from "../components/AssignUserForm";
+import { getTasksForSprint } from "../features/tasks/taskSlice";
+import { reset } from "../features/tasks/taskSlice";
+import { getProjectUserRoles } from "../features/projects/projectRoleSlice";
+import {
+  getActiveSprint,
+  getAllSprints,
+} from "../features/sprints/sprintSlice";
+import { getActiveProject } from "../features/projects/projectSlice";
+import { getAllUsers } from "../features/users/userSlice";
 
-//const token = JSON.parse(localStorage.getItem('user')!).token;
-
-//StoryData
-//installed packages:
-//npm install @hello-pangea/dnd --save
-//npm install uuidv4
-//npm install react-bootstrap-icons --save
-//npm install --save react-bootstrap
-//npm install bootstrap --save
-
-/*
-
-const itemsFromBackend123 = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-
-
-
-    
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: []
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
-  
-
-  
-
-*/
-
-function Dashboard() {
+function SprintBacklog() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-  //demo
-  const initialList = [
-    {
-      id: 1,
-      title: "title1",
-      status: "asigned",
-      user: "matevz",
-      workedTime: 3,
-      remainingTime: 2,
-      estimatedTime: 6,
-    },
-    {
-      id: 2,
-      title: "title2",
-      status: "unasigned",
-      user: "janez",
-      workedTime: 4,
-      remainingTime: 1,
-      estimatedTime: 5,
-    },
-  ];
-  const [list, setList] = useState(initialList);
-  function handleChange() {
-    // track input field's state
-  }
-
-  const handleAdd = (e: any) => {
-    e.preventDefault();
-  };
-
+  let { activeSprint } = useAppSelector((state) => state.sprints);
+  let taskState = useAppSelector((state) => state.tasks);
+  const { activeProject } = useAppSelector((state) => state.projects);
+  let { userRoles } = useAppSelector((state) => state.projectRoles);
   let { users, user } = useAppSelector((state) => state.users);
-  const [allUsers, setAllUsers] = useState<String[]>([]);
-
-  useEffect(() => {
-    if (!(users.length === 0)) {
-      const usernames = users.map((user) => user.username);
-      setAllUsers(usernames);
-    }
-  }, [users]);
+  let { stories, storiesForSprint, isSuccess } = useAppSelector(
+    (state) => state.stories
+  );
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
+  const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
+  const [itemsByStatus, setItemsByStatus] = useState<StoryData[]>([]);
+
+  console.log(users);
+
+  useEffect(() => {
+    if (users.length === 0) {
+      dispatch(getAllUsers());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (taskState.isSuccess || taskState.isError) {
+      dispatch(reset());
+    }
+  }, [taskState.isSuccess, taskState.isError]);
+
+  // get active project
+  useEffect(() => {
+    if (activeProject.id === "") {
+      dispatch(getActiveProject());
+    }
+  }, []);
+
+  // get active sprint id
+  useEffect(() => {
+    if (activeSprint == undefined && activeProject != undefined) {
+      dispatch(getActiveSprint(activeProject.id!));
+    }
+  }, [activeProject]);
+
+  // fetch stories in sprint
+  useEffect(() => {
+    if (activeSprint != undefined) {
+      dispatch(getStoriesForSprint(activeSprint.id!));
+    }
+  }, [activeSprint]);
+
+  // get developer list
+  useEffect(() => {
+    dispatch(getProjectUserRoles(activeProject.id));
+  }, []);
+
+  useEffect(() => {
+    setDevelopersOnProject([]);
+    userRoles.forEach((user: any) => {
+      if (user.role === 0) {
+        setDevelopersOnProject((prevDevelopers) => {
+          const newDevelopers = [...prevDevelopers];
+          newDevelopers.push(user.userId.toString());
+          return newDevelopers;
+        });
+      }
+    });
+  }, [activeProject, userRoles]);
+
   useEffect(() => {
     if (user === null) {
       return;
@@ -157,12 +147,11 @@ function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    dispatch(getAllStory());
-  }, []);
-
-  //let stories = useAppSelector((state) => state.stories);
-  //console.log(stories)
-  const navigate = useNavigate();
+    if (activeSprint !== undefined && activeSprint.id !== undefined) {
+      // getStoriesForSprint(activeSprint.id);
+      dispatch(getTasksForSprint(activeSprint.id));
+    }
+  }, [activeSprint]);
 
   useEffect(() => {
     if (user === null) {
@@ -171,32 +160,32 @@ function Dashboard() {
     }
   }, [user]);
 
-  let { stories, isSuccess } = useAppSelector((state) => state.stories);
-
-  const [itemsByStatus, setItemsByStatus] = useState<StoryData[]>([]);
-
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showDeleteTaskModal, setShowDeleteTaskModal] = useState(false);
   const [showAssignUserModal, setShowAssignUserModal] = useState(false);
 
-  // this is needed for add task modal
+  // this is for add/edit modals
   const [selectedStoryId, setSelectedStoryId] = useState("");
+  const [selectedTask, setSelectedTask] = useState<any>({});
 
   const openAddTaskModal = (id: string) => {
     setSelectedStoryId(id);
     setShowAddTaskModal(true);
   };
 
-  const openEditTaskModal = (item: any) => {
+  const openEditTaskModal = (task: any) => {
+    setSelectedTask(task);
     setShowEditTaskModal(true);
   };
 
-  const openDeleteTaskModal = (item: any) => {
+  const openDeleteTaskModal = (task: any) => {
+    setSelectedTask(task);
     setShowDeleteTaskModal(true);
   };
 
-  const openAssignUserModal = (item: any) => {
+  const openAssignUserModal = (task: any) => {
+    setSelectedTask(task);
     setShowAssignUserModal(true);
   };
 
@@ -209,11 +198,11 @@ function Dashboard() {
   };
 
   const hideDeleteTaskModal = () => {
-    setShowEditTaskModal(false);
+    setShowDeleteTaskModal(false);
   };
 
-  const hideAssignTaskModal = () => {
-    setShowEditTaskModal(false);
+  const hideAssignUserkModal = () => {
+    setShowAssignUserModal(false);
   };
 
   const stringPriority = (priority: number): string[] => {
@@ -232,18 +221,12 @@ function Dashboard() {
   };
 
   //doda začetne elemnte
-
   useEffect(() => {
-    //console.log(SprintBacklogItemStatus)
-    //console.log(itemsByStatus)
-
     const isEmpty = Object.values(itemsByStatus).every((value) => value);
     if (isEmpty && isSuccess) {
       setItemsByStatus(stories);
     }
   }, [isSuccess]);
-
-  //{Object.values.map(([columnId, column], index) => {
 
   const initvalue: StoryData = {
     id: "",
@@ -263,7 +246,6 @@ function Dashboard() {
   const [tempDataStory, setTempDataTask] = useState<StoryData>(initvalue);
   const getDataTask = (item: StoryData) => {
     setTempDataTask(item);
-    //console.log(item);
     return setShowForm(true);
   };
 
@@ -273,10 +255,10 @@ function Dashboard() {
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
         <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
-          {Object.values(itemsByStatus).map((item) => {
+          {storiesForSprint.map((story) => {
             // console.log(item);
             return (
-              <Card className="mt-3">
+              <Card className="mt-3" key={story.id}>
                 <Tab.Container id="left-tabs-example" defaultActiveKey="first">
                   <Card.Header className="d-flex align-items-center">
                     <Nav variant="tabs" defaultActiveKey="first">
@@ -291,8 +273,8 @@ function Dashboard() {
                   <Card.Body>
                     <Tab.Content>
                       <Tab.Pane eventKey="first">
-                        <Card.Title>{item.title}</Card.Title>
-                        <Card.Text>{item.description}</Card.Text>
+                        <Card.Title>{story.title}</Card.Title>
+                        <Card.Text>{story.description}</Card.Text>
 
                         <Table
                           responsive="lg"
@@ -301,59 +283,56 @@ function Dashboard() {
                           <thead>
                             <tr>
                               <th>#</th>
-                              <th>Title</th>
-                              <th>Status</th>
-                              <th>User</th>
-                              <th>workedTime</th>
-                              <th>Remaining time</th>
+                              <th>Description</th>
                               <th>Estimated time</th>
+                              <th>Options</th>
                             </tr>
                           </thead>
 
                           <tbody>
-                            {list.map((item) => (
-                              <tr key={item.id}>
-                                <td>{item.id}</td>
-                                <td>{item.title}</td>
-                                <td>{item.status}</td>
-                                <td>{item.user}</td>
-                                <td>{item.workedTime}</td>
-                                <td>{item.remainingTime}</td>
-                                <td>{item.estimatedTime}</td>
-                                <td>
-                                  <Dropdown className="ms-auto">
-                                    <Dropdown.Toggle
-                                      variant="link"
-                                      id="dropdown-custom-components"
-                                      bsPrefix="p-0"
-                                    >
-                                      <ThreeDots />
-                                    </Dropdown.Toggle>
-                                    <Dropdown.Menu>
-                                      <Dropdown.Item
-                                        onClick={() => openEditTaskModal(item)}
+                            {taskState.tasksForSprint
+                              .filter((task) => task.storyId === story.id)
+                              .map((task) => (
+                                <tr key={task.id}>
+                                  <td>{task.id}</td>
+                                  <td>{task.name}</td>
+                                  <td>{task.remaining}</td>
+                                  <td>
+                                    <Dropdown className="ms-auto">
+                                      <Dropdown.Toggle
+                                        variant="link"
+                                        id="dropdown-custom-components"
+                                        bsPrefix="p-0"
                                       >
-                                        <Pencil /> Edit
-                                      </Dropdown.Item>
-                                      <Dropdown.Item
-                                        onClick={() =>
-                                          openAssignUserModal(item)
-                                        }
-                                      >
-                                        <Person /> Assign User
-                                      </Dropdown.Item>
-                                      <Dropdown.Item
-                                        onClick={() =>
-                                          openDeleteTaskModal(item)
-                                        }
-                                      >
-                                        <Trash /> Delete
-                                      </Dropdown.Item>
-                                    </Dropdown.Menu>
-                                  </Dropdown>
-                                </td>
-                              </tr>
-                            ))}
+                                        <ThreeDots />
+                                      </Dropdown.Toggle>
+                                      <Dropdown.Menu>
+                                        <Dropdown.Item
+                                          onClick={() =>
+                                            openEditTaskModal(task)
+                                          }
+                                        >
+                                          <Pencil /> Edit
+                                        </Dropdown.Item>
+                                        <Dropdown.Item
+                                          onClick={() =>
+                                            openAssignUserModal(task)
+                                          }
+                                        >
+                                          <Person /> Assign User
+                                        </Dropdown.Item>
+                                        <Dropdown.Item
+                                          onClick={() =>
+                                            openDeleteTaskModal(task)
+                                          }
+                                        >
+                                          <Trash /> Delete
+                                        </Dropdown.Item>
+                                      </Dropdown.Menu>
+                                    </Dropdown>
+                                  </td>
+                                </tr>
+                              ))}
 
                             {/* <tr className="align-middle">
                               <th>
@@ -405,7 +384,7 @@ function Dashboard() {
                           form="my_form"
                           size="sm"
                           type="button"
-                          onClick={() => openAddTaskModal(item.id!)}
+                          onClick={() => openAddTaskModal(story.id!)}
                         >
                           Add new task
                         </Button>
@@ -437,22 +416,43 @@ function Dashboard() {
           assignedUserIdInit=""
           closeModal={hideAddTaskModal}
           showModal={showAddTaskModal}
+          developersOnProject={developersOnProject}
         />
       )}
 
       {showEditTaskModal && (
         <EditTaskForm
-          id="1"
-          descriptionInit="Prepare UI"
-          timeRequiredInit="1"
+          id={selectedTask.id.toString()}
+          descriptionInit={selectedTask.name}
+          timeRequiredInit={selectedTask.remaining.toString()}
+          showModal={showEditTaskModal}
+          closeModal={hideEditTaskModal}
         />
       )}
 
-      {showAssignUserModal && <AssignUserForm id={"2"} assignedUserIdInit="" />}
+      {showAssignUserModal && (
+        <AssignUserForm
+          id={selectedTask.id.toString()}
+          assignedUserIdInit={
+            selectedTask.assignedUserId
+              ? selectedTask.assignedUserId.toString()
+              : ""
+          }
+          developersOnProject={developersOnProject}
+          showModal={showAssignUserModal}
+          closeModal={hideAssignUserkModal}
+        />
+      )}
 
-      {showDeleteTaskModal && <DeleteTaskModal id={"1"} />}
+      {showDeleteTaskModal && (
+        <DeleteTaskModal
+          id={selectedTask.id.toString()}
+          closeModal={hideDeleteTaskModal}
+          showModal={showDeleteTaskModal}
+        />
+      )}
     </>
   );
 }
 
-export default Dashboard;
+export default SprintBacklog;
