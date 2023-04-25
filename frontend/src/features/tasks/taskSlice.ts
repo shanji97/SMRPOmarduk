@@ -12,6 +12,7 @@ interface TaskState {
     isSuccess: boolean
     isError: boolean
     message: any
+    changed: boolean
 }
 
 const initialState: TaskState = {
@@ -22,7 +23,8 @@ const initialState: TaskState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
-    message: ''
+    message: '',
+    changed: false
 }
 
 
@@ -90,6 +92,16 @@ export const getWorkLogs = createAsyncThunk('/task/getWorkLogs', async (taskId: 
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.getWorkLogs(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const logWork = createAsyncThunk('/task/logWork', async (body: {date: string, userId: string, taskId: string, spent: number, remaining: number, description: string}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.logWork(body, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -214,6 +226,22 @@ export const taskSlice = createSlice({
             state.workLogs = action.payload;
         })
         .addCase(getWorkLogs.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(logWork.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(logWork.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.changed = !state.changed;
+        })
+        .addCase(logWork.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

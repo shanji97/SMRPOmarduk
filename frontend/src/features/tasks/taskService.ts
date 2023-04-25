@@ -109,6 +109,22 @@ const getWorkLogs = async (taskId: string, token: string) => {
     return response.data;
 }
 
+const logWork = async (body: {date?: string, userId?: string, taskId?: string}, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const requestBody = {...body};
+    delete requestBody.taskId;
+    delete requestBody.date;
+    delete requestBody.userId;
+
+    const response = await axios.post(`${TASK_API_URL}/${body.taskId}/time/${body.userId}/${body.date}`, requestBody, config);
+
+    return response.data;
+}
+
 const taskService = {
     getTaskForSprint,
     createTask,
@@ -118,6 +134,7 @@ const taskService = {
     getTaskForUser,
     getTaskForStory,
     getWorkLogs,
+    logWork,
 }
 
 export default taskService;
