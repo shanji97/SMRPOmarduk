@@ -38,9 +38,9 @@ export class StoryService {
     return await this.storyRepository.findBy({ projectId: projectId })
   }
 
-  async createStory(story: CreateStoryDto, projectId: number): Promise<object> {
+  async createStory(story: CreateStoryDto, projectId: number, userId : number): Promise<object> {
     try {
-      let newStory = this.createStoryObject(story, projectId);
+      let newStory = this.createStoryObject(story, projectId, userId);
       const inserted = await this.storyRepository.insert(newStory);
       return inserted.identifiers[0];
     } catch (ex) {
@@ -121,7 +121,7 @@ export class StoryService {
     }) > 0;
   }
 
-  createStoryObject(story: CreateStoryDto, projectId: number): Story {
+  createStoryObject(story: CreateStoryDto, projectId: number, userId: number): Story {
     let newStory = new Story();
     newStory.projectId = projectId;
     newStory.title = story.title;
@@ -129,6 +129,7 @@ export class StoryService {
     newStory.sequenceNumber = story.sequenceNumber;
     newStory.priority = story.priority;
     newStory.businessValue = story.businessValue;
+    newStory.userId = userId;
     return newStory;
   }
 

@@ -6,6 +6,7 @@ import { UserLogin } from '../auth/user-login.entity';
 import { StoryNotification } from '../story-notification/story-notification.entity';
 import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
 import { ProjectWallNotificationComment } from '../project-wall-notification-comment/comment.entity';
+import { Story } from 'src/story/story.entity';
 
 @Entity()
 export class User {
@@ -68,4 +69,7 @@ export class User {
 
   @OneToMany(type => TaskUserTime, taskTime => taskTime.user)
   taskTime: TaskUserTime[];
+
+  @OneToMany(type => Story, story => story.user)
+  stories: Story[];
 }
