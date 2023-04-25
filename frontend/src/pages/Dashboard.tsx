@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { Component, useEffect, useState } from "react";
 import {
   DragDropContext,
   Draggable,
   Droppable,
   DropResult,
+  DragDropContextProps,
 } from "@hello-pangea/dnd";
 import { v4 as uuid } from "uuid";
-import { Card, Dropdown, ProgressBar } from "react-bootstrap";
+import { Button, Card, CloseButton, Col, Dropdown, Form, InputGroup, ListGroup, Modal, Nav, ProgressBar, Row, Tab } from "react-bootstrap";
 import {
   CircleFill,
   Clock,
@@ -14,13 +15,25 @@ import {
   ThreeDots,
   Trash,
   Stack,
+  ConeStriped,
+  X,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
-import {useAppDispatch, useAppSelector} from "../app/hooks";
-import { useNavigate } from "react-router-dom";
-import {parseJwt} from "../helpers/helpers";
-import {getUser} from "../features/users/userSlice";
+import { useAppSelector, useAppDispatch } from "../app/hooks";
+import { Link, useNavigate } from "react-router-dom";
+import { StoryData, SprintBacklogItemStatus } from '../classes/storyData';
 
+import produce from 'immer';
+import  DeleteConfirmation  from './DeleteConfirmation'
+import { getAllStory, deleteStory } from "../features/stories/storySlice";
+import classes from './Dashboard.module.css';
+import StoryModal from "./StoryModal";
+import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
+
+//const token = JSON.parse(localStorage.getItem('user')!).token;
+
+
+//StoryData
 //installed packages:
 //npm install @hello-pangea/dnd --save
 //npm install uuidv4
@@ -28,7 +41,16 @@ import {getUser} from "../features/users/userSlice";
 //npm install --save react-bootstrap
 //npm install bootstrap --save
 
-const itemsFromBackend = [
+
+
+ 
+
+
+
+
+/*
+
+const itemsFromBackend123 = [
   { id: uuid(), content: "First task" },
   { id: uuid(), content: "Second task" },
   { id: uuid(), content: "Third task" },
@@ -36,10 +58,15 @@ const itemsFromBackend = [
   { id: uuid(), content: "Fifth task" },
 ];
 
+
+
+
+    
+
 const columnsFromBackend = {
   [uuid()]: {
     name: "Requested",
-    items: itemsFromBackend,
+    items: []
   },
   [uuid()]: {
     name: "To do",
@@ -54,75 +81,229 @@ const columnsFromBackend = {
     items: [],
   },
 };
+  
+
+  
+
+*/
+
+
+const defaultItems = {
+  [SprintBacklogItemStatus.UNALLOCATED]: [],
+  [SprintBacklogItemStatus.ALLOCATED]: [],
+  [SprintBacklogItemStatus.IN_PROGRESS]: [],
+  [SprintBacklogItemStatus.DONE]: [],
+  
+};
+
+type TaskboardData = Record<SprintBacklogItemStatus, StoryData[]>;
+
+
+
 
 function Dashboard() {
   const dispatch = useAppDispatch();
-  const [columns, setColumns] = useState(columnsFromBackend);
+  
+
+  useEffect(() => {
+    dispatch(getAllStory())
+  }, [])
+
+
+  //let stories = useAppSelector((state) => state.stories);
+  //console.log(stories)
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.users);
 
+  
   useEffect(() => {
     if (user === null) {
       navigate("/login");
-    } else {
-      const token = JSON.parse(localStorage.getItem('user')!).token;
-      const uid = parseJwt(token).sid;
-      dispatch(getUser(uid));
     }
   }, [user]);
 
-  const onDragEnd = ({ destination, source }: DropResult) => {
-    if (!destination) return;
 
-    if (source.droppableId !== destination.droppableId) {
-      const sourceColumn = columns[source.droppableId];
-      const destColumn = columns[destination.droppableId];
-      const sourceItems = [...sourceColumn.items];
-      const destItems = [...destColumn.items];
-      const [removed] = sourceItems.splice(source.index, 1);
-      destItems.splice(destination.index, 0, removed);
-      setColumns({
-        ...columns,
-        [source.droppableId]: {
-          ...sourceColumn,
-          items: sourceItems,
-        },
-        [destination.droppableId]: {
-          ...destColumn,
-          items: destItems,
-        },
-      });
-    } else {
-      const column = columns[source.droppableId];
-      const copiedItems = [...column.items];
-      const [removed] = copiedItems.splice(source.index, 1);
-      copiedItems.splice(destination.index, 0, removed);
-      setColumns({
-        ...columns,
-        [source.droppableId]: {
-          ...column,
-          items: copiedItems,
-        },
-      });
+ 
+  const { stories, isSuccess} = useAppSelector((state) => state.stories);
+
+
+  const [itemsByStatus, setItemsByStatus] = useState<TaskboardData>(
+    defaultItems
+    //stories
+  );
+
+  const stringPriority = (priority: number): string[] => {
+    switch(priority) {
+      case 1:
+        return ['Must have', 'badge-light-must'];
+      case 2:
+        return ['Could have', 'badge-light-could'];
+      case 3: 
+        return ['Should have', 'badge-light-should'];
+      case 4: 
+        return ["Won\'t have this time", 'gray-wont'];
+      default:
+        return [];
     }
+  }
+  
+
+  const handleDragEnd: DragDropContextProps['onDragEnd'] = ({
+    source,
+    destination,
+  }) => {
+    setItemsByStatus((current) =>
+      produce(current, (draft) => {
+        // dropped outside the list
+        if (!destination) {
+          return;
+        }
+        const [removed] = draft[
+          source.droppableId as SprintBacklogItemStatus
+        ].splice(source.index, 1);
+        draft[destination.droppableId as SprintBacklogItemStatus].splice(
+          destination.index,
+          0,
+          removed
+        );
+      })
+    );
+  };
+  
+  
+
+  type HandleDeleteFunc = (args: { status: SprintBacklogItemStatus; itemToDelete: StoryData }) => void;
+
+  const handleDelete: HandleDeleteFunc = ({
+    status,
+    itemToDelete,
+  }) =>
+    setItemsByStatus((current) =>
+      produce(current, (draft) => {
+        draft[status] = draft[status].filter(
+          (item) => item.id !== itemToDelete.id
+        );
+        setShow(false);
+        dispatch(deleteStory(itemToDelete.id!));
+        dispatch(getAllStory());
+      })
+    );
+
+  //doda začetne elemnte
+  
+  useEffect(() => {
+    //console.log(ProductBacklogItemStatus)
+    //console.log(itemsByStatus)
+
+  
+    if (isSuccess) {
+      setItemsByStatus((current) =>
+        produce(current, (draft) => {
+          //for (const status of Object.values(ProductBacklogItemStatus)) {
+          //  draft[status] = draft[status].filter(() => false);
+          //}
+          console.log(current)
+          const isEmpty = Object.values(current).every(
+            (value) => value.length === 0
+          );
+          
+          if (isEmpty) {
+          // Adding new item as "to do"
+
+          stories.forEach((story: StoryData) => {
+            
+            draft[SprintBacklogItemStatus.UNALLOCATED].push({
+              id: story.id?.toString(),
+              title: story.title,
+              description: story.description,
+              tests: story.tests,
+              priority: story.priority,
+              businessValue: story.businessValue,
+              sequenceNumber: story.sequenceNumber,
+              category: story.category,
+              timeComplexity: story.timeComplexity,
+              isRealized: story.isRealized
+            });
+          });
+        }
+        })
+      );
+    }
+  }, [isSuccess]);
+
+    
+    
+
+
+
+  
+
+//{Object.values.map(([columnId, column], index) => {
+
+
+  //modal za delete
+  const [show, setShow] = useState(false);
+ 
+
+  //modal za zgodbe
+  const [showstory, setShowStory] = useState(false);
+  
+  const initvalue: StoryData = {
+    id: "",
+    title: "",
+    description: "",
+    tests: [],
+    priority: 0,
+    businessValue: 0,
+    sequenceNumber: 0,
+    category: 0,
+    timeComplexity: 0,
+    isRealized: false
   };
 
+
+  const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
+  const getDataStory = (item: StoryData) => {
+    setTempDataStory(item);
+    return setShowStory(true);
+  }
+ 
+  const [points, setPonts] = useState('');
+  const [visiblePoints, setVisiblePonts] = useState(true);
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    setVisiblePonts((prev) => !prev);
+    
+  };
+  const handleKeyDown = (e: any) => {
+    const val = e.target.value;
+    if (e.target.validity.valid) setPonts(e.target.value);
+    else if (val === '') setPonts(val);   
+  };
+
+  
   return (
+    <>
+    
     <div className="row flex-row flex-sm-nowrap m-1 mt-3">
-      <DragDropContext onDragEnd={onDragEnd}>
-        {Object.entries(columns).map(([columnId, column], index) => {
+      
+      <DragDropContext onDragEnd={handleDragEnd}>
+        
+        {Object.values(SprintBacklogItemStatus).map((status) => {
+          //console.log(columns)
           return (
-            <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={columnId}>
-              <Card className="bg-light border-0 " key={columnId}>
+            <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
+              <Card className="bg-light border-0 ">
                 <div className="pt-3 hstack gap-2 mx-3">
-                  <Card.Title className="fs-6 my-0">{column.name}</Card.Title>
+                  <Card.Title className="fs-6 my-0">{status}</Card.Title>
                   <div className="vr my-0"></div>
                   <p className="fs-6 my-0">6</p>
+                  { (status === SprintBacklogItemStatus.UNALLOCATED) && <Button className="ms-auto" variant="light">New Card</Button> }
                 </div>
                 <hr className="hr mx-3" />
+                
 
-
-                <Droppable droppableId={columnId} key={columnId}>
+                <Droppable droppableId={status} key={status}>
                   {(provided, snapshot) => {
                     return (
                       <div
@@ -135,19 +316,27 @@ function Dashboard() {
                           borderRadius: "0px 0px 5px 5px",
                         }}
                       >
-                        {column.items.map((item, index) => {
+                        {itemsByStatus[status].map((item, index) => {
+                          console.log(status)
+                          
                           return (
+                            
+                            
+                            
                             <Draggable
                               key={item.id}
-                              draggableId={item.id}
+                              draggableId={item.id!}
                               index={index}
+                              isDragDisabled={status === SprintBacklogItemStatus.DONE}
                             >
+                              
                               {(provided, snapshot) => {
                                 return (
+                                  <>
+
                                   <Card
                                     className="mb-3 mx-3"
                                     ref={provided.innerRef}
-                                    key={Math.random()}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
                                     style={{
@@ -155,28 +344,46 @@ function Dashboard() {
                                       ...provided.draggableProps.style,
                                     }}
                                   >
+                                    
                                     <Card.Header className="hstack gap-2 align-items-center">
                                       <p className="fs-6 text-muted m-1">
-                                        TSK-39
+                                        TSK-{item.sequenceNumber}
                                       </p>
                                       <p className="fs-6 text-muted m-1  text-truncate">
                                         sivar.lapajne@gmail.com
                                       </p>
+                                      
                                       <Dropdown className="">
+                                        
                                         <Dropdown.Toggle
                                           variant="link"
                                           id="dropdown-custom-components"
                                           bsPrefix="p-0"
                                         >
+                                          
                                           <ThreeDots />
                                         </Dropdown.Toggle>
                                         <Dropdown.Menu>
                                           <Dropdown.Item>
                                             <Pencil /> Edit
                                           </Dropdown.Item>
-                                          <Dropdown.Item>
+                                          <Dropdown.Item onClick={() => setShow(true)}
+                                            /* onClick={() =>
+                                              Modal.confirm({
+                                                title: 'Delete?',
+                                                content: `Are you sure to delete "${item.title}"?`,
+                                                onOk: () =>
+                                                  onDelete({
+                                                    status,
+                                                    itemToDelete: item,
+                                                  }),
+                                              })
+                                            } */
+                                          >
+
                                             <Trash /> Delete
                                           </Dropdown.Item>
+                                          {/* <DeleteConfirmation item={item} status={status}  onCancel={() => setShow(false)} show={show} onDelete={handleDelete}/> */}
                                           <Dropdown.Item href="#/action-3">
                                             Something else
                                           </Dropdown.Item>
@@ -184,33 +391,123 @@ function Dashboard() {
                                       </Dropdown>
                                     </Card.Header>
                                     <Card.Body>
-                                      <Card.Text>{item.content}</Card.Text>
+                                      
+                                      <Card.Text onClick={() => getDataStory(item)} 
+                                                  className="m-0"
+                                                  
+                                                  >
+                                                    
+                                                    <Button className="text-decoration-none" variant="link">{item.title}</Button>
+                                                    
+                                                  
+                                      </Card.Text>
+                                      
+                                      
+                                      <div className="text-end"><small className="custom-font-size text-muted mb-1 d-inline-block">25%</small></div>
                                       <ProgressBar
                                         style={{ height: "3px" }}
                                         now={60}
                                       />
+                                     
+              
                                       <div className="pt-3 hstack gap-2 ">
-                                        <Clock className="text-muted" />
-                                        <p className="fs-6 text-muted my-0">
+                                        
+
+                                        <p className={`my-0 badge rounded-pill ${classes[stringPriority(item.priority)[1]]}`}>
+                                         {stringPriority(item.priority)[0]}
                                           {" "}
-                                          2h
                                         </p>
 
-                                        <CircleFill className="text-muted ms-auto" />
+                                        
+                                        
+                                        
+                                       
+
+                                        
+                                        <p className="  ms-auto fs-6  text-muted my-0">
+                                          BV: {item.businessValue}
+                                        </p>
+                                        
 
                                         <div className="vr"></div>
-
-                                        <Stack className="text-muted" />
-                                        <p className="fs-6 text-muted my-0">
-                                          6
-                                        </p>
+                                        <p className="text-nowrap text-muted my-0">
+                                          {" "}
+                                         2h
+                                        </p> 
+          
+                                        <Clock className=" text-muted" />
+                                        
                                       </div>
                                     </Card.Body>
+                                    <Card.Footer className="bg-transparent pb-0 px-2">
+                                    
+                                    <ListGroup className="pb-0 px-2"> 
+                                      <ListGroup.Item
+                                        className={`d-flex justify-content-between align-items-center border-0 mb-2 rounded ${classes["listItem-bg"]}`}>
+                                        <div className="d-flex align-items-center">
+                                          <input className="form-check-input me-2" type="checkbox" value="" aria-label="..." />
+                                          Cras justo odio
+                                        </div>
+                                        <a href="#!" data-mdb-toggle="tooltip" title="Remove item">
+                                          <X className="text-primary"/>
+                                        </a>
+                                        </ListGroup.Item>
+                                        <ListGroup.Item
+                                        className={`d-flex justify-content-between align-items-center border-0 mb-2 rounded ${classes["listItem-bg"]}`}>
+                                        <div className="d-flex align-items-center">
+                                          <input className="form-check-input me-2" type="checkbox" value="" aria-label="..." />
+                                          Cras justo odio
+                                        </div>
+                                        <a href="#!" data-mdb-toggle="tooltip" title="Remove item">
+                                          <X className="text-primary"/>
+                                        </a>
+                                        
+                                        </ListGroup.Item>
+
+                                    </ListGroup>                           
+                                   
+
+                                    </Card.Footer>
+                                    <ListGroup variant="flush">
+        <ListGroup.Item><Row><Col  sm={7}>Time complexity: </Col>
+        <Col sm={5}>
+        {visiblePoints && <Form onSubmit={handleSubmit} className=" ms-auto"> 
+        <InputGroup size="sm">
+<Form.Control
+    className="mobileBox"
+    size='sm'
+    pattern="[0-9]*"
+    required
+    placeholder="PT"
+    onChange={handleKeyDown}
+    value={points}
+    type='tel'
+    maxLength={2}
+              
+/>  
+<InputGroup.Text className="">PT</InputGroup.Text>
+</InputGroup>
+</Form>}
+{!visiblePoints && <Button onClick={() => setVisiblePonts((prev) => !prev)} variant="link" className="m-0 p-0 float-end text-decoration-none">{points}</Button>}
+</Col></Row>
+        </ListGroup.Item>
+        
+      </ListGroup>
                                   </Card>
+                          
+                                  </>
+
                                 );
                               }}
+                              
                             </Draggable>
+                            
                           );
+
+
+                          
+
+
                         })}
 
                         {provided.placeholder}
@@ -224,7 +521,17 @@ function Dashboard() {
           );
         })}
       </DragDropContext>
+     
     </div>
+       
+    
+       
+        {
+          showstory && <StoryModal item={tempDataStory} onCancel={() => setShowStory(false)} show={showstory}/>
+        }
+    
+    
+  </>
   );
 }
 

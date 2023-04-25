@@ -1,12 +1,12 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import { DeepPartial, EntityManager, In, QueryFailedError } from 'typeorm';
-
+import { DeepPartial, EntityManager, In, Not, QueryFailedError } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { Project } from './project.entity';
 import { ProjectUserRole, UserRole } from './project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { ProjectDto } from './dto/project.dto';
 
 @Injectable()
 export class ProjectService {
@@ -22,6 +22,39 @@ export class ProjectService {
     return await this.entityManager.find(Project);
   }
 
+  async getAllProjectsWithUserData(): Promise<ProjectDto[]> {
+    const projectData = await this.entityManager.createQueryBuilder(Project, "project")
+      .innerJoinAndSelect("project.userRoles", "userRole")
+      .select([
+        "project.id",
+        "project.projectName",
+        "project.projectDescription",
+        "userRole.userId",
+        "userRole.role"
+      ]).getRawMany();
+
+    const projectMap = projectData.reduce((map, raw) => {
+      const projectId = raw.project_id;
+      const userRole = {
+        userId: raw.userRole_userId,
+        role: raw.userRole_role
+      };
+      if (map.has(projectId)) {
+        map.get(projectId).userRoles.push(userRole);
+      } else {
+        map.set(projectId, {
+          id: projectId,
+          projectName: raw.project_projectName,
+          projectDescription: raw.project_projectDescription,
+          userRoles: [userRole]
+        });
+      }
+      return map;
+    }, new Map<number, ProjectDto>());
+
+    return Array.from(projectMap.values()) as ProjectDto[];
+  }
+  
   async getProjectCount(): Promise<number> {
     return await this.entityManager.count(Project);
   }
@@ -52,14 +85,23 @@ export class ProjectService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('Project name already exists');
+            throw new ConflictException('Project name already exists.');
         }
       }
     }
   }
 
+  async getActiveProject(): Promise<Project> {
+    return await this.entityManager.findOneBy(Project, { isActive: true });
+  }
+
   async deleteProjectById(projectId: number) {
     await this.entityManager.delete(Project, { id: projectId });
+  }
+
+  async setActiveProject(projectId: number, isActive: boolean) {
+    await this.entityManager.update(Project, { id: Not(projectId) }, { isActive: false })
+    await this.entityManager.update(Project, { id: projectId }, { isActive: true })
   }
 
   createProjectObject(project: CreateProjectDto): Project {
@@ -83,6 +125,16 @@ export class ProjectService {
     });
   }
 
+  async countUsersWithRoleOnProject(projectId: number, roles: UserRole[] | number[] | UserRole | number): Promise<number> {
+    if (!Array.isArray(roles)) // Force an array
+      roles = [roles];
+    const result = await this.entityManager.createQueryBuilder(ProjectUserRole, 'pur')
+      .select('COUNT(DISTINCT(pur.userId))', 'cnt')
+      .where('pur.projectId = :projectId AND pur.role IN (:...role)', { projectId: projectId, role: roles })
+      .getRawOne();
+    return (result) ? result.cnt : 0;
+  }
+
   async addUserToProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
     try {
       // Check: User can't be project owner if he already has any other role
@@ -91,8 +143,8 @@ export class ProjectService {
 
       // Check: User that is ProjectOwner can't be anything else
       if (role !== UserRole.ProjectOwner && await this.hasUserRoleOnProject(projectId, userId, UserRole.ProjectOwner))
-        throw new ValidationException('User is project owner');
-      
+        throw new ValidationException('User is project owner.');
+
       await this.entityManager.insert(ProjectUserRole, {
         projectId: projectId,
         userId: userId,
@@ -102,7 +154,7 @@ export class ProjectService {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
           case 1062: // Duplicate entry
-            throw new ValidationException('User already has same role on project');
+            throw new ValidationException('User already has same role on project.');
         }
       }
       throw ex;
@@ -115,6 +167,10 @@ export class ProjectService {
       userId: userId,
       role: role,
     });
+  }
+
+  async overwriteUserRoleOnProject(projectId: number, userId: number, role: UserRole | number): Promise<void> {
+    await this.entityManager.update(ProjectUserRole, { projectId, role: role }, { userId });
   }
 
   async removeUserFromProject(projectId: number, userId: number): Promise<void> {
@@ -134,8 +190,7 @@ export class ProjectService {
   async hasUserRoleOnProject(projectId: number, userId: number, roles: UserRole[] | number[] | UserRole | number | null): Promise<boolean> {
     if (roles) {
       if (!Array.isArray(roles)) // Force an array
-      roles = [roles];
-    
+        roles = [roles];
       return await this.entityManager.countBy(ProjectUserRole, {
         projectId: projectId,
         userId: userId,
@@ -148,4 +203,5 @@ export class ProjectService {
       }) > 0;
     }
   }
+
 }
