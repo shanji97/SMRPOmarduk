@@ -6,10 +6,7 @@ import { Task } from '../task/task.entity';
 import { StoryTest } from '../test/test.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
 import { StoryNotification } from '../story-notification/story-notification.entity';
-<<<<<<< HEAD
-import { User } from '../user/user.entity';
-=======
->>>>>>> develop
+import { User } from 'src/user/user.entity';
 
 export enum Category {
   WontHave = 0,
