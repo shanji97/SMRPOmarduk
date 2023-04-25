@@ -1,10 +1,13 @@
 import { Entity, Column, CreateDateColumn, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { ProjectUserRole } from '../project/project-user-role.entity';
 import { Task } from '../task/task.entity';
+import { TaskUserTime } from '../task/task-user-time.entity';
 import { UserLogin } from '../auth/user-login.entity';
 import { StoryNotification } from '../story-notification/story-notification.entity';
 import { ProjectWallNotification } from '../project-wall-notification/project-wall-notification.entity';
 import { ProjectWallNotificationComment } from '../project-wall-notification-comment/comment.entity';
+import { Story } from '../story/story.entity';
+import { PlanningPokerVote } from '../story/planning-poker-vote.entity';
 
 @Entity()
 export class User {
@@ -64,4 +67,13 @@ export class User {
 
   @OneToMany(type => ProjectWallNotificationComment, projectWallNotificationComment => projectWallNotificationComment.user)
   projectWallNotificationComments: ProjectWallNotificationComment[];
+
+  @OneToMany(type => TaskUserTime, taskTime => taskTime.user)
+  taskTime: TaskUserTime[];
+
+  @OneToMany(type => Story, story => story.user)
+  stories: Story[];
+
+  @OneToMany(type => PlanningPokerVote, votes => votes.user)
+  planningPockerVotes: PlanningPokerVote[];
 }

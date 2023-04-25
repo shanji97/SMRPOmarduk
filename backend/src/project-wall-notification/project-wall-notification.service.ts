@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, In, Not, QueryFailedError } from 'typeorm';
 import { ProjectWallNotification } from './project-wall-notification.entity';
-import { ProjectWallNotificationComment } from '../project-wall-notification-comment/comment.entity';
 import { CreateProjectWallNotificationDto } from './dto/create-notification.dto';
 import { ProjectWallNotificationDto } from './dto/project-wall-notification.dto';
 
@@ -35,61 +34,13 @@ export class ProjectWallNotificationService {
     }
 
     async getAllProjectWallNotificationsWithComments(projectId: number): Promise<ProjectWallNotificationDto[]> {
-        const data = await this.entityManager.createQueryBuilder(ProjectWallNotification, 'notification')
+        return await this.entityManager.createQueryBuilder(ProjectWallNotification, 'notification')
             .leftJoinAndSelect('notification.comments', 'comment')
             .leftJoinAndSelect('comment.user', 'commentUser')
             .where('notification.projectId = :projectId', { projectId })
-            .select([
-                'notification.id',
-                'notification.author',
-                'notification.title',
-                'notification.projectId',
-                'notification.userId',
-                'notification.postContent',
-                'notification.created',
-                'comment.id',
-                'comment.author',
-                'comment.userId',
-                'comment.content',
-                'comment.created',
-                'commentUser.id',
-                'commentUser.username',
-            ])
-
             .orderBy('notification.created', 'DESC')
             .addOrderBy('comment.created', 'ASC')
             .getMany();
-
-        const notificationMap = new Map<number, ProjectWallNotificationDto>();
-        data.forEach((item) => {
-            const { id, author, title, projectId, userId, postContent, created } = item;
-            const comment = item.comments[0];
-            const commentDto = comment
-                ? {
-                    id: comment.id,
-                    author: comment.author,
-                    projectWallNotificationId: comment.projectWallNotificationId,
-                    userId: comment.userId,
-                    content: comment.content,
-                    created: comment.created,
-                }
-                : null;
-            if (notificationMap.has(id)) {
-                notificationMap.get(id).comments.push(commentDto);
-            } else {
-                notificationMap.set(id, {
-                    id,
-                    author,
-                    title,
-                    projectId,
-                    userId,
-                    postContent,
-                    created: created,
-                    comments: commentDto ? [commentDto] : [],
-                });
-            }
-        });
-        return Array.from(notificationMap.values());
     }
 
     async deleteProjectWallNotification(notificationId: number) {

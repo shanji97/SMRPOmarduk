@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import * as moment from 'moment';
+
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
+import { SprintStory } from './sprint-story.entity';
+import { Story } from '../story/story.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { SprintStory } from './sprint-story.entity';
 
 @Injectable()
 export class SprintService {
@@ -28,6 +30,13 @@ export class SprintService {
 
   async getSprintById(sprintId: number): Promise<Sprint> {
     return await this.sprintRepository.findOneBy({ id: sprintId });
+  }
+
+  async getStoriesForSprintById(sprintId: number): Promise<Story[]> {
+    return await this.entityManager.createQueryBuilder(Story, 's')
+      .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
+      .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .getMany();
   }
 
   async getActiveSprintForProject(projectId: number): Promise<Sprint> {
@@ -75,12 +84,12 @@ export class SprintService {
     if (!sprintRecord)
       throw new ValidationException('Invalid sprint ID');
 
-    // Can't edit sprints that have already started
-    if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment(), 'd'))
-      throw new ValidationException('Sprint has already started');
-
     // Check if end is after start
-    if (sprint.startDate || sprint.endDate) {
+    if ((sprint.startDate && sprint.startDate !== sprintRecord.startDate) || (sprint.endDate && sprint.endDate !== sprintRecord.endDate)) {
+      // Can't edit sprints that have already started
+      if (moment(sprintRecord.startDate, 'YYYY-MM-DD').isSameOrBefore(moment(), 'd'))
+        throw new ValidationException('Sprint has already started');
+
       if ((sprint.endDate || sprintRecord.endDate) < (sprint.startDate || sprintRecord.startDate))
         throw new ValidationException('End date is before start date');
 
@@ -101,7 +110,7 @@ export class SprintService {
         throw new ValidationException('Sprint date overlaps with one of other sprints');
     }
 
-    if (sprint.startDate || sprint.endDate || sprint.velocity) {
+    if ((sprint.startDate && sprint.startDate !== sprintRecord.startDate) || (sprint.endDate && sprint.endDate !== sprintRecord.endDate) || (sprint.velocity && sprint.velocity !== sprintRecord.velocity)) {
       let sprintDurationDays: number = moment(sprint.endDate || sprintRecord.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate || sprintRecord.startDate, 'YYYY-MM-DD'), 'd') + 1;
       if (sprintDurationDays > 6) {
         const weekends = sprintDurationDays / 7; // Calculate weekends TODO: improve

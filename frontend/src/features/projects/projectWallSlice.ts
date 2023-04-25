@@ -59,6 +59,16 @@ export const deletePost = createAsyncThunk('projectRole/deletePost', async (body
   }
 });
 
+export const deleteComment = createAsyncThunk('projectRole/deletePostComment', async (body: {projectId: string, commentId: string}, thunkAPI: any) => {
+  try {
+    const token = JSON.parse(localStorage.getItem('user')!).token;
+    return await projectWallService.deleteComment(body, token);
+  } catch (error: any) {
+    const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+    return thunkAPI.rejectWithValue(message)
+  }
+});
+
 export const addComment = createAsyncThunk('projectRole/createComment', async (body: Comment, thunkAPI: any) => {
   try {
     const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -114,6 +124,21 @@ export const projectRoleSlice = createSlice({
         state.isError = true
         state.message = action.payload
       })
+      .addCase(deleteComment.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = '';
+      })
+      .addCase(deleteComment.rejected, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = false;
+        state.isError = true
+        state.message = action.payload
+      })
       .addCase(createPost.pending, (state) => {
         state.isLoading = true
       })
@@ -160,7 +185,6 @@ export const projectRoleSlice = createSlice({
 
 
         const oldPost: PostData = state.wallPosts.find(post => post.id === newComment.notificationId)!;
-        console.log(JSON.stringify(oldPost));
         const oldIndex = state.wallPosts.findIndex(post => post.id === newComment.notificationId);
         const oldPosts = state.wallPosts.map(post => ({
           ...post,

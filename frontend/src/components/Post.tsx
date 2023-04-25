@@ -5,9 +5,9 @@ import {Form} from "react-bootstrap";
 import classes from './Post.module.css';
 import {Button} from "react-bootstrap";
 import {Comment} from "../classes/wallData";
-import {Trash, X} from "react-bootstrap-icons";
+import {Trash, TrashFill, X} from "react-bootstrap-icons";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {addComment, deletePost} from "../features/projects/projectWallSlice";
+import {addComment, deleteComment, deletePost} from "../features/projects/projectWallSlice";
 import {toast} from "react-toastify";
 
 interface PostProps {
@@ -46,7 +46,12 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
 
   const handleDeletePost = () => {
     dispatch(deletePost({projectId: activeProject.id!, postId: id}));
-    toast.info('Post deleted!');
+    // toast.info('Post deleted!');
+  }
+
+  const handleDeleteComment = (body: {commentId: string, projectId: string}) => {
+    dispatch(deleteComment(body));
+    window.location.reload();
   }
 
   const submitNewComment = (e: React.FormEvent<HTMLFormElement>) => {
@@ -78,7 +83,14 @@ const Post: React.FC<PostProps> = ({id, user, content, title, author, comments, 
         <Fragment>
           <h4>Comments:</h4>
           {comments?.map(comment => {
-            return <p><b>{comment.author}</b>: {comment.content}</p>
+            return <div>
+              <div style={{display: 'inline-flex'}}>
+                <p><b>{comment.author}</b>: {comment.content}</p>
+                <TrashFill color="blue" onClick={() => {handleDeleteComment({commentId: comment.id!, projectId: activeProject.id!})}} style={{ cursor: 'pointer', marginLeft: '2rem', marginTop: '.4rem'}} />
+              </div>
+            </div>
+            
+            
           })}
         </Fragment> :
         <p className='text-secondary'>No comments</p>

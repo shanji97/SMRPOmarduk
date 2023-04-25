@@ -5,13 +5,13 @@ import { JoiValidationPipe } from '../common/pipe/joi-validation.pipe';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
 import { SprintService } from './sprint.service';
+import { Story } from '../story/story.entity';
+import { StoryService } from '../story/story.service';
 import { Token } from '../auth/decorator/token.decorator';
 import { TokenDto, tokenSchema } from '../auth/dto/token.dto';
 import { UpdateSprintDto, UpdateSprintSchema } from './dto/update-sprint.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
-import { StoryService } from '../story/story.service';
-import { throwError } from 'rxjs';
 
 @ApiTags('sprint')
 @ApiBearerAuth()
@@ -37,6 +37,37 @@ export class SprintController {
       throw new ForbiddenException();
 
     return await this.sprintService.listSprintsForProject(projectId);
+  }
+
+  @ApiOperation({ summary: 'List stories for sprint' })
+  @ApiOkResponse()
+  @Get(':sprintId/story')
+  async listStoriesForSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<Story[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    return await this.sprintService.getStoriesForSprintById(sprintId);
+  }
+
+  @ApiOperation({ summary: 'Get active sprint for porject.' })
+  @ApiOkResponse()
+  @Get('project/:projectId/active')
+  async getActiveSprintByProjectId(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<Sprint> {
+    // Check permissions
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+
+    const sprint = await this.sprintService.getActiveSprintForProject(projectId);
+    if (!sprint)
+      throw new NotFoundException();
+    return sprint;
   }
 
   @ApiOperation({ summary: 'Get sprint by ID.' })
@@ -124,11 +155,7 @@ export class SprintController {
     if (!sprint)
       throw new BadRequestException('No sprint with the given ID exists in the ');
 
-    const storyIdsInSprint = (await this.storyService.getStoryIdsForSprint(storyId)).length;
-    if(sprint.velocity = storyIdsInSprint)
-      throw new BadRequestException('The number of stories in the sprint is equal to the sprint velocity.');
-
-    if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, UserRole.ScrumMaster))
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException('Only the scrum master can add the story to sprint.');
 
     await this.sprintService.addStoryToSprint(sprintId, storyId);

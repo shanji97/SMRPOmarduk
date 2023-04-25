@@ -202,9 +202,8 @@ export class ProjectController {
   @ApiOperation({ summary: "Toggles the active flag for the project." })
   @ApiOkResponse()
   @Patch(':projectId/set-active')
-  async setActiveProject(@Param('projectId', ParseIntPipe) projectId: number) {
+  async setActiveProject(@Param('projectId', ParseIntPipe) projectId: number): Promise<Project> {
     try {
-
       let existingProject: Project = await this.projectService.getProjectById(projectId);
       if (!existingProject) {
         throw new NotFoundException('Project with the given ID not found.');
@@ -215,6 +214,8 @@ export class ProjectController {
       let toggledActive: boolean = !existingProject.isActive;
 
       await this.projectService.setActiveProject(projectId, toggledActive);
+
+      return await this.projectService.getProjectById(projectId);
     }
     catch (ex) {
       if (ex instanceof ConflictException) {
@@ -328,7 +329,7 @@ export class ProjectController {
   @ApiNoContentResponse()
   @Delete(':projectId/notification/:notificationId')
   async deleteProjectWallNotification(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('notificationId', ParseIntPipe) notificationId: number) {
-    if (!this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+    if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
     await this.projectWallNotificationService.deleteProjectWallNotification(notificationId);
   }
@@ -337,7 +338,7 @@ export class ProjectController {
   @ApiNoContentResponse()
   @Delete(':projectId/notifications')
   async deleteProjectWallNotifications(@Token() token, @Param('projectId', ParseIntPipe) projectId: number) {
-    if (!this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+    if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
     await this.projectWallNotificationService.deleteProjectWallNotificationByProjectId(projectId);
   }
@@ -346,7 +347,7 @@ export class ProjectController {
   @ApiNoContentResponse()
   @Delete(':projectId/notification-comments/:commentId')
   async deleteProjectWallNotificationComment(@Token() token, @Param('projectId', ParseIntPipe) projectId: number, @Param('commentId', ParseIntPipe) commentId: number) {
-    if (!this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
+    if (!await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.ScrumMaster]))
       throw new ForbiddenException('Only the scrum master on this project can delete notifications.');
     await this.projectWallNotificationCommentService.deleteProjectWallNotificationComment(commentId);
   }
