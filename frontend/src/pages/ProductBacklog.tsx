@@ -161,7 +161,6 @@ function ProductBacklog() {
   useEffect(() => {
     if (isSuccess && !isLoading) {
       dispatch(reset);
-      console.log("kul");
     }
     if (isError && !isLoading) {
       dispatch(reset);

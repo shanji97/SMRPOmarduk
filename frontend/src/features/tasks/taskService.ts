@@ -17,6 +17,30 @@ const getTaskForSprint = async (sprintId: string, token: string) => {
     return response.data;
 }
 
+const getTaskForStory = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${TASK_API_URL}/story/${storyId}`, config);
+
+    return response.data;
+}
+
+const getTaskForUser = async (sprintId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${TASK_API_URL}/sprint/${sprintId}`, config);
+
+    return response.data;
+}
+
 const createTask = async (taskData: any, token: string) => { // TODO change data type from any to TaskData if possible
     const config = {
         headers: {
@@ -74,6 +98,33 @@ const assignUser = async (assignUserData: any, token: string) => {
     return response.data;
 }
 
+const getWorkLogs = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${TASK_API_URL}/${taskId}/time`, config);
+
+    return response.data;
+}
+
+const logWork = async (body: {date?: string, userId?: string, taskId?: string}, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const requestBody = {...body};
+    delete requestBody.taskId;
+    delete requestBody.date;
+    delete requestBody.userId;
+
+    const response = await axios.post(`${TASK_API_URL}/${body.taskId}/time/${body.userId}/${body.date}`, requestBody, config);
+
+    return response.data;
+}
+
 const startTime = async (taskId: string, token: string) => {
     const config = {
         headers: {
@@ -102,6 +153,10 @@ const taskService = {
     editTask,
     deleteTask,
     assignUser,
+    getTaskForUser,
+    getTaskForStory,
+    getWorkLogs,
+    logWork,
     startTime,
     stopTime
 }
