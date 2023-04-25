@@ -74,6 +74,9 @@ export class User {
   @OneToMany(type => Story, story => story.user)
   stories: Story[];
 
+  @OneToMany(type => Story, story => story.assignedUser)
+  assignedStories: Story[];
+
   @OneToMany(type => PlanningPokerVote, votes => votes.user)
-  planningPockerVotes: PlanningPokerVote[];
+  planningPokerVotes: PlanningPokerVote[];
 }

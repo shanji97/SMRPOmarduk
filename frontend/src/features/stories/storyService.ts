@@ -32,6 +32,18 @@ const getStoriesForSprint = async (sprintId: string, token: string) => {
     return response.data;
 }
 
+const getStoriesForUser = async (token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${STORY_API_URL}/user`, config);
+
+    return response.data;
+}
+
 
 const create = async (storyData: StoryData, token: string) => {
     const config = {
@@ -39,7 +51,6 @@ const create = async (storyData: StoryData, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    console.log(storyData)
     
     const createStoryData = {
         title:  storyData.title,
@@ -74,7 +85,6 @@ const editStory = async (storyData: StoryData, token: string) => {
     
     }
 
-    console.log(storyData);
 
     const response = await axios.patch(`${STORY_API_URL}/${storyData.id}/update`, editStoryData, config);
 
@@ -146,7 +156,8 @@ const storyService = {
     updateStoryCategory,
     editStory,
     updateTimeComplexity,
-    rejectStory
+    rejectStory,
+    getStoriesForUser,
 }
 
 export default storyService;

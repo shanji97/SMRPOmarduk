@@ -33,6 +33,10 @@ export class TaskService {
     return await this.taskRepository.find({ where: { storyId: In(storyIds) }, relations: ['assignedUser'] });
   }
 
+  async getTasksForUser(userId: number): Promise<Task[]> {
+    return await this.taskRepository.find({ where: { assignedUserId: userId }, relations: ['story'] });
+  }
+
   async getTaskById(taskId: number): Promise<Task> {
     return await this.taskRepository.findOne({ where: { id: taskId }, relations: ['assignedUser'] });
   }
@@ -47,6 +51,10 @@ export class TaskService {
     if (!await this.storyService.isStoryInActiveSprint(storyId))
       throw new ValidationException('Story not in active sprint');
 
+    // Check if story already completed
+    if (await this.storyService.isStoryFinished(storyId))
+      throw new ValidationException('Story already finished');
+    
     // TODO: Check remaining value
     
 
@@ -164,6 +172,66 @@ export class TaskService {
     });
   }
 
+  async startTaskTiming(taskId: number): Promise<void> {
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
+
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (await this.storyService.isStoryFinished(task.storyId)) // Check if story is finished
+      throw new ValidationException('Story already finished');
+    if (task.category == TaskCategory.ACTIVE || task.dateActive)
+      throw new ValidationException('Task already active'); 
+    if (task.category !== TaskCategory.ACCEPTED)
+      throw new ValidationException('Task not accepted');
+
+    await this.taskRepository.update({ id: taskId }, {
+      category: TaskCategory.ACTIVE,
+      dateActive: () => 'NOW()',
+    });
+  }
+
+  async stopTaskTiming(taskId: number): Promise<void> {
+    // Allow to stop timing after sprint isn't active anymore
+
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (task.category !== TaskCategory.ACTIVE || !task.dateActive)
+      throw new ValidationException('Task not active');
+
+    // Add log time record
+    let elapsed = +(moment().diff(moment((<Date><unknown>task.dateActive).toISOString().replace('Z', '')), 'm') / 60.0).toFixed(2); // Because problems with dates
+    if (elapsed < 0) // Failsafe (calculation error)
+      elapsed = 0;
+    const today: string = moment().format('YYYY-MM-DD');
+    const work = await this.getWorkOnTaskForUserByDate(taskId, task.assignedUserId, today);
+    const last = await this.getLastWorkOnTask(taskId);
+    await this.setWorkOnTask(today, taskId, task.assignedUserId, { spent: ((work) ? work.spent + elapsed : elapsed), remaining: last?.remaining || 0 });
+
+    await this.taskRepository.update({ id: taskId }, {
+      category: TaskCategory.ACCEPTED,
+      dateActive: null,
+    });
+  }
+
+  async endTask(taskId: number): Promise<void> {
+    // Allow to stop timing after sprint isn't active anymore
+
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (task.category !== TaskCategory.ACCEPTED)
+      throw new ValidationException('Task not accepted');
+
+    await this.taskRepository.update({ id: taskId }, {
+      category: TaskCategory.ENDED,
+      dateActive: null,
+    });
+  }
+
   async isTaskInActiveSprint(taskId: number): Promise<boolean> {
     const storyId = await this.getStoryIdForTaskById(taskId);
     if (!storyId) // Task does not exit
@@ -171,18 +239,36 @@ export class TaskService {
     return await this.storyService.isStoryInActiveSprint(storyId);
   }
 
-  async hasUserPermissionForTask(userId: number, taskId: number): Promise<boolean> {
+  async hasUserPermissionForTask(userId: number, taskId: number, role: UserRole[] | UserRole | number[] | number | null = null): Promise<boolean> {
     const storyId = await this.getStoryIdForTaskById(taskId);
     if (!storyId)
       return false;
-    return await this.storyService.hasUserPermissionForStory(userId, storyId);
+    return await this.storyService.hasUserPermissionForStory(userId, storyId, role);
   }
 
   async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
     return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' }})
   }
 
+  async getWorkOnTaskForUser(taskId: number, userId: number): Promise<TaskUserTime[]> {
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' }})
+  }
+
+  async getWorkOnTaskForUserByDate(taskId: number, userId: number, date: string): Promise<TaskUserTime | null> {
+    const result = await this.taskUserTimeRepository.findOneBy({ taskId: taskId, userId: userId, date: date });
+    return result || null;
+  }
+
+  async getLastWorkOnTask(taskId: number): Promise<TaskUserTime | null> {
+    const result = await this.taskUserTimeRepository.findOne({ where: { taskId: taskId }, order: { date: 'DESC', remaining: 'DESC' } });
+    return result || null;
+  }
+
   async setWorkOnTask(date: string, taskId: number, userId: number, work: DeepPartial<TaskUserTime>): Promise<void> {
+    // We can't enter work for future
+    if (moment(date, 'YYYY-MM-DD').isAfter(moment(), 'd'))
+      throw new ValidationException('Can\'t enter work on task for future');
+
     work.date = date;
     work.taskId = taskId;
     work.userId = userId;
