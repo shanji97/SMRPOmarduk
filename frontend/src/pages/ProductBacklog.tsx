@@ -182,7 +182,7 @@ function ProductBacklog() {
     if (activeProject.id) {
       dispatch(getAllSprints(activeProject.id!));
       dispatch(getProjectUserRoles(activeProject.id!))
-      
+      console.log(activeProject)
     }
   }, [activeProject]);
 
@@ -363,8 +363,22 @@ function ProductBacklog() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
-        if (!destination) {
+        if (!destination || destination === source) {
           return;
+        }
+        if (destination.droppableId === "Allocated") {
+          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+            toast.error("Sprint Velocity is full");
+            return;
+
+          }
+        }
+        if (source.droppableId === "Unallocated" && destination.droppableId === "Done") {
+          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+            toast.error("Story is not in active Sprint and is not realised");
+            return;
+
+          }
         }
 
         
@@ -664,9 +678,13 @@ function ProductBacklog() {
                                 draggableId={item.id!}
                                 index={index}
                                 isDragDisabled={
-                                  status ===
-                                    ProductBacklogItemStatus.WONTHAVE ||
+                                  
+                                  status === ProductBacklogItemStatus.WONTHAVE ||
                                   !Boolean(itemTime[item.id!]) || !isUserScramMaster()
+                                  ? true
+                                  : status === ProductBacklogItemStatus.DONE
+                                  ? true
+                                  : undefined
                                 }
                               >
                                 {(provided, snapshot) => {

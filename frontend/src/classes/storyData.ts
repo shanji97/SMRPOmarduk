@@ -66,3 +66,30 @@ export interface RejectStory {
     description: string
     storyId: string
 }
+
+export interface NotificationData {
+    id?:       string,
+    description: string
+    storyId: string
+}
+
+export interface PostDataNotification {
+    id?: string,
+    userId?: string,
+    storyId?: string,
+    notificationText: string,
+    notificationType: number,
+    created?: string,
+    approved: boolean
+}
+
+export interface Comment {
+    id?: string,
+    projectId?: string,
+    notificationId?: string,
+    content: string,
+    author: string,
+    userId: string,
+    created?: string
+    approved: boolean
+  }
