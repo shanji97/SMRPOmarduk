@@ -172,7 +172,7 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category == TaskCategory.ACTIVE)
+    if (task.category == TaskCategory.ACTIVE || task.dateActive)
       throw new ValidationException('Task already active'); 
     if (task.category !== TaskCategory.ACCEPTED)
       throw new ValidationException('Task not accepted');
@@ -189,11 +189,13 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category !== TaskCategory.ACTIVE)
+    if (task.category !== TaskCategory.ACTIVE || !task.dateActive)
       throw new ValidationException('Task not active');
 
     // Add log time record
-    const elapsed = +(moment((<Date><unknown>task.dateActive).toISOString().replace('Z', '')).diff(moment(), 'm') / 60.0).toFixed(2); // Because problems with dates
+    let elapsed = +(moment().diff(moment((<Date><unknown>task.dateActive).toISOString().replace('Z', '')), 'm') / 60.0).toFixed(2); // Because problems with dates
+    if (elapsed < 0) // Failsafe (calculation error)
+      elapsed = 0;
     const today: string = moment().format('YYYY-MM-DD');
     const work = await this.getWorkOnTaskForUserByDate(taskId, task.assignedUserId, today);
     const last = await this.getLastWorkOnTask(taskId);
