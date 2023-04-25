@@ -1,62 +1,19 @@
-import React, { Component, useEffect, useState } from "react";
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-  DragDropContextProps,
-} from "@hello-pangea/dnd";
-import { v4 as uuid } from "uuid";
-import { Button, Card, CloseButton, Col, Dropdown, Form, InputGroup, ListGroup, Modal, Nav, ProgressBar, Row, Tab, Table } from "react-bootstrap";
-import {
-  CircleFill,
-  Clock,
-  Pencil,
-  ThreeDots,
-  Trash,
-  Stack,
-  ConeStriped,
-  X,
-} from "react-bootstrap-icons";
+import React, { useEffect } from "react";
+import { Card, Nav, Tab, Table } from "react-bootstrap";
+
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { Link, useNavigate } from "react-router-dom";
-import { StoryData, SprintBacklogItemStatus } from '../classes/storyData';
+import { useNavigate } from "react-router-dom";
 
-import produce from 'immer';
-import  DeleteConfirmation  from './DeleteConfirmation'
-import { getAllStory, deleteStory, getStoriesForUser } from "../features/stories/storySlice";
+import { getStoriesForUser } from "../features/stories/storySlice";
 import classes from './Dashboard.module.css';
-import StoryModal from "./StoryModal";
-import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 
 
 function Dashboard() {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const {storiesForUser} = useAppSelector(state => state.stories);
-  
-  //demo
-  const initialList = [
-    {
-      id: 1,
-      title: "title1",
-      status: "Start Work",
-      user: "matevz",
-      workedTime: 3,
-      remainingTime: 2,
-      estimatedTime: 6
-    },
-    {
-      id: 2,
-      title: "title2",
-      status: "Release task",
-      user: "janez",
-      workedTime: 4,
-      remainingTime: 1,
-      estimatedTime: 5
-    },
-  ];
-  const [list, setList] = useState(initialList);
+  const { user } = useAppSelector((state) => state.users);
+  let { storiesForUser } = useAppSelector((state) => state.stories);
 
 
   useEffect(() => {
@@ -64,91 +21,21 @@ function Dashboard() {
   }, [])
 
 
-  //let stories = useAppSelector((state) => state.stories);
-  //console.log(stories)
-  const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.users);
-
-  
   useEffect(() => {
     if (user === null) {
+      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
 
 
- 
-  let { stories, isSuccess} = useAppSelector((state) => state.stories);
-
-
-  const [itemsByStatus, setItemsByStatus] = useState<StoryData[]>([]);
-
-  const stringPriority = (priority: number): string[] => {
-    switch(priority) {
-      case 0:
-        return ['Must have', 'badge-light-must'];
-      case 1:
-        return ['Could have', 'badge-light-could'];
-      case 2: 
-        return ['Should have', 'badge-light-should'];
-      case 3: 
-        return ["Won\'t have this time", 'gray-wont'];
-      default:
-        return [];
-    }
-  }
-  
-
- 
-
-
-  
-  //doda začetne elemnte
-  
-  useEffect(() => {
-
-    const isEmpty = Object.values(itemsByStatus).every(value => value);
-    if (isEmpty && isSuccess) {
-      
-          
-          setItemsByStatus(stories);
-          
-    }
-
-    
-    
-  }, [isSuccess]);
-
-
-
-//{Object.values.map(([columnId, column], index) => {
-
-
-  
-const initvalue: StoryData = {
-  id: "",
-  title: "",
-  description: "",
-  tests: [],
-  priority: 0,
-  businessValue: 0,
-  sequenceNumber: 0,
-  category: 0,
-  timeComplexity: 0,
-  isRealized: false
-};
-
-
- 
- 
-
-  
   return (
     <>
     <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
     <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
       
     {storiesForUser.map((item) => {
+            console.log(item)
             return (
             
            <Card className="mt-3">
@@ -193,18 +80,7 @@ const initvalue: StoryData = {
         
       <tbody>
 
-      {list.map((item) => (
-        <tr key={item.id}>
-          <td >{item.id}</td>
-          <td >{item.title}</td>
-          <td ><Button className="align-middle text-decoration-none" variant="link">{item.status}</Button></td>
-          
-          <td >{item.workedTime}</td>
-          <td >{item.remainingTime}</td>
-          <td >{item.estimatedTime}</td>
-          <td ><Button variant="outline-primary" size="sm">Work History</Button></td>
-        </tr>
-      ))}
+      {/* <Tasks storyId={story.id} /> */}
       
   
      
