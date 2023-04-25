@@ -4,6 +4,7 @@ import { getBaseUrl } from "../../helpers/helpers";
 
 
 const STORY_API_URL = `${getBaseUrl()}/api/story`;
+const SPRINTS_API_URL = `${getBaseUrl()}/api/sprint`;
 
 // const STORY_API_URL = `http://localhost:3000/api/story`;
 
@@ -15,6 +16,18 @@ const getAllStory = async (token: string) => {
     }
 
     const response = await axios.get(`${STORY_API_URL}`, config);
+
+    return response.data;
+}
+
+const getStoriesForSprint = async (sprintId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${SPRINTS_API_URL}/${sprintId}/story`, config);
 
     return response.data;
 }
@@ -114,6 +127,7 @@ const updateTimeComplexity = async (updateTimeComplexity: UpdateTimeComplexity, 
 const storyService = {
     create,
     getAllStory,
+    getStoriesForSprint,
     deleteStory,
     updateStoryCategory,
     editStory,

@@ -6,6 +6,7 @@ let user = JSON.parse(localStorage.getItem('user')!);
 
 interface StoryState {
     stories: StoryData[]
+    storiesForSprint: StoryData[]
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -18,6 +19,7 @@ interface StoryState {
 
 const initialState: StoryState = {
     stories: [],
+    storiesForSprint: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -33,6 +35,17 @@ export const getAllStory = createAsyncThunk('/story/getAllStory', async (_, thun
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.getAllStory(token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        console.log(message);
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const getStoriesForSprint = createAsyncThunk('/story/getStoriesForSprint', async (sprintId: string, thunkAPI: any) => { 
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.getStoriesForSprint(sprintId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         console.log(message);
@@ -131,11 +144,27 @@ export const storySlice = createSlice({
                 state.message = '';
                 state.stories = action.payload
             })
-            .addCase(getAllStory.rejected, (state, action) => {
+            .addCase(getStoriesForSprint.rejected, (state, action) => {
                 state.isLoading = false
                 state.isSuccess = false;
                 state.isError = true
                 state.message = action.payload
+            })
+            .addCase(getStoriesForSprint.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getStoriesForSprint.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.storiesForSprint = action.payload;
+            })
+            .addCase(deleteStory.rejected, (state, action) => {
+                state.isLoading = false
+                state.isDeleteError = true
+                state.message = action.payload
+                state.isDeleteSuccess = false;
             })
             .addCase(deleteStory.pending, (state) => {
                 state.isLoading = true
@@ -145,14 +174,6 @@ export const storySlice = createSlice({
                 state.isDeleteSuccess = true;
                 state.isDeleteError = false;
                 state.message = '';
-                // @ts-ignore
-                state.stories = state.stories.filter(story => story.id !== action.payload)
-            })
-            .addCase(deleteStory.rejected, (state, action) => {
-                state.isLoading = false
-                state.isDeleteError = true
-                state.message = action.payload
-                state.isDeleteSuccess = false;
             })
             .addCase(editStory.pending, (state) => {
                 state.isLoading = true

@@ -77,46 +77,13 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectID/sprints" element={<Sprints />} />
           <Route path="/:projectID/add-story" element={<AddStory />} />
-          <Route path='/product-backlog' element={<ProductBacklog />} />
-          <Route path='/sprint-backlog' element={<SprintBacklog />} />
-          <Route path='/my-tasks' element={<MyTasks />} />
-          <Route path='/projects/:projectID/wall' element={<ProjectWall />} />
           <Route path="/product-backlog" element={<ProductBacklog />} />
           <Route path="/sprint-backlog" element={<SprintBacklog />} />
           <Route path="/my-tasks" element={<MyTasks />} />
-
-          {
-            // this is for testing
-          }
-
-          <Route
-            path="/add-task/:storyID/"
-            element={
-              <TaskForm
-                storyId={1}
-                descriptionInit=""
-                timeRequiredInit=""
-                assignedUserIdInit=""
-                closeModal={() => {}}
-                showModal={true}
-              />
-            }
-          />
-          <Route
-            path="/edit-task/"
-            element={
-              <EditTaskForm
-                id={"1"}
-                descriptionInit="Prepare UI"
-                timeRequiredInit="1"
-              />
-            }
-          />
-          <Route
-            path="/assign-user/"
-            element={<AssignUserForm id={"2"} assignedUserIdInit="" />}
-          />
-          <Route path="/delete-task/" element={<DeleteTaskModal id={"13"} />} />
+          <Route path="/projects/:projectID/wall" element={<ProjectWall />} />
+          <Route path="/product-backlog" element={<ProductBacklog />} />
+          <Route path="/sprint-backlog" element={<SprintBacklog />} />
+          <Route path="/my-tasks" element={<MyTasks />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />

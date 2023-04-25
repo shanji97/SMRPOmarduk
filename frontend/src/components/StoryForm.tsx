@@ -67,6 +67,8 @@ const StoryForm: React.FC<StoryProps> = ({
     }
     if (storyState.isUpdateError && !storyState.isLoading) {
       toast.error(storyState.message);
+      dispatch(reset());
+      dispatch(getAllStory());
     }
   }, [
     storyState.isUpdateSuccess,

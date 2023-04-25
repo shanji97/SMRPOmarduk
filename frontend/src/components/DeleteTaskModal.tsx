@@ -19,18 +19,30 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
-import { createTask, deleteTask, reset } from "../features/tasks/taskSlice";
+import {
+  createTask,
+  deleteTask,
+  getTasksForSprint,
+  reset,
+} from "../features/tasks/taskSlice";
 
 interface DeleteTaskProps {
   id?: string;
+  showModal: boolean;
+  closeModal: () => void;
 }
 
-const EditTaskForm: React.FC<DeleteTaskProps> = ({ id }) => {
+const EditTaskForm: React.FC<DeleteTaskProps> = ({
+  id,
+  showModal,
+  closeModal,
+}) => {
   const dispatch = useAppDispatch();
   let { isSuccess, isError, isLoading, message } = useAppSelector(
     (state) => state.tasks
   );
   const { activeProject } = useAppSelector((state) => state.projects);
+  let { activeSprint } = useAppSelector((state) => state.sprints);
   const { users } = useAppSelector((state) => state.users);
   const navigate = useNavigate();
 
@@ -41,8 +53,10 @@ const EditTaskForm: React.FC<DeleteTaskProps> = ({ id }) => {
     if (isSuccess && !isLoading) {
       toast.info("Task successfully deleted!");
       dispatch(reset());
-      // dispatch(getAllStory);
-      // closeModal();
+      if (activeSprint != undefined) {
+        // dispatch(getTasksForSprint(activeSprint.id!));
+      }
+      closeModal();
     }
     if (isError && !isLoading) {
       toast.error(message);
@@ -88,13 +102,15 @@ const EditTaskForm: React.FC<DeleteTaskProps> = ({ id }) => {
   };
 
   return (
-    <Modal show={true}>
+    <Modal show={showModal} onHide={closeModal}>
       <Modal.Header closeButton>
         <Modal.Title>Delete Confirmation</Modal.Title>
       </Modal.Header>
       <Modal.Body>Are you sure you want to delete this task?</Modal.Body>
       <Modal.Footer>
-        <Button variant="default">Cancel</Button>
+        <Button variant="default" onClick={closeModal}>
+          Cancel
+        </Button>
         <Button variant="danger" onClick={handleSubmit}>
           Delete
         </Button>

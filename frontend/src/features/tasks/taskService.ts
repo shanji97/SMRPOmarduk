@@ -5,12 +5,30 @@ import { getBaseUrl } from "../../helpers/helpers";
 const TASK_API_URL = `${getBaseUrl()}/api/task`;
 
 
+const getTaskForSprint = async (sprintId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${TASK_API_URL}/sprint/${sprintId}`, config);
+
+    return response.data;
+}
+
 const createTask = async (taskData: any, token: string) => { // TODO change data type from any to TaskData if possible
     const config = {
         headers: {
             Authorization: `JWT ${token}`
         }
     }
+
+    if (taskData.assignedUserId === "") {
+        delete taskData.assignedUserId;
+    }
+
+    console.log(taskData)
     let storyId = taskData.storyId;
     delete taskData.storyId;
 
@@ -27,6 +45,7 @@ const editTask = async (taskData: any, token: string) => { // TODO change data t
     }
     let taskId = taskData.id;
     delete taskData.id;
+    console.log(taskData)
 
     const response = await axios.patch(`${TASK_API_URL}/${taskId}`, taskData, config);
 
@@ -56,6 +75,7 @@ const assignUser = async (assignUserData: any, token: string) => {
 }
 
 const taskService = {
+    getTaskForSprint,
     createTask,
     editTask,
     deleteTask,
