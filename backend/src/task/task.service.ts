@@ -33,6 +33,10 @@ export class TaskService {
     return await this.taskRepository.find({ where: { storyId: In(storyIds) }, relations: ['assignedUser'] });
   }
 
+  async getTasksForUser(userId: number): Promise<Task[]> {
+    return await this.taskRepository.find({ where: { assignedUserId: userId }, relations: ['story'] });
+  }
+
   async getTaskById(taskId: number): Promise<Task> {
     return await this.taskRepository.findOne({ where: { id: taskId }, relations: ['assignedUser'] });
   }
