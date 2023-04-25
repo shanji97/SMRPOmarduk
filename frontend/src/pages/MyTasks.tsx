@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getStoriesForUser } from "../features/stories/storySlice";
 import classes from './Dashboard.module.css';
+import Tasks from "../components/Tasks";
 
 
 function Dashboard() {
@@ -23,7 +24,6 @@ function Dashboard() {
 
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -35,7 +35,6 @@ function Dashboard() {
     <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
       
     {storiesForUser.map((item) => {
-            console.log(item)
             return (
             
            <Card className="mt-3">
@@ -79,22 +78,13 @@ function Dashboard() {
         </thead>
         
       <tbody>
-
-      {/* <Tasks storyId={story.id} /> */}
-      
-  
-     
-
-</tbody>
+        <Tasks storyId={item.id!} />
+      </tbody>
 
 
 
 
       </Table>
-     
-     
-
-                
               </Tab.Pane>
               <Tab.Pane eventKey="second">
                 dfvdf

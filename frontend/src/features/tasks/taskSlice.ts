@@ -6,6 +6,7 @@ let user = JSON.parse(localStorage.getItem('user')!);
 interface TaskState {
     tasks: any[] // TODO
     tasksForSprint: any[]
+    tasksForStory: any[]
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -15,6 +16,7 @@ interface TaskState {
 const initialState: TaskState = {
     tasks: [],
     tasksForSprint: [],
+    tasksForStory: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -26,6 +28,16 @@ export const getTasksForSprint = createAsyncThunk('/task/getTaskForSprint', asyn
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.getTaskForSprint(sprintId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getTasksForStory = createAsyncThunk('/task/getTask2ForSprint', async (storyId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.getTaskForStory(storyId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -97,6 +109,22 @@ export const taskSlice = createSlice({
             state.tasksForSprint = action.payload;
         })
         .addCase(getTasksForSprint.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getTasksForStory.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getTasksForStory.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.tasksForStory = action.payload;
+        })
+        .addCase(getTasksForStory.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
