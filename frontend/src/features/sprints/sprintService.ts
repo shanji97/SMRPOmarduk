@@ -77,13 +77,24 @@ const deleteSprint = async (sprintId: string, token: string) => {
     const response = await axios.delete(`${SPRINTS_API_URL}/${sprintId}`, config);
     return response.data;
 }
+const getActiveSprint = async (projectId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${SPRINTS_API_URL}/project/${projectId}/active`, config);
+    return response.data;
+}
 
 const sprintService = {
     createSprint,
     getAllSprints,
     updateSprint,
     deleteSprint,
-    addStoryToSprint
+    addStoryToSprint,
+    getActiveSprint
 }
 
 export default sprintService;

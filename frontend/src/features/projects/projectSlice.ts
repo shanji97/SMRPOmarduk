@@ -92,6 +92,15 @@ export const editProject = createAsyncThunk('project/editProject', async (projec
         return thunkAPI.rejectWithValue(message)
     }  
 });
+export const getProjectUserRoles = createAsyncThunk('project/getProjectUserRoles', async (id: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await projectService.getProjectUserRoles(id, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
 
 
 export const projectSlice = createSlice({
@@ -182,6 +191,22 @@ export const projectSlice = createSlice({
             state.userRoles = action.payload;
         })
         .addCase(editProject.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getProjectUserRoles.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getProjectUserRoles.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.userRoles = action.payload;
+        })
+        .addCase(getProjectUserRoles.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

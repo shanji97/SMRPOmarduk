@@ -32,6 +32,7 @@ import {
   Stack,
   ConeStriped,
   X,
+  Eraser,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
@@ -54,9 +55,17 @@ import StoryForm from "../components/StoryForm";
 import { getActiveProject } from "../features/projects/projectSlice";
 import {
   addStoryToSprint,
+  getActiveSprint,
   getAllSprints,
+  updateSprint,
 } from "../features/sprints/sprintSlice";
 import { StorySprint } from "../classes/sprintData";
+import Projects from "./Projects";
+import { getProjectUserRoles } from  "../features/projects/projectSlice";
+import { parseJwt } from "../helpers/helpers";
+import RejectStoryModal from "./RejectStoryModal";
+import { toast } from "react-toastify";
+
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -114,13 +123,14 @@ const defaultItems = {
   [ProductBacklogItemStatus.DONE]: [],
 };
 
-console.log(Object.keys(defaultItems));
+
 
 type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
-  const { activeProject } = useAppSelector((state) => state.projects);
+  const { activeProject, userRoles } = useAppSelector((state) => state.projects);
+  
   //dispatch(getActiveProject());
   //helper funkcija za updatat useState
   const [sgs, setSgs] = useState("undefined");
@@ -128,8 +138,22 @@ function ProductBacklog() {
   let { stories, isSuccess, isLoading, isError } = useAppSelector(
     (state) => state.stories
   );
-
+  let projectroles = useAppSelector((state) => state.projects);
   let SprintSelector = useAppSelector((state) => state.sprints);
+  
+  useEffect(() => {
+    if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
+      toast.success("Story successfully created!");
+      dispatch(reset());
+    }
+    if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
+      toast.error(SprintSelector.message);
+    }
+  }, [
+    SprintSelector.isStoryInSprint,
+    SprintSelector.isNotStoryInSprint ,
+    SprintSelector.isLoading,
+  ]);
 
   //console.log(SprintSelector)
   useEffect(() => {
@@ -146,8 +170,72 @@ function ProductBacklog() {
   useEffect(() => {
     dispatch(getAllStory());
     dispatch(getActiveProject());
-    dispatch(getAllSprints(activeProject.id!));
+    
+    
   }, []);
+
+  useEffect(() => {
+    
+    if (activeProject.id) {
+      dispatch(getAllSprints(activeProject.id!));
+      dispatch(getProjectUserRoles(activeProject.id!))
+      dispatch(getActiveSprint(activeProject.id!))
+    }
+  }, [activeProject]);
+
+  useEffect(() => {
+    
+    if (activeProject.id) {
+      const dataArray = Object.values(userRoles);
+      const filteredData = dataArray.filter(item => item.role === 1);
+      if (filteredData) {
+        setScrumMasterId(filteredData[0].userId)
+      }
+      
+    }
+  }, [userRoles]);
+
+//console.log(projectroles.userRoles)
+
+
+  //uporabniki
+  let { users, user } = useAppSelector((state) => state.users);
+  const [allUsers, setAllUsers] = useState<String[]>([]);
+
+  useEffect(() => {
+    if (!(users.length === 0)) {
+      const usernames = users.map((user) => user.username);
+      setAllUsers(usernames);
+    }
+  }, [users]);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState();
+  const [scrumMasterId, setScrumMasterId] = useState();
+  useEffect(() => {
+    if (user === null) {
+      return;
+    }
+    const token = JSON.parse(localStorage.getItem("user")!).token;
+    const userData = parseJwt(token);
+    setIsAdmin(userData.isAdmin);
+    setUserName(userData.sub);
+    setUserId(userData.sid)
+  }, [user]);
+
+  const isUserScramMaster = () => {
+    if (scrumMasterId === userId && userId && scrumMasterId)
+    return true;
+    else return false;
+    
+  };
+
+
+  
+//console.log(isUserScramMaster())
+
+
 
   // NOTE: temporary fix, change this if needed
   /*
@@ -164,7 +252,8 @@ function ProductBacklog() {
   //let stories = useAppSelector((state) => state.stories);
   //console.log(stories)
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.users);
+
+  
 
   useEffect(() => {
     if (user === null) {
@@ -219,6 +308,41 @@ function ProductBacklog() {
     }
   };
 
+  type HandrejectFunc = (args: {
+    status: ProductBacklogItemStatus;
+    itemToDelete: StoryData;
+  }) => void;
+
+  /* 
+  const handleReject: HandrejectFunc = ({ status, itemToDelete }) =>
+    setItemsByStatus((current) =>
+      produce(current, (draft) => {
+        
+
+       
+        const niki = draft[
+                  source.droppableId as ProductBacklogItemStatus
+                ][source.index];
+                
+        const [removed] = draft[
+          itemToDelete.id as ProductBacklogItemStatus
+        ].splice(source.index, 1);
+
+        draft[destination.droppableId as ProductBacklogItemStatus].splice(
+          destination.index,
+          0,
+          removed
+        );
+        let projectRoleData = {
+          projectId: parseInt(activeProject?.id || ""),
+          category: categoryChange(destination.droppableId),
+          storyId: removed.id || "",
+        };
+        dispatch(updateStoryCategory(projectRoleData));
+      })
+    );
+
+    */
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
     destination,
@@ -251,14 +375,18 @@ function ProductBacklog() {
         };
         dispatch(updateStoryCategory(projectRoleData));
 
-        /*if (destination.droppableId === "Allocated" && destination.droppableId != source.droppableId) {
+        if (destination.droppableId === "Allocated" && destination.droppableId != source.droppableId) {
           const storySprint: StorySprint = {
-            sprintId: number,
-            storyId: removed.id
+            sprintId: parseInt(SprintSelector.activeSprint?.id || ""),
+            storyId: parseInt(removed.id || "")
           
         };
-        dispatch(updateSprint(sprintBody)); 
-        } */
+        dispatch(addStoryToSprint(storySprint)); 
+        } 
+        //itemsByStatus[destination.droppableId].length
+        console.log(typeof destination.droppableId)
+        console.log(destination.droppableId === "")
+
       })
     );
   };
@@ -284,6 +412,10 @@ function ProductBacklog() {
   const [itemVisibility, setItemVisibility] = useState<{
     [itemId: string]: boolean;
   }>({});
+  //za beleženje vnosačasa
+  const [itemTime, setItemTime] = useState<{
+    [itemId: string]: number;
+  }>({});
 
   const handleFormToggle = (itemId: string) => {
     setItemVisibility((prev) => {
@@ -296,20 +428,32 @@ function ProductBacklog() {
     (itemId: string) => (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       handleFormToggle(itemId);
+
+      
+
+      let projectRoleData = {
+        timeComplexity: itemTime[itemId],
+        storyId: itemId,
+      };
+      dispatch(updateTimeComplexity(projectRoleData));
+
     };
   const handleKeyDown = (e: any) => {
     e.preventDefault();
 
     const val = e.target.value;
-    let projectRoleData1 = {
-      timeComplexity: val,
-      storyId: e.target.id,
-    };
-
-    console.log(projectRoleData1);
+    const targetId = e.target.id
+    
     if (val.length > 0 && /^\d+$/.test(val)) {
-      dispatch(updateTimeComplexity(projectRoleData1));
-    }
+      setItemTime((prev) => {
+        const newState = { ...prev };
+        newState[targetId] = val;
+        return newState;
+      });
+  }
+
+    
+    
     //else if (e.target.value == '') dispatch(updateTimeComplexity(projectRoleData2));
     //dispatch(getAllStory());
   };
@@ -336,11 +480,16 @@ function ProductBacklog() {
           // Adding new item as "to do"
           //console.log("zgodbice ob updatu")
           //console.log(stories)
+          const visibilityObject: { [itemId: string]: boolean } = {};
+          const insertTimeObject: { [itemId: string]: number } = {};
           stories.forEach((story: StoryData) => {
             //za beleženje časa init values
-            const visibilityObject: { [itemId: string]: boolean } = {};
+
             visibilityObject[story.id!] = false;
-            setItemVisibility(visibilityObject);
+            //za beleženje vnosa časa
+            insertTimeObject[story.id!] = story.timeComplexity;
+           
+            
             //storyi
             let cat;
             if (story.priority === 0) {
@@ -366,10 +515,12 @@ function ProductBacklog() {
               isRealized: story.isRealized,
             });
           });
+          setItemVisibility(visibilityObject);
+          setItemTime(insertTimeObject);
         })
       );
     }
-  }, [isSuccess, stories]);
+  }, [isSuccess]);
 
   //{Object.values.map(([columnId, column], index) => {
 
@@ -383,6 +534,9 @@ function ProductBacklog() {
 
   // modal za edit story
   const [showEditStoryModal, setShowEditStoryModal] = useState(false);
+
+  // modal za reject
+  const [showRejectStoryModal, setShowRejectStoryModal] = useState(false);
 
   const openNewStoryModal = () => {
     setShowNewStoryModal(true);
@@ -400,7 +554,13 @@ function ProductBacklog() {
   const hideEditStoryModal = () => {
     setShowEditStoryModal(false);
   };
-
+  const openRejectStoryModal = (item: StoryData) => {
+    setTempDataStory(item);
+    setShowRejectStoryModal(true);
+  };
+  const hideRejectStoryModal = () => {
+    setShowRejectStoryModal(false);
+  };
   const initvalue: StoryData = {
     id: "",
     title: "",
@@ -437,17 +597,20 @@ function ProductBacklog() {
               <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
                 <Card className="bg-light border-0 ">
                   <div className="pt-3 hstack gap-2 mx-3">
-                    <Card.Title className="fs-6 my-0">{status}</Card.Title>
+                    <Card.Title className="fs-6 my-0  text-truncate">{status}</Card.Title>
                     <div className="vr my-0"></div>
                     <p className="fs-6 my-0">{itemsByStatus[status].length}</p>
                     {status === ProductBacklogItemStatus.UNALLOCATED && (
                       <Button
-                        className="ms-auto"
+                        className="ms-auto m-0 p-0"
                         variant="light"
                         onClick={() => openNewStoryModal()}
                       >
                         New Story
                       </Button>
+                    )}
+                    {status === ProductBacklogItemStatus.ALLOCATED && (
+                      <p>{SprintSelector.activeSprint?.velocity}</p>
                     )}
                   </div>
                   <hr className="hr mx-3" />
@@ -474,7 +637,7 @@ function ProductBacklog() {
                                 isDragDisabled={
                                   status ===
                                     ProductBacklogItemStatus.WONTHAVE ||
-                                  !Boolean(item.timeComplexity)
+                                  !Boolean(itemTime[item.id!]) || !isUserScramMaster()
                                 }
                               >
                                 {(provided, snapshot) => {
@@ -494,7 +657,8 @@ function ProductBacklog() {
                                           <p className="fs-6 text-muted m-1">
                                             TSK-{item.sequenceNumber}
                                           </p>
-
+                                          {status !==
+                                                ProductBacklogItemStatus.WONTHAVE && (
                                           <Dropdown className="ms-auto">
                                             <Dropdown.Toggle
                                               variant="link"
@@ -502,8 +666,19 @@ function ProductBacklog() {
                                               bsPrefix="p-0"
                                             >
                                               <ThreeDots />
+
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
+                                            {status !==
+                                                ProductBacklogItemStatus.UNALLOCATED && (
+                                                <Dropdown.Item
+                                                  onClick={() =>
+                                                    openRejectStoryModal(item)
+                                                  }
+                                                >
+                                                  <Eraser /> Reject
+                                                </Dropdown.Item>
+                                              )}
                                               {status ===
                                                 ProductBacklogItemStatus.UNALLOCATED && (
                                                 <Dropdown.Item
@@ -518,17 +693,6 @@ function ProductBacklog() {
                                                 ProductBacklogItemStatus.UNALLOCATED && (
                                                 <Dropdown.Item
                                                   onClick={() => setShow(true)}
-                                                  /* onClick={() =>
-                                              Modal.confirm({
-                                                title: 'Delete?',
-                                                content: `Are you sure to delete "${item.title}"?`,
-                                                onOk: () =>
-                                                  onDelete({
-                                                    status,
-                                                    itemToDelete: item,
-                                                  }),
-                                              })
-                                            } */
                                                 >
                                                   <Trash /> Delete
                                                 </Dropdown.Item>
@@ -541,14 +705,15 @@ function ProductBacklog() {
                                               />
                                             </Dropdown.Menu>
                                           </Dropdown>
+                                          )}
                                         </Card.Header>
                                         <Card.Body>
                                           <Card.Text
                                             onClick={() => getDataStory(item)}
-                                            className="m-0"
+                                            className="m-0  text-truncate"
                                           >
                                             <Button
-                                              className="text-decoration-none"
+                                              className="text-decoration-none "
                                               variant="link"
                                             >
                                               {item.title}
@@ -604,7 +769,8 @@ function ProductBacklog() {
                                                         className="mobileBox"
                                                         size="sm"
                                                         pattern="[0-9]*"
-                                                        defaultValue="0"
+                                                        //value={itemTime[item.id!]}
+                                                        placeholder={itemTime[item.id!].toString()}
                                                         id={item.id}
                                                         onChange={handleKeyDown}
                                                         type="tel"
@@ -616,17 +782,23 @@ function ProductBacklog() {
                                                     </InputGroup>
                                                   </Form>
                                                 )}
-                                                {!itemVisibility[item.id!] && (
+                                                {!itemVisibility[item.id!] && isUserScramMaster() &&   (
                                                   <Button
                                                     id={item.id}
+
+                                                    //isUserScramMaster
                                                     onClick={() =>
                                                       handleFormToggle(item.id!)
                                                     }
                                                     variant="link"
                                                     className="m-0 p-0 float-end text-decoration-none"
                                                   >
-                                                    {item.timeComplexity}
+                                                    {itemTime[item.id!]}
+                                                    
                                                   </Button>
+                                                )}
+                                                {!isUserScramMaster() && (
+                                                <p className="m-0 p-0 float-end text-decoration-none">{itemTime[item.id!]}</p>
                                                 )}
                                               </Col>
                                             </Row>
@@ -692,8 +864,16 @@ function ProductBacklog() {
           </Modal.Body>
         </Modal>
       )}
+      {showRejectStoryModal && (
+        <RejectStoryModal
+          item={tempDataStory}
+          onCancel={() => setShowRejectStoryModal(false)}
+          show={showRejectStoryModal}
+        />
+      )}
     </>
   );
 }
 
 export default ProductBacklog;
+

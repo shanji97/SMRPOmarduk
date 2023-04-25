@@ -10,6 +10,8 @@ interface SprintState {
     isSuccess: boolean
     isError: boolean
     message: any
+    isNotStoryInSprint: boolean 
+    isStoryInSprint: boolean
 }
 
 const initialState: SprintState = {
@@ -20,6 +22,8 @@ const initialState: SprintState = {
     isSuccess: false,
     isError: false,
     message: '',
+    isNotStoryInSprint: false,
+    isStoryInSprint: false
 }
 
 export const createSprint = createAsyncThunk('sprint/create', async (sprintBody: SprintBody, thunkAPI: any) => {
@@ -61,6 +65,16 @@ export const getAllSprints = createAsyncThunk('sprint/getAll', async (projectId:
         return thunkAPI.rejectWithValue(message)
     }  
 });
+export const getActiveSprint = createAsyncThunk('sprint/getActiveSprint', async (projectId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.getActiveSprint(projectId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
 
 export const deleteSprint = createAsyncThunk('sprint/delete', async (sprintId: string, thunkAPI: any) => {
     try {
@@ -82,6 +96,8 @@ export const sprintSlice = createSlice({
             state.isSuccess = false
             state.message = ''
             state.isUpdated = false;
+            state.isStoryInSprint = false
+            state.isNotStoryInSprint = false
         },
         setActiveSprint: (state, action) => {
             state.activeSprint = action.payload;
@@ -110,15 +126,15 @@ export const sprintSlice = createSlice({
         })
         .addCase(addStoryToSprint.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
+            state.isStoryInSprint = true;
+            state.isNotStoryInSprint = false;
             state.message = '';
             state.sprints.push(action.payload);
         })
         .addCase(addStoryToSprint.rejected, (state, action) => {
             state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
+            state.isStoryInSprint = false;
+            state.isNotStoryInSprint = true
             state.message = action.payload
         })
         .addCase(updateSprint.pending, (state) => {
@@ -161,6 +177,22 @@ export const sprintSlice = createSlice({
             state.sprints = action.payload;
         })
         .addCase(getAllSprints.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getActiveSprint.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getActiveSprint.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = false;
+            state.message = '';
+            state.sprints = action.payload;
+        })
+        .addCase(getActiveSprint.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

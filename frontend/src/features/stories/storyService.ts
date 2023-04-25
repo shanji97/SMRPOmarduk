@@ -1,5 +1,5 @@
 import axios from "axios";
-import { StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
+import { RejectStory, StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
 import { getBaseUrl } from "../../helpers/helpers";
 
 
@@ -110,6 +110,20 @@ const updateTimeComplexity = async (updateTimeComplexity: UpdateTimeComplexity, 
     const response = await axios.patch(`${STORY_API_URL}/${updateTimeComplexity.storyId}/time-complexity`, updatedTimeComplexity, config);
     return response.data;
 }
+const rejectStory = async (rejectStory: RejectStory, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const updatedRejectStory = {
+        description: rejectStory.description,
+    }
+
+    const response = await axios.patch(`${STORY_API_URL}/${rejectStory.storyId}/reject`, updatedRejectStory, config);
+    return response.data;
+}
 
 const storyService = {
     create,
@@ -117,7 +131,8 @@ const storyService = {
     deleteStory,
     updateStoryCategory,
     editStory,
-    updateTimeComplexity
+    updateTimeComplexity,
+    rejectStory
 }
 
 export default storyService;
