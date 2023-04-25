@@ -33,6 +33,7 @@ import {
   ConeStriped,
   X,
   Eraser,
+  Stickies,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
@@ -135,7 +136,7 @@ function ProductBacklog() {
   //helper funkcija za updatat useState
   const [sgs, setSgs] = useState("undefined");
 
-  let { stories, isSuccess, isLoading, isError } = useAppSelector(
+  let { stories, isSuccess, isLoading, isError, message } = useAppSelector(
     (state) => state.stories
   );
   let projectroles = useAppSelector((state) => state.projects);
@@ -163,6 +164,7 @@ function ProductBacklog() {
     }
     if (isError && !isLoading) {
       dispatch(reset);
+      toast.error(message);
       console.log("error");
     }
   }, [isSuccess, isError, isLoading]);
@@ -386,7 +388,9 @@ function ProductBacklog() {
         //itemsByStatus[destination.droppableId].length
         console.log(typeof destination.droppableId)
         console.log(destination.droppableId === "")
-
+        if (source.droppableId === "Allocated" && destination.droppableId != "Done") {
+          
+        };
       })
     );
   };
@@ -482,6 +486,7 @@ function ProductBacklog() {
           //console.log(stories)
           const visibilityObject: { [itemId: string]: boolean } = {};
           const insertTimeObject: { [itemId: string]: number } = {};
+          if (stories) {
           stories.forEach((story: StoryData) => {
             //za beleženje časa init values
 
@@ -515,8 +520,10 @@ function ProductBacklog() {
               isRealized: story.isRealized,
             });
           });
+
           setItemVisibility(visibilityObject);
           setItemTime(insertTimeObject);
+        }
         })
       );
     }
@@ -610,7 +617,7 @@ function ProductBacklog() {
                       </Button>
                     )}
                     {status === ProductBacklogItemStatus.ALLOCATED && (
-                      <p>{SprintSelector.activeSprint?.velocity}</p>
+                      <p className="fs-6 my-0">/   {SprintSelector.activeSprint?.velocity}</p>
                     )}
                   </div>
                   <hr className="hr mx-3" />

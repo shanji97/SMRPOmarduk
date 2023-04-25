@@ -60,3 +60,9 @@ export interface UpdateTimeComplexity {
     storyId: string
 }
 
+
+export interface RejectStory {
+    id?:       string,
+    description: string
+    storyId: string
+}

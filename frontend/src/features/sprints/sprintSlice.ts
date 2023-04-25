@@ -86,15 +86,7 @@ export const deleteSprint = createAsyncThunk('sprint/delete', async (sprintId: s
     }
 });
 
-export const getActiveSprint = createAsyncThunk('sprint/getActiveSprint', async (projectId: string, thunkAPI: any) => {
-    try {
-        const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await sprintService.getActiveSprint(projectId, token);
-    } catch (error: any) {
-        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-        return thunkAPI.rejectWithValue(message)
-    }
-});
+
 
 export const sprintSlice = createSlice({
     name: 'sprints',
@@ -187,22 +179,6 @@ export const sprintSlice = createSlice({
             state.sprints = action.payload;
         })
         .addCase(getAllSprints.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
-            state.message = action.payload
-        })
-        .addCase(getActiveSprint.pending, (state) => {
-            state.isLoading = true
-        })
-        .addCase(getActiveSprint.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isSuccess = false;
-            state.isError = false;
-            state.message = '';
-            state.sprints = action.payload;
-        })
-        .addCase(getActiveSprint.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
