@@ -64,8 +64,9 @@ import { StorySprint } from "../classes/sprintData";
 import Projects from "./Projects";
 import { getProjectUserRoles } from  "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
-import RejectStoryModal from "./RejectStoryModal";
+
 import { toast } from "react-toastify";
+import RejectStoryModal from "./RejectStoryModal";
 
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
