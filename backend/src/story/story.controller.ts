@@ -59,6 +59,17 @@ export class StoryController {
     return storyTests;
   }
 
+  @ApiOperation({ summary: 'Stories written by particular user.' })
+  @ApiOkResponse()
+  @Get('/by-user/:userId')
+  async getStoriesByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<Story[]> {
+    const stories: Story[] = await this.storyService.getStoriesByUserId(userId);
+    if (!stories)
+      throw new NotFoundException('Tests for story not found.');
+    return stories;
+  }
+
+
   @ApiOperation({ summary: 'Get notifications for a particular story.' })
   @ApiOkResponse()
   @ApiNotFoundResponse()

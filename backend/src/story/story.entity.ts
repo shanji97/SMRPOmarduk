@@ -27,6 +27,9 @@ export class Story {
   @Column({ unsigned: true, type: 'int' })
   projectId: number;
 
+  @Column({ unsigned: true, type: 'int', default:0 })
+  userId: number;
+
   @Column({ unsigned: true })
   sequenceNumber: number;
 

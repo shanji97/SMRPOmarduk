@@ -30,6 +30,10 @@ export class StoryService {
     return await this.storyRepository.findOneBy({ id: storyId });
   }
 
+  async getStoriesByUserId(userId: number): Promise<Story[]>{
+    return await this.storyRepository.findBy({ userId: userId })
+  }
+
   async getStoriesByProjectId(projectId: number): Promise<Story[]> {
     return await this.storyRepository.findBy({ projectId: projectId })
   }
