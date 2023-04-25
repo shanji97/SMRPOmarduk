@@ -30,7 +30,7 @@ export class Story {
   @Column({ unsigned: true, type: 'int' })
   projectId: number;
 
-  @Column({ unsigned: true, type: 'int', default: 0 })
+  @Column({ unsigned: true, type: 'int'})
   userId: number;
 
   @Column({ unsigned: true })
