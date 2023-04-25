@@ -59,6 +59,16 @@ export class StoryController {
     return storyTests;
   }
 
+  @ApiOperation({ summary: 'Stories written by particular user.' })
+  @ApiOkResponse()
+  @Get('/by-user/:userId')
+  async getStoriesByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<Story[]> {
+    const stories: Story[] = await this.storyService.getStoriesByUserId(userId);
+    if (!stories)
+      throw new NotFoundException('Tests for story not found.');
+    return stories;
+  }
+
   @ApiOperation({ summary: 'Get notifications for a particular story.' })
   @ApiOkResponse()
   @ApiNotFoundResponse()
@@ -109,7 +119,7 @@ export class StoryController {
       if (!hasValidRole)
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner.');
 
-      const row = await this.storyService.createStory(story, projectId);
+      const row = await this.storyService.createStory(story, projectId, token.sid);
       const storyId = row["id"];
       await this.testService.createTest(storyId, story.tests);
 
@@ -175,6 +185,13 @@ export class StoryController {
       const isDeveloper = usersOnProject.length == 1 && usersOnProject[0].role == UserRole.Developer;
       if (updateData.category == Category.Unassigned && usersOnProject.length == 0 || isDeveloper)
         throw new ForbiddenException('No users with this user ID on the project or this user is only a developer.');
+
+      const story: Story = await this.storyService.getStoryById(storyId);
+      if (!story)
+        throw new BadRequestException('No story by the given ID found.');
+
+      if (story.category == Category.Finished)
+        throw new BadRequestException('You cannot update the category of finished stories.');
 
       await this.storyService.updateStoryCategory(storyId, updateData.category);
     } catch (ex) {
