@@ -1,9 +1,8 @@
 import { Fragment, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-//import { getAllTasks } from "../features/tasks/taskSlice";
 import { Button } from "react-bootstrap";
 import { getTasksForStory } from "../features/tasks/taskSlice";
-//import LogTimeModal from "./LogTimeModal";
+import LogTimeModal from "./LogTimeModal";
 
 interface TasksProps {
     storyId: string
@@ -37,14 +36,14 @@ const Tasks: React.FC<TasksProps> = ({storyId}) => {
                         <td >{task.name}</td>
                         <td ><Button className="align-middle text-decoration-none" variant="link">{task.status}</Button></td>
                         
-                        <td >{task.workedTime}</td>
+                        <td >{task.spent}</td>
                         <td >{task.remaining}</td>
                         <td >{task.estimatedTime}</td>
                         <td ><Button variant="outline-primary" size="sm" onClick={openLogTimeModal}>Work History</Button></td>
                     </tr>
                 )
             })}
-            {/*showModal && <LogTimeModal showModal={showModal} hideModal={hideModal} />*/}
+            {showModal && <LogTimeModal showModal={showModal} hideModal={hideModal} />}
         </Fragment>
     )
 
