@@ -122,7 +122,8 @@ export class TaskController {
       if (!taskId)
         throw new InternalServerErrorException('Failed to create task');
 
-      await this.assignTask(token, taskId, assignedUserId);
+      if (assignedUserId)
+        await this.assignTask(token, taskId, assignedUserId);
     } catch (ex) {
       if (ex instanceof ValidationException) {
         throw new BadRequestException(ex.message);

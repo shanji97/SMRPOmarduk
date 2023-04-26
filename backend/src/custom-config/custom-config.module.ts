@@ -6,6 +6,7 @@ import { DatabaseConfigService } from './database-config.service';
 import { HttpConfigService } from './http-config.service';
 import { ServeStaticConfigService } from './serve-static-config.service';
 import { JwtConfigService } from './jwt-config.service';
+import { MulterConfigService } from './multer-config.service';
 
 @Global()
 @Module({
@@ -30,12 +31,14 @@ import { JwtConfigService } from './jwt-config.service';
     DatabaseConfigService,
     HttpConfigService,
     JwtConfigService,
+    MulterConfigService,
     ServeStaticConfigService,
   ],
   exports: [
     DatabaseConfigService,
     HttpConfigService,
     JwtConfigService,
+    MulterConfigService,
     ServeStaticConfigService,
   ]
 })
