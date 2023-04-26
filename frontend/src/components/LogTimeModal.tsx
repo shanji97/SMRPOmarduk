@@ -5,6 +5,7 @@ import TimeInputs from "./TimeInputs";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { getWorkLogs, reset } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
+import { Calendar } from "react-bootstrap-icons";
 
 interface LogTimeModalProps {
   taskId: string,
@@ -35,16 +36,8 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
   useEffect(() => {
     if (isError) {
       toast.error(message);
-    } else if (isSuccess) {
-      toast.success('Work logged!');
     }
 
-    return () => {
-      dispatch(reset());
-    }
-  }, [isSuccess, message, isError])
-
-  useEffect(() => {
     return () => {
       dispatch(reset());
     }

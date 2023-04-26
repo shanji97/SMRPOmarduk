@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import taskService from "./taskService";
+import { start } from "repl";
 
 let user = JSON.parse(localStorage.getItem('user')!);
 
@@ -8,9 +9,12 @@ interface TaskState {
     tasksForSprint: any[]
     tasksForStory: any[]
     workLogs: any[]
+    currentlyWorkingOnTaskId: string;
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
+    isTimerSuccess: boolean
+    isTimerError: boolean
     message: any
     changed: boolean
 }
@@ -20,9 +24,12 @@ const initialState: TaskState = {
     tasksForSprint: [],
     tasksForStory: [],
     workLogs: [],
+    currentlyWorkingOnTaskId: "",
     isLoading: false,
     isSuccess: false,
     isError: false,
+    isTimerSuccess: false,
+    isTimerError: false,
     message: '',
     changed: false
 }
@@ -108,6 +115,26 @@ export const logWork = createAsyncThunk('/task/logWork', async (body: {date: str
     }
 });
 
+export const startTime = createAsyncThunk('/task/startTime', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.startTime(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const stopTime = createAsyncThunk('/task/stopTime', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.stopTime(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 
 export const taskSlice = createSlice({
     name: 'tasks',
@@ -117,6 +144,8 @@ export const taskSlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isTimerSuccess = false
+            state.isTimerError = false
             state.message = ''
         }
     },
@@ -246,6 +275,38 @@ export const taskSlice = createSlice({
             state.isSuccess = false;
             state.isError = true
             state.message = action.payload
+        })
+        .addCase(startTime.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(startTime.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isTimerSuccess = true;
+            state.isTimerError = false;
+            state.message = '';
+            state.currentlyWorkingOnTaskId = action.meta.arg;
+        })
+        .addCase(startTime.rejected, (state, action) => {
+            state.isLoading = false
+            state.isTimerSuccess = false;
+            state.isTimerError = true
+            state.message = action.payload
+        })
+        .addCase(stopTime.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(stopTime.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isTimerSuccess = true;
+            state.isTimerError = false;
+            state.message = '';
+            state.currentlyWorkingOnTaskId = "";
+        })
+        .addCase(stopTime.rejected, (state, action) => {
+            state.isLoading = false;
+            state.isTimerSuccess = false;
+            state.isTimerError = true;
+            state.message = action.payload;
         })
     }
 })

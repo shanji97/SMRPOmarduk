@@ -1,6 +1,8 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager, DeepPartial } from 'typeorm';
+
 import { CreateStoryDto } from './dto/create-story.dto';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from '../sprint/sprint.entity';
@@ -15,6 +17,7 @@ export class StoryService {
   private readonly logger: Logger = new Logger(StoryService.name);
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
     @InjectRepository(Story)
     private readonly storyRepository: Repository<Story>,
@@ -134,6 +137,14 @@ export class StoryService {
     return await this.entityManager.count(SprintStory, {
       where: { storyId: storyId }
     }) > 0;
+  }
+
+  async getTimeComplexityInHoursForStoryById(storyId: number): Promise<number> {
+    const hoursPerPoint: number = this.configService.get<number>('HOURS_PER_POINT');
+    const story = await this.getStoryById(storyId);
+    if (!story)
+      return 0;
+    return hoursPerPoint * story.timeComplexity;
   }
 
   createStoryObject(story: CreateStoryDto, projectId: number, userId: number): Story {
