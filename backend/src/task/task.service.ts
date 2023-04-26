@@ -29,6 +29,26 @@ export class TaskService {
     return await this.taskRepository.find({ where: { storyId: storyId }, relations: ['assignedUser'] });
   }
 
+  async getTaskCategoryCoundForStory(storyId: number): Promise<{ count: { category: number, count: number }[], finished: boolean }> {
+    let result = await this.taskRepository.createQueryBuilder('task')
+      .select('task.category, COUNT(task.category) AS count')
+      .where('task.storyId = :storyId', { storyId: storyId })
+      .groupBy('task.category')
+      .getRawMany();
+    result = result.map(category => {
+      category.count = +category.count;
+      return category;
+    });
+
+    const catsum = result.reduce((acc, category) => acc + category.count, 0);
+    const finished = result.reduce((acc, category) => (category.category === TaskCategory.ENDED) ? acc + category.count : acc, 0);
+    
+    return {
+      count: result,
+      finished: catsum === finished,
+    };
+  }
+
   async getTasksForSprint(sprintId: number): Promise<Task[]> {
     const storyIds: number[] = await this.storyService.getStoryIdsForSprint(sprintId);
 
