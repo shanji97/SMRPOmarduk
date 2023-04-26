@@ -125,6 +125,28 @@ const logWork = async (body: {date?: string, userId?: string, taskId?: string}, 
     return response.data;
 }
 
+const startTime = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${TASK_API_URL}/${taskId}/time/start`, config);
+
+    return response.data;
+}
+
+const stopTime = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${TASK_API_URL}/${taskId}/time/stop`, config);
+
+    return response.data;
+}
+
 const taskService = {
     getTaskForSprint,
     createTask,
@@ -135,6 +157,8 @@ const taskService = {
     getTaskForStory,
     getWorkLogs,
     logWork,
+    startTime,
+    stopTime
 }
 
 export default taskService;

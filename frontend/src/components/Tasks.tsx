@@ -1,22 +1,46 @@
 import { Fragment, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { Button } from "react-bootstrap";
-import { getTasksForStory } from "../features/tasks/taskSlice";
+import { getTasksForStory, reset } from "../features/tasks/taskSlice";
 import LogTimeModal from "./LogTimeModal";
 import Task from "./Task";
+import { toast } from "react-toastify";
 
 interface TasksProps {
-    storyId: string
+  storyId: string;
 }
 
-const Tasks: React.FC<TasksProps> = ({storyId}) => {
-    const dispatch = useAppDispatch();
-    const {tasksForStory} = useAppSelector(state => state.tasks);
-    const [tasks, setTasks] = useState<any[]>([]);
+const Tasks: React.FC<TasksProps> = ({ storyId }) => {
+  const dispatch = useAppDispatch();
+  const { tasksForStory } = useAppSelector((state) => state.tasks);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const {
+    currentlyWorkingOnTaskId,
+    isTimerSuccess,
+    isTimerError,
+    isLoading,
+    message,
+  } = useAppSelector((state) => state.tasks);
 
-    useEffect(() => {
-        dispatch(getTasksForStory(storyId));
-    }, [storyId]);
+  // error/success messages for timer
+  useEffect(() => {
+    if (isTimerSuccess && !isLoading) {
+      if (currentlyWorkingOnTaskId !== "") {
+        toast.success("Started timer!");
+      } else {
+        toast.success("Stopped timer!");
+      }
+      dispatch(reset());
+    }
+    if (isTimerError && !isLoading) {
+      toast.error(message);
+      dispatch(reset());
+    }
+  }, [isTimerSuccess, isTimerError, isLoading]);
+
+  useEffect(() => {
+    dispatch(getTasksForStory(storyId));
+  }, [storyId]);
 
     useEffect(() => {
         if (tasksForStory.length > 0) {
@@ -26,7 +50,7 @@ const Tasks: React.FC<TasksProps> = ({storyId}) => {
 
     return (
         <Fragment>
-            {tasks.map(task => {
+            {tasksForStory.map(task => {
                 return <Task key={task.id} task={task} />
             })}
         </Fragment>
