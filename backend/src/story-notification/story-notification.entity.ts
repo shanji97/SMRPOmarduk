@@ -18,11 +18,8 @@ export class StoryNotification {
   @Column({ unsigned: true, type: 'int' })
   userId: number;
 
-  @Column({ unsigned: true, type: 'int', nullable: true })
-  userFor?: number | null;
-
-  @Column({type: 'boolean', default: false})
-  userViewed: boolean;
+  @Column({ length: 200 })
+  authorName: string;
 
   @Column({ type: 'text' })
   notificationText: string;

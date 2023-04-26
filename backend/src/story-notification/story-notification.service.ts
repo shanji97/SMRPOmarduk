@@ -26,8 +26,8 @@ export class StoryNotificationService {
         return await this.storyNotificationRepository.findBy({ storyId: storyId, notificationType: notificationType });
     }
 
-    async createNotification(description: string, userId: number, stroyId: number, notificationType: NotificationStatus, approved) {
-        let newRejectionNotification: StoryNotification = this.createNotificationObject(description, userId, stroyId, notificationType, approved);
+    async createNotification(description: string, userId: number, stroyId: number, notificationType: NotificationStatus, approved:boolean, username: string) {
+        let newRejectionNotification: StoryNotification = this.createNotificationObject(description, userId, stroyId, notificationType, approved,username);
         await this.storyNotificationRepository.insert(newRejectionNotification);
     };
 
@@ -39,13 +39,14 @@ export class StoryNotificationService {
         await this.entityManager.delete(StoryNotification, { id: notificationId })
     }
 
-    createNotificationObject(description: string, userId: number, storyId: number, notificationType: NotificationStatus, approved: boolean): StoryNotification {
+    createNotificationObject(description: string, userId: number, storyId: number, notificationType: NotificationStatus, approved: boolean, username:string): StoryNotification {
         let newStoryNotification = new StoryNotification();
         newStoryNotification.notificationText = description;
         newStoryNotification.userId = userId;
         newStoryNotification.storyId = storyId;
         newStoryNotification.notificationType = notificationType;
         newStoryNotification.approved = approved;
+        newStoryNotification.authorName = username;
         return newStoryNotification;
     }
 

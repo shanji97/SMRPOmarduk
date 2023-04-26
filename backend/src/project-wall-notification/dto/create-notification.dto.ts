@@ -16,7 +16,6 @@ export class CreateProjectWallNotificationDto {
         example: 'Post content.',
         description: 'Post content.',
         minLength: 1,
-        type: String,
         required: true
     })
     postContent: string;
@@ -44,7 +43,7 @@ export class CreateProjectWallNotificationDto {
 
 export const CreateProjectWallNotificationSchema = Joi.object().keys({
     title: Joi.string().min(1).max(200).required().default('Work on a project.'),
-    postContent: Joi.string().min(1).required().default('Work on a project.'),
+    postContent: Joi.string().trim().min(5).required(),
     author: Joi.string().min(1).max(200).default('shanji'),
     userId: Joi.number().min(1).required().default(1)
 });
