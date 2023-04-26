@@ -18,3 +18,8 @@ export interface DateRangeSpecs {
     key: string,
     selection?: any
 }
+
+export interface StorySprint {
+    sprintId: number,
+    storyId: number
+}

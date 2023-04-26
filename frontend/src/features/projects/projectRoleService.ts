@@ -46,19 +46,29 @@ const removeDeveloper = async (removeDeveloperData: any, token: string) => {
 
     let userId = removeDeveloperData.userId;
     let projectID = removeDeveloperData.projectId;
-    console.log(`${PROJECTS_API_URL}/${projectID}/removeDeveloper/${userId}`)
 
     const response = await axios.delete(`${PROJECTS_API_URL}/${projectID}/developer/${userId}`, config);
 
     return response.data;
 }
 
+const getProjectUserRoles = async (id: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${PROJECTS_API_URL}/${id}/user`, config);
+
+    return response.data;
+}
 
 
 const projectRoleService = {
     updateProjectRoles,
     addDeveloper,
-    removeDeveloper
+    removeDeveloper,
+    getProjectUserRoles
 }
 
 export default projectRoleService;

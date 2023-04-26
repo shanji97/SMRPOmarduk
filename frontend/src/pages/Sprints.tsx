@@ -1,6 +1,6 @@
 import React, {Fragment, useState} from "react";
 import Card from "../components/Card";
-import {Dropdown, DropdownButton, Modal, Table} from "react-bootstrap";
+import {Badge, Dropdown, DropdownButton, Modal, Table} from "react-bootstrap";
 import classes from "./Users.module.css";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {PencilFill, Trash} from "react-bootstrap-icons";
@@ -21,6 +21,19 @@ const Sprints = () => {
     setShowModal(true);
   }
 
+  const getSprintState = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const today = new Date();
+
+    if (endDate < today) {
+      return 'Finished';
+    } else if (startDate > today) {
+      return 'In future'
+    }
+    return 'Active';
+  }
+
   const handleDeleteSprint = (sprintId: string) => {
     dispatch(deleteSprint(sprintId));
     toast.success('Sprint deleted!');
@@ -38,7 +51,7 @@ const Sprints = () => {
           <tr>
             <th>#</th>
             <th>Sprint name</th>
-            <th>Velocity (hours)</th>
+            <th>Velocity (points)</th>
             <th>Date range</th>
           </tr>
           </thead>
@@ -51,7 +64,7 @@ const Sprints = () => {
                 <td>{sprint.velocity}</td>
                 <td>
                   <div className={classes.usernameContainer}>
-                    {`${sprint.startDate} - ${sprint.endDate}`}
+                    {`${sprint.startDate} - ${sprint.endDate} (${getSprintState(sprint.startDate, sprint.endDate)})`}
                     <DropdownButton id="dropdown-basic-button" title="Options">
                       <Dropdown.Item>Make active</Dropdown.Item>
                       <Dropdown.Item onClick={() => {openEditModal(i, sprint.id!)}}>Edit <PencilFill /></Dropdown.Item>

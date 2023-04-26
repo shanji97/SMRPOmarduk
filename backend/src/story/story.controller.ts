@@ -154,6 +154,7 @@ export class StoryController {
       const story: Story = await this.storyService.getStoryById(storyId);
       if (!story)
         throw new NotFoundException('Story for the given ID not found.');
+
       if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster, UserRole.Developer]))
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner but certainly not a developer.');
 
