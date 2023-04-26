@@ -4,7 +4,8 @@ import { Button, Form } from "react-bootstrap";
 import classes from "./LogTimeModal.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
-import { logWork } from "../features/tasks/taskSlice";
+import { logWork, reset } from "../features/tasks/taskSlice";
+import { toast } from "react-toastify";
 
 interface TimeInputsProps {
   taskId: string;
@@ -23,10 +24,23 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
   remainingTimeInit,
 }) => {
   const dispatch = useAppDispatch();
+  const { isError, message, isSuccess } = useAppSelector(
+    (state) => state.tasks
+  );
   const { user } = useAppSelector((state) => state.users);
   const [spentTime, setSpentTime] = useState(spentTimeInit);
   const [remainingTime, setRemainingTime] = useState(remainingTimeInit);
   const [userId, setUserId] = useState("");
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    return () => {
+      dispatch(reset());
+    };
+  }, [isSuccess, message, isError]);
 
   useEffect(() => {
     if (user === null) {
@@ -59,6 +73,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
     };
 
     dispatch(logWork(body));
+    toast.success("Work logged!");
   };
 
   return (

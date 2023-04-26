@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import { Card, Nav, Tab, Table } from "react-bootstrap";
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -24,6 +24,10 @@ function Dashboard() {
       navigate("/login");
     }
   }, [user]);
+
+  if (storiesForUser.length === 0) {
+    return <h2>No stories</h2>
+  }
 
   return (
     <>
@@ -62,7 +66,6 @@ function Dashboard() {
 
                               <th>Work Done</th>
                               <th>Remaining time</th>
-                              <th>Estimated time</th>
                             </tr>
                           </thead>
 

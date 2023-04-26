@@ -13,6 +13,7 @@ interface TasksProps {
 const Tasks: React.FC<TasksProps> = ({ storyId }) => {
   const dispatch = useAppDispatch();
   const { tasksForStory } = useAppSelector((state) => state.tasks);
+  const [tasks, setTasks] = useState<any[]>([]);
   const {
     currentlyWorkingOnTaskId,
     isTimerSuccess,
@@ -39,17 +40,21 @@ const Tasks: React.FC<TasksProps> = ({ storyId }) => {
 
   useEffect(() => {
     dispatch(getTasksForStory(storyId));
-  }, []);
+  }, [storyId]);
 
-  return (
-    <Fragment>
-      {tasksForStory.map((task) => {
-        return <Task task={task} />;
-      })}
-    </Fragment>
-  );
+    useEffect(() => {
+        if (tasksForStory.length > 0) {
+            setTasks(tasksForStory);
+        }
+    }, [tasksForStory]);
 
-  return <h1>asd</h1>;
-};
+    return (
+        <Fragment>
+            {tasksForStory.map(task => {
+                return <Task key={task.id} task={task} />
+            })}
+        </Fragment>
+    )
+}
 
 export default Tasks;

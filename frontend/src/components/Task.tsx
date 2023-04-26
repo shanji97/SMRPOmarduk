@@ -1,17 +1,16 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Button } from "react-bootstrap";
 import LogTimeModal from "./LogTimeModal";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { reset, startTime, stopTime } from "../features/tasks/taskSlice";
-import { toast } from "react-toastify";
+import { getWorkLogs, startTime, stopTime } from "../features/tasks/taskSlice";
 
 interface TaskProps {
   task: any;
 }
 
-const Task: React.FC<TaskProps> = ({ task }) => {
-  // console.log(task);
+const Task: React.FC<TaskProps> = ({task}) => {
   const dispatch = useAppDispatch();
+  const {workLogs} = useAppSelector(state => state.tasks);
   const [showModal, setShowModal] = useState(false);
 
   const {
@@ -22,20 +21,51 @@ const Task: React.FC<TaskProps> = ({ task }) => {
     message,
   } = useAppSelector((state) => state.tasks);
 
+  useEffect(() => {
+    dispatch(getWorkLogs(task.id!));
+  }, []);
+
   const openLogTimeModal = () => {
     setShowModal(true);
   };
 
   const hideModal = () => {
-    setShowModal(false);
-  };
+      setShowModal(false);
+  }
+
+  const getStatusFromCategory = (category: number) => {
+    switch(category) {
+      case 0:
+        return 'UNKNOWN';
+      case 1:
+        return 'UNASSIGNED';
+      case 2:
+        return 'ASSIGNED'
+      case 3:
+        return 'ACCEPTED'
+      case 4:
+        return 'ACTIVE'
+      case 250:
+        return 'ENDED'
+      default:
+        return 'UNKNOWN'
+    }
+  }
+
+  const hoursSpentInTotal = useMemo(() => {
+      let sum = 0;
+      workLogs.forEach(log => {
+          sum += log.spent;
+      })
+      return sum;
+  }, [workLogs]);
 
   const handleStartWork = () => {
-    dispatch(startTime(task.id));
+      dispatch(startTime(task.id));
   };
 
   const handleStopWork = () => {
-    dispatch(stopTime(task.id));
+      dispatch(stopTime(task.id));
   };
 
   return (
@@ -43,14 +73,10 @@ const Task: React.FC<TaskProps> = ({ task }) => {
       <tr key={task.id}>
         <td>{task.id}</td>
         <td>{task.name}</td>
-        <td>
-          <Button className="align-middle text-decoration-none" variant="link">
-            {task.status}
-          </Button>
-        </td>
+          <td>{getStatusFromCategory(task.category)}</td>
 
-        <td>{task.spent}</td>
-        <td>{task.remaining}</td>
+        <td>{hoursSpentInTotal}h</td>
+        <td>{`${workLogs?.[workLogs.length - 1]?.remaining}h` ?? '/'}</td>
         <td>{task.estimatedTime}</td>
         <td>
           <Button
@@ -82,7 +108,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
         />
       )}
     </Fragment>
-  );
-};
+    )
+}
 
 export default Task;
