@@ -273,7 +273,7 @@ function SprintBacklog() {
   };
 
   const isTaskInProgress = (task: any) => {
-    return task.dateAccepted != null;
+    return task.dateAccepted != null && task.dateEnded == null;
   };
 
   const isTaskFinished = (task: any) => {
@@ -416,7 +416,7 @@ function SprintBacklog() {
                           Add new task
                         </Button>
                       </Tab.Pane>
-                      <Tab.Pane eventKey="second">dfvdf</Tab.Pane>
+                      <Tab.Pane eventKey="second"></Tab.Pane>
                     </Tab.Content>
                   </Card.Body>
                 </Tab.Container>
