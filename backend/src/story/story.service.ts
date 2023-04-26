@@ -1,11 +1,13 @@
 import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, EntityManager, DeepPartial } from 'typeorm';
+
 import { CreateStoryDto } from './dto/create-story.dto';
 import { ProjectService } from '../project/project.service';
 import { Sprint } from '../sprint/sprint.entity';
 import { SprintStory } from '../sprint/sprint-story.entity';
-import { Story } from './story.entity';
+import { Story, Category } from './story.entity';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
@@ -15,6 +17,7 @@ export class StoryService {
   private readonly logger: Logger = new Logger(StoryService.name);
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
     @InjectRepository(Story)
     private readonly storyRepository: Repository<Story>,
@@ -27,15 +30,23 @@ export class StoryService {
   }
 
   async getStoryById(storyId: number): Promise<Story> {
-    return await this.storyRepository.findOneBy({ id: storyId });
+    return await this.storyRepository.findOne({ where: { id: storyId }, relations: ['assignedUser'] });
   }
 
   async getStoriesByUserId(userId: number): Promise<Story[]>{
     return await this.storyRepository.findBy({ userId: userId })
   }
 
+  async getStoriesByAssignedUserId(userId: number): Promise<Story[]>{
+    return await this.storyRepository.findBy({ assignedUserId: userId })
+  }
+
+  async getStoriesWithTasksByAssignedUserId(userId: number): Promise<Story[]>{
+    return await this.storyRepository.find({ where: { assignedUserId: userId }, relations: ['tasks']})
+  }
+
   async getStoriesByProjectId(projectId: number): Promise<Story[]> {
-    return await this.storyRepository.findBy({ projectId: projectId })
+    return await this.storyRepository.find({ where: { projectId: projectId }, relations: ['assignedUser'] })
   }
 
   async createStory(story: CreateStoryDto, projectId: number, userId : number): Promise<object> {
@@ -77,7 +88,7 @@ export class StoryService {
     try {
       let existingStory = await this.getStoryById(storyId);
 
-      await this.storyRepository.update({ id: storyId }, { title: story.title, description: story.description, sequenceNumber: story.sequenceNumber, priority: story.priority, businessValue: story.businessValue });
+      await this.storyRepository.update({ id: storyId }, { title: story.title, description: story.description, sequenceNumber: story.sequenceNumber, priority: story.priority, businessValue: story.businessValue, assignedUserId: story.assignedUserId });
     } catch (ex) {
       if (ex instanceof QueryFailedError) {
         switch (ex.driverError.errno) {
@@ -108,6 +119,13 @@ export class StoryService {
     return this.storyRepository.findOneBy({ title: title });
   }
 
+  async isStoryFinished(storyId: number): Promise<boolean> {
+    const story = await this.storyRepository.findOne({ where: { id: storyId }, select: ['id', 'category'] });
+    if (!story)
+      return false;
+    return story.category == Category.Finished;
+  }
+
   async getStoryProjectId(storyId: number): Promise<number | null> {
     const story = await this.storyRepository.findOneBy({ id: storyId });
     if (!story)
@@ -121,6 +139,14 @@ export class StoryService {
     }) > 0;
   }
 
+  async getTimeComplexityInHoursForStoryById(storyId: number): Promise<number> {
+    const hoursPerPoint: number = this.configService.get<number>('HOURS_PER_POINT');
+    const story = await this.getStoryById(storyId);
+    if (!story)
+      return 0;
+    return hoursPerPoint * story.timeComplexity;
+  }
+
   createStoryObject(story: CreateStoryDto, projectId: number, userId: number): Story {
     let newStory = new Story();
     newStory.projectId = projectId;
@@ -130,6 +156,7 @@ export class StoryService {
     newStory.priority = story.priority;
     newStory.businessValue = story.businessValue;
     newStory.userId = userId;
+    newStory.assignedUserId = story.assignedUserId;
     return newStory;
   }
 
@@ -139,6 +166,7 @@ export class StoryService {
     existingStory.sequenceNumber = story.sequenceNumber;
     existingStory.priority = story.priority;
     existingStory.businessValue = story.businessValue;
+    existingStory.assignedUserId = story.assignedUserId;
     return existingStory;
   }
 

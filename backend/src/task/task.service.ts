@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
 import * as moment from 'moment';
@@ -15,6 +16,7 @@ export class TaskService {
   private readonly logger: Logger = new Logger(TaskService.name);
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
     private readonly storyService: StoryService,
     @InjectRepository(Task)
@@ -33,13 +35,17 @@ export class TaskService {
     return await this.taskRepository.find({ where: { storyId: In(storyIds) }, relations: ['assignedUser'] });
   }
 
+  async getTasksForUser(userId: number): Promise<Task[]> {
+    return await this.taskRepository.find({ where: { assignedUserId: userId }, relations: ['story'] });
+  }
+
   async getTaskById(taskId: number): Promise<Task> {
     return await this.taskRepository.findOne({ where: { id: taskId }, relations: ['assignedUser'] });
   }
 
   async getStoryIdForTaskById(taskId: number): Promise<number | null> {
     const result = await this.taskRepository.findOne({ where: { id: taskId }, select: ['storyId'] });
-    return result.storyId || null;
+    return result?.storyId || null;
   }
 
   async createTask(storyId: number, task: DeepPartial<Task>): Promise<number> {
@@ -47,16 +53,24 @@ export class TaskService {
     if (!await this.storyService.isStoryInActiveSprint(storyId))
       throw new ValidationException('Story not in active sprint');
 
-    // TODO: Check remaining value
-
-
     task.storyId = storyId;
 
     if (task.assignedUserId) {
       task.category = TaskCategory.ASSIGNED;
       task.dateAssigned = moment().format('YYYY-MM-DD');
     }
+    // Check if story already completed
+    if (await this.storyService.isStoryFinished(storyId))
+      throw new ValidationException('Story already finished');
+    
+    // Check remaining value
+    const taskMaxTimeFactor: number = this.configService.get<number>('TASK_MAX_TIME_FACTOR');
+    const storyTimeMax = await this.storyService.getTimeComplexityInHoursForStoryById(storyId);
+    const maxTime = storyTimeMax * taskMaxTimeFactor;
+    if (task.remaining > maxTime)
+      throw new ValidationException('Timeremaining too big');
 
+    task.storyId = storyId;
     const result = await this.taskRepository.insert(task);
     return result.raw.insertId || null;
   }
@@ -66,7 +80,14 @@ export class TaskService {
     if (!await this.isTaskInActiveSprint(taskId))
       throw new ValidationException('Task not in active sprint');
 
-    // TODO: Check remaining value
+    const taskRecord = await this.getTaskById(taskId);
+
+    // Check remaining value
+    const taskMaxTimeFactor: number = this.configService.get<number>('TASK_MAX_TIME_FACTOR');
+    const storyTimeMax = await this.storyService.getTimeComplexityInHoursForStoryById(taskRecord.storyId);
+    const maxTime = storyTimeMax * taskMaxTimeFactor;
+    if (task.remaining > maxTime)
+      throw new ValidationException('Timeremaining too big');
 
     await this.taskRepository.update({ id: taskId }, task);
   }
@@ -86,7 +107,7 @@ export class TaskService {
     return task.story.projectId;
   }
 
-  async assignTaskToUser(taskId: number, userId: number): Promise<void> {
+  async assignTaskToUser(taskId: number, userId: number, override: boolean = false): Promise<void> {
     // Check if task is part of active sprint
     if (!await this.isTaskInActiveSprint(taskId))
       throw new ValidationException('Task not in active sprint');
@@ -94,7 +115,7 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category != TaskCategory.UNASSIGNED)
+    if (task.category != TaskCategory.UNASSIGNED && !(override && [TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED, TaskCategory.UNKNOWN].includes(task.category)))
       throw new ValidationException('Task is not unassigned');
 
     // Only users that have role on project, can be assigned to task
@@ -104,7 +125,7 @@ export class TaskService {
 
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ASSIGNED,
-      dateAssigned: () => 'NOW()', // TODO: Check if working
+      dateAssigned: () => 'NOW()',
       assignedUserId: userId,
     });
   }
@@ -122,7 +143,7 @@ export class TaskService {
 
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ACCEPTED,
-      dateAccepted: () => 'NOW()', // TODO: Check if working
+      dateAccepted: () => 'NOW()',
     });
   }
 
@@ -172,26 +193,8 @@ export class TaskService {
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
-    // Step 1: Flatten user time for each task
     const userTime = taskData.flatMap(task => task.userTime);
-
-    // Step 2: Aggregate user time by date and user
-    const timeByDateAndUser = userTime.reduce((acc, cur) => {
-      const key = `${cur.date}-${cur.userId}`;
-      if (!acc[key]) {
-        acc[key] = {
-          date: cur.date,
-          userId: cur.userId,
-          spent: 0,
-          remaining: 0
-        };
-      }
-      acc[key].spent += cur.spent;
-      acc[key].remaining += cur.remaining;
-      return acc;
-    }, {});
-
-    // Step 3: Aggregate user time by date and task
+    
     return userTime.reduce((acc, cur) => {
       const key = `${cur.date}-${cur.taskId}`;
       if (!acc[key]) {
@@ -206,10 +209,67 @@ export class TaskService {
       acc[key].remaining += cur.remaining;
       return acc;
     }, {});
-
- 
   }
 
+  async startTaskTiming(taskId: number): Promise<void> {
+    // Check if task is part of active sprint
+    if (!await this.isTaskInActiveSprint(taskId))
+      throw new ValidationException('Task not in active sprint');
+
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (await this.storyService.isStoryFinished(task.storyId)) // Check if story is finished
+      throw new ValidationException('Story already finished');
+    if (task.category == TaskCategory.ACTIVE || task.dateActive)
+      throw new ValidationException('Task already active'); 
+    if (task.category !== TaskCategory.ACCEPTED)
+      throw new ValidationException('Task not accepted');
+
+    await this.taskRepository.update({ id: taskId }, {
+      category: TaskCategory.ACTIVE,
+      dateActive: () => 'NOW()',
+    });
+  }
+
+  async stopTaskTiming(taskId: number): Promise<void> {
+    // Allow to stop timing after sprint isn't active anymore
+
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (task.category !== TaskCategory.ACTIVE || !task.dateActive)
+      throw new ValidationException('Task not active');
+
+    // Add log time record
+    let elapsed = +(moment().diff(moment((<Date><unknown>task.dateActive).toISOString().replace('Z', '')), 'm') / 60.0).toFixed(2); // Because problems with dates
+    if (elapsed < 0) // Failsafe (calculation error)
+      elapsed = 0;
+    const today: string = moment().format('YYYY-MM-DD');
+    const work = await this.getWorkOnTaskForUserByDate(taskId, task.assignedUserId, today);
+    const last = await this.getLastWorkOnTask(taskId);
+    await this.setWorkOnTask(today, taskId, task.assignedUserId, { spent: ((work) ? work.spent + elapsed : elapsed), remaining: last?.remaining || 0 });
+
+    await this.taskRepository.update({ id: taskId }, {
+      category: TaskCategory.ACCEPTED,
+      dateActive: null,
+    });
+  }
+
+  async endTask(taskId: number): Promise<void> {
+    // Allow to stop timing after sprint isn't active anymore
+
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (task.category !== TaskCategory.ACCEPTED)
+      throw new ValidationException('Task not accepted');
+
+    await this.taskRepository.update({ id: taskId }, {
+      category: TaskCategory.ENDED,
+      dateActive: null,
+    });
+  }
 
   async isTaskInActiveSprint(taskId: number): Promise<boolean> {
     const storyId = await this.getStoryIdForTaskById(taskId);
@@ -218,18 +278,36 @@ export class TaskService {
     return await this.storyService.isStoryInActiveSprint(storyId);
   }
 
-  async hasUserPermissionForTask(userId: number, taskId: number): Promise<boolean> {
+  async hasUserPermissionForTask(userId: number, taskId: number, role: UserRole[] | UserRole | number[] | number | null = null): Promise<boolean> {
     const storyId = await this.getStoryIdForTaskById(taskId);
     if (!storyId)
       return false;
-    return await this.storyService.hasUserPermissionForStory(userId, storyId);
+    return await this.storyService.hasUserPermissionForStory(userId, storyId, role);
   }
 
   async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
     return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' } })
   }
 
+  async getWorkOnTaskForUser(taskId: number, userId: number): Promise<TaskUserTime[]> {
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' }})
+  }
+
+  async getWorkOnTaskForUserByDate(taskId: number, userId: number, date: string): Promise<TaskUserTime | null> {
+    const result = await this.taskUserTimeRepository.findOneBy({ taskId: taskId, userId: userId, date: date });
+    return result || null;
+  }
+
+  async getLastWorkOnTask(taskId: number): Promise<TaskUserTime | null> {
+    const result = await this.taskUserTimeRepository.findOne({ where: { taskId: taskId }, order: { date: 'DESC', remaining: 'DESC' } });
+    return result || null;
+  }
+
   async setWorkOnTask(date: string, taskId: number, userId: number, work: DeepPartial<TaskUserTime>): Promise<void> {
+    // We can't enter work for future
+    if (moment(date, 'YYYY-MM-DD').isAfter(moment(), 'd'))
+      throw new ValidationException('Can\'t enter work on task for future');
+
     work.date = date;
     work.taskId = taskId;
     work.userId = userId;

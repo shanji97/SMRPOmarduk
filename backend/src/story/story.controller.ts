@@ -18,6 +18,7 @@ import { StoryNotificationDto, StoryNotificationSchema } from './dto/reject-stor
 import { StoryNotificationService } from '../story-notification/story-notification.service';
 import { NotificationStatus, StoryNotification } from '../story-notification/story-notification.entity';
 import { UpdateStoryBacklogSchema, UpdateStoryBacklogDto } from './dto/update-story-backlog.dto';
+import { TokenDto } from '../auth/dto/token.dto';
 
 @ApiTags('story')
 @ApiBearerAuth()
@@ -37,6 +38,18 @@ export class StoryController {
   @Get()
   async listStories(): Promise<Story[]> {
     return await this.storyService.getAllStories();
+  }
+
+  @ApiOperation({ summary: 'Stories assigned to this user.' })
+  @ApiOkResponse()
+  @Get('/user')
+  async getStoriesAssignedToUser(
+    @Token() token: TokenDto,
+  ): Promise<Story[]> {
+    const stories: Story[] = await this.storyService.getStoriesWithTasksByAssignedUserId(token.sid);
+    if (!stories)
+      throw new NotFoundException('Tests for story not found.');
+    return stories;
   }
 
   @ApiOperation({ summary: 'Get story by ID.' })

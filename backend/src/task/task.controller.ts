@@ -57,6 +57,28 @@ export class TaskController {
     return this.taskService.getTasksForSprint(sprintId);
   }
 
+  @ApiOperation({ summary: 'List tasks for user'})
+  @ApiOkResponse()
+  @Get('user')
+  async listTasksForUser(
+    @Token() token: TokenDto,
+  ): Promise<Task[]> {   
+    return this.taskService.getTasksForUser(token.sid);
+  }
+
+  @ApiOperation({ summary: 'List tasks for some other user'})
+  @ApiOkResponse()
+  @Get('user/:userId')
+  async listTasksForOtherUser(
+    @Token() token: TokenDto,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<Task[]> {
+    if (token.sid !== userId && !token.isAdmin)
+      throw new ForbiddenException();
+    
+    return this.taskService.getTasksForUser(userId);
+  }
+
   @ApiOperation({ summary: 'Get task by ID'})
   @ApiOkResponse()
   @ApiNotFoundResponse()
@@ -100,7 +122,8 @@ export class TaskController {
       if (!taskId)
         throw new InternalServerErrorException('Failed to create task');
 
-      await this.assignTask(token, taskId, assignedUserId);
+      if (assignedUserId)
+        await this.assignTask(token, taskId, assignedUserId);
     } catch (ex) {
       if (ex instanceof ValidationException) {
         throw new BadRequestException(ex.message);
@@ -119,7 +142,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Body(new JoiValidationPipe(UpdateTaskSchema)) task: UpdateTaskDto,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
     
     // Check if task part of active sprint
@@ -144,7 +167,7 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
     
     // Check if task part of active sprint
@@ -181,7 +204,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Param('userId', ParseIntPipe) userId: number, 
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
@@ -193,16 +216,18 @@ export class TaskController {
     // Check if task exists
     const task = await this.taskService.getTaskById(taskId);
     
+    const hasOverridePermissions: boolean = token.isAdmin || await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster);
+
     // User can accept task; admin and scrum master can reassign people
-    if (task.assignedUserId != null && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
+    if (task.assignedUserId != null && !hasOverridePermissions)
       throw new ForbiddenException('Someone is already assigned to task');
 
     // User can assign only himself, project scrum master can also others
-    if (token.sid !== userId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
+    if (token.sid !== userId && !hasOverridePermissions)
       throw new ForbiddenException("Can't assign other users to task");
 
     try {
-      await this.taskService.assignTaskToUser(taskId, userId);
+      await this.taskService.assignTaskToUser(taskId, userId, hasOverridePermissions);
 
       // If user asigns himself to task automatically accepts
       if (userId === token.sid)
@@ -232,7 +257,7 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
     @Param('confirm', ParseBoolPipe) confirm: boolean,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
     
     // Check if task part of active sprint
@@ -266,7 +291,7 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
@@ -298,10 +323,113 @@ export class TaskController {
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<TaskUserTime[]> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     return await this.taskService.getWorkOnTask(taskId);
+  }
+
+  @ApiOperation({ summary: 'Get work on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Get(':taskId/time/user/:userId')
+  async getWorkOnTaskForUser(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<TaskUserTime[]> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+
+    return await this.taskService.getWorkOnTaskForUser(taskId, userId);
+  }
+
+  @ApiOperation({ summary: 'Start to measure time spent on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Get(':taskId/time/start')
+  async startTaskTiming(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if task part of active sprint
+    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't part of active sprint");
+
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't start timing, because not assigned to task");
+
+    try {
+      await this.taskService.startTaskTiming(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Stop to measure time spent on task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Get(':taskId/time/stop')
+  async stopTaskTiming(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't stop timing, because not assigned to task");
+
+    try {
+      await this.taskService.stopTaskTiming(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'End task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Get(':taskId/end')
+  async endTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+
+    // User can assign only himself, project scrum master can also others
+    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't end, because not assigned to task");
+
+    try {
+      await this.taskService.endTask(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
   }
 
   @ApiOperation({ summary: 'Set work of user on task' })
@@ -315,7 +443,7 @@ export class TaskController {
     @Param('date', new JoiValidationPipe(Joi.date())) date: string,
     @Body(new JoiValidationPipe(TaskUserTimeSchema)) work: TaskUserTimeDto
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
@@ -329,7 +457,17 @@ export class TaskController {
     if ((token.sid !== userId || userId !== task.assignedUserId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException("Can't assign time on task");
 
-    await this.taskService.setWorkOnTask(date, taskId, userId, work);
+    // Check if story is finished
+    if (await this.storyService.isStoryFinished(task.storyId))
+      throw new ValidationException("Story already finished");
+
+    try {
+      await this.taskService.setWorkOnTask(date, taskId, userId, work);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
   }
 
   @ApiOperation({ summary: 'Delete work of user on task' })
@@ -342,7 +480,7 @@ export class TaskController {
     @Param('userId', ParseIntPipe) userId: number,
     @Param('date', new JoiValidationPipe(Joi.date())) date: string,
   ): Promise<void> {
-    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId))
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     // Check if task part of active sprint
