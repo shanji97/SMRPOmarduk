@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import { Card, Nav, Tab, Table } from "react-bootstrap";
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -28,9 +28,13 @@ function Dashboard() {
     }
   }, [user]);
 
+  if (storiesForUser.length === 0) {
+    return <h2>No stories</h2>
+  }
 
   return (
-    <>
+
+    <Fragment>
     <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
     <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
       
@@ -69,8 +73,7 @@ function Dashboard() {
           <tr>
             <th>#</th>
             <th>Title</th>
-            <th>Status</th>
-            
+            <th>Status</th>            
             <th>Work Done</th>
             <th>Remaining time</th>
             <th>Estimated time</th>
@@ -110,7 +113,7 @@ function Dashboard() {
         
     
     
-  </>
+  </Fragment>
   );
 }
 

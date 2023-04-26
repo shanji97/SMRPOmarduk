@@ -12,20 +12,25 @@ interface TasksProps {
 const Tasks: React.FC<TasksProps> = ({storyId}) => {
     const dispatch = useAppDispatch();
     const {tasksForStory} = useAppSelector(state => state.tasks);
+    const [tasks, setTasks] = useState<any[]>([]);
 
     useEffect(() => {
         dispatch(getTasksForStory(storyId));
-    }, []);
+    }, [storyId]);
+
+    useEffect(() => {
+        if (tasksForStory.length > 0) {
+            setTasks(tasksForStory);
+        }
+    }, [tasksForStory]);
 
     return (
         <Fragment>
-            {tasksForStory.map(task => {
-                return <Task task={task} />
+            {tasks.map(task => {
+                return <Task key={task.id} task={task} />
             })}
         </Fragment>
     )
-
-    return <h1>asd</h1>
 }
 
 export default Tasks;

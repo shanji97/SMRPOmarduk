@@ -33,18 +33,6 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
   const [initialLogs, setInitialLogs] = useState<React.ReactElement[]>([]);
 
   useEffect(() => {
-    if (isError) {
-      toast.error(message);
-    } else if (isSuccess) {
-      toast.success('Work logged!');
-    }
-
-    return () => {
-      dispatch(reset());
-    }
-  }, [isSuccess, message, isError])
-
-  useEffect(() => {
     return () => {
       dispatch(reset());
     }
