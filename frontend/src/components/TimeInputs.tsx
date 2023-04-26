@@ -70,7 +70,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({taskId, index, onChange, date, s
   return (
       <Form onSubmit={submitTimes}>
         <div className={classes.inputsContainer}>
-            <p>{date}</p>
+            <p style={{ marginTop: '.9rem', marginRight: '.5rem'}}>{date}</p>
             <Form.Group className={classes.inputGroup} controlId="formBasicworkspent">
                 <div style={{display: 'inline-flex'}}>
                 <Form.Label>Spent</Form.Label>
@@ -80,6 +80,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({taskId, index, onChange, date, s
                     value={spentTime}
                     onChange={handleSpentTimeChanged}
                     min={0}
+                    style={{width: '100px'}}
                 />
                 </div>
             </Form.Group>
@@ -94,6 +95,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({taskId, index, onChange, date, s
                     value={remainingTime}
                     onChange={handleRemainingChanged}
                     min={0}
+                    style={{width: '100px'}}
                 />
                 </div>
             </Form.Group>
