@@ -265,19 +265,23 @@ function SprintBacklog() {
   };
 
   const isTaskUnassigned = (task: any) => {
-    return task.assignedUserId == null;
+    // return task.assignedUserId == null;
+    return task.category === 1;
   };
 
   const isTaskAssigned = (task: any) => {
-    return task.assignedUserId != null && task.dateAccepted == null;
+    // return task.assignedUserId != null && task.dateAccepted == null;
+    return task.category === 2;
   };
 
   const isTaskInProgress = (task: any) => {
-    return task.dateAccepted != null && task.dateEnded == null;
+    // return task.dateAccepted != null && task.dateEnded == null;
+    return task.category === 3;
   };
 
   const isTaskFinished = (task: any) => {
-    return task.dateEnded != null;
+    // return task.dateEnded != null;
+    return task.category === 4;
   };
 
   const renderStatus = (task: any) => {
@@ -306,8 +310,6 @@ function SprintBacklog() {
         </Badge>
       );
     }
-
-    return "asd";
   };
 
   return (
