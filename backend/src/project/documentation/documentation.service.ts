@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import * as fs from 'fs';
@@ -8,6 +8,7 @@ import sanitize = require('sanitize-filename');
 
 @Injectable()
 export class DocumentationService {
+  private readonly logger: Logger = new Logger(DocumentationService.name);
 
   private readonly rootDirectoryPath: string;
 
@@ -17,8 +18,12 @@ export class DocumentationService {
     this.rootDirectoryPath = path.join(this.configService.get<string>('DATA_DIR'), 'project');
 
     // Create directory if not exits
-    if (!fs.existsSync(this.rootDirectoryPath))
-      fs.mkdirSync(this.rootDirectoryPath);
+    try {
+      if (!fs.existsSync(this.rootDirectoryPath))
+        fs.mkdirSync(this.rootDirectoryPath);
+    } catch (ex) {
+      this.logger.warn(ex.message);
+    } 
   }
 
   getProjectDirPath(projectId: number): string {
