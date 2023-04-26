@@ -390,7 +390,7 @@ export class StoryController {
     await this.storyService.deleteStoryById(storyId);
   }
 
-  @ApiOperation({ summary: 'Approve notification for a story.' })
+  @ApiOperation({ summary: 'Delete notification for a story.' })
   @ApiNotFoundResponse()
   @ApiNoContentResponse()
   @Delete('/notification/:notificationId/')
