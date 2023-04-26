@@ -31,7 +31,7 @@ function Dashboard() {
         <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
           {storiesForUser.map((item) => {
             return (
-              <Card className="mt-3">
+              <Card className="mt-3" key={item.id}>
                 <Tab.Container id="left-tabs-example" defaultActiveKey="first">
                   <Card.Header className="d-flex align-items-center">
                     <Nav variant="tabs" defaultActiveKey="first">

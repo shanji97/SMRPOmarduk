@@ -131,7 +131,7 @@ const startTime = async (taskId: string, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    const response = await axios.post(`${TASK_API_URL}/${taskId}/time/start`, config);
+    const response = await axios.get(`${TASK_API_URL}/${taskId}/time/start`, config);
 
     return response.data;
 }
@@ -142,7 +142,7 @@ const stopTime = async (taskId: string, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    const response = await axios.post(`${TASK_API_URL}/${taskId}/time/stop`, config);
+    const response = await axios.get(`${TASK_API_URL}/${taskId}/time/stop`, config);
 
     return response.data;
 }

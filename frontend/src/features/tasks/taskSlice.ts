@@ -9,9 +9,12 @@ interface TaskState {
     tasksForSprint: any[]
     tasksForStory: any[]
     workLogs: any[]
+    currentlyWorkingOnTaskId: string;
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
+    isTimerSuccess: boolean
+    isTimerError: boolean
     message: any
     changed: boolean
 }
@@ -21,9 +24,12 @@ const initialState: TaskState = {
     tasksForSprint: [],
     tasksForStory: [],
     workLogs: [],
+    currentlyWorkingOnTaskId: "",
     isLoading: false,
     isSuccess: false,
     isError: false,
+    isTimerSuccess: false,
+    isTimerError: false,
     message: '',
     changed: false
 }
@@ -138,6 +144,8 @@ export const taskSlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isTimerSuccess = false
+            state.isTimerError = false
             state.message = ''
         }
     },
@@ -273,14 +281,15 @@ export const taskSlice = createSlice({
         })
         .addCase(startTime.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
+            state.isTimerSuccess = true;
+            state.isTimerError = false;
             state.message = '';
+            state.currentlyWorkingOnTaskId = action.meta.arg;
         })
         .addCase(startTime.rejected, (state, action) => {
             state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
+            state.isTimerSuccess = false;
+            state.isTimerError = true
             state.message = action.payload
         })
         .addCase(stopTime.pending, (state) => {
@@ -288,15 +297,16 @@ export const taskSlice = createSlice({
         })
         .addCase(stopTime.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
+            state.isTimerSuccess = true;
+            state.isTimerError = false;
             state.message = '';
+            state.currentlyWorkingOnTaskId = "";
         })
         .addCase(stopTime.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
-            state.message = action.payload
+            state.isLoading = false;
+            state.isTimerSuccess = false;
+            state.isTimerError = true;
+            state.message = action.payload;
         })
     }
 })
