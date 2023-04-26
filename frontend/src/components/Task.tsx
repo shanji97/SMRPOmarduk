@@ -25,6 +25,31 @@ const Task: React.FC<TaskProps> = ({task}) => {
         return sum;
     }, [workLogs]);
     
+    const getStatusFromCategory = (category: number) => {
+        switch(category) {
+            case 0:
+              return 'UNKNOWN'
+              break;
+            case 1:
+              return 'UNASSIGNED'  
+              break;
+            case 2:
+              return 'ASSIGNED'                
+              break;
+            case 3:
+              return 'ACCEPTED'
+              break;
+            case 4:
+                return 'ACTIVE'
+              break;
+            case 250:
+                return 'ENDED'                
+              break;
+            default:
+              return 'UNKNOWN'
+        }
+    }
+
     const openLogTimeModal = () => {
         setShowModal(true);
     }
@@ -38,10 +63,10 @@ const Task: React.FC<TaskProps> = ({task}) => {
             <tr key={task.id}>
                 <td >{task.id}</td>
                 <td >{task.name}</td>
-                <td>{task.remaining === 0 ? 'Finished' : 'In progress'}</td>
+                <td>{getStatusFromCategory(task.category)}</td>
                 
                 <td >{hoursSpentInTotal}h</td>
-                <td >{task.remaining}h</td>
+                <td>{`${workLogs?.[workLogs.length - 1]?.remaining}h` ?? '/'}</td>
                 <td >{task.estimatedTime}</td>
                 <td ><Button variant="outline-primary" size="sm" onClick={openLogTimeModal}>Work History</Button></td>
             </tr>

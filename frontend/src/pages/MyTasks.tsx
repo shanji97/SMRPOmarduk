@@ -76,7 +76,6 @@ function Dashboard() {
             <th>Status</th>            
             <th>Work Done</th>
             <th>Remaining time</th>
-            <th>Estimated time</th>
           </tr>
         </thead>
         

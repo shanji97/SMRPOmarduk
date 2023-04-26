@@ -5,6 +5,7 @@ import TimeInputs from "./TimeInputs";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { getWorkLogs, reset } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
+import { Calendar } from "react-bootstrap-icons";
 
 interface LogTimeModalProps {
   taskId: string,
@@ -33,6 +34,10 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
   const [initialLogs, setInitialLogs] = useState<React.ReactElement[]>([]);
 
   useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
     return () => {
       dispatch(reset());
     }
