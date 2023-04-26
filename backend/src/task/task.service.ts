@@ -45,7 +45,7 @@ export class TaskService {
 
   async getStoryIdForTaskById(taskId: number): Promise<number | null> {
     const result = await this.taskRepository.findOne({ where: { id: taskId }, select: ['storyId'] });
-    return result.storyId || null;
+    return result?.storyId || null;
   }
 
   async createTask(storyId: number, task: DeepPartial<Task>): Promise<number> {
@@ -102,7 +102,7 @@ export class TaskService {
     return task.story.projectId;
   }
 
-  async assignTaskToUser(taskId: number, userId: number): Promise<void> {
+  async assignTaskToUser(taskId: number, userId: number, override: boolean = false): Promise<void> {
     // Check if task is part of active sprint
     if (!await this.isTaskInActiveSprint(taskId))
       throw new ValidationException('Task not in active sprint');
@@ -110,7 +110,7 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category != TaskCategory.UNASSIGNED)
+    if (task.category != TaskCategory.UNASSIGNED && !(override && [TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED, TaskCategory.UNKNOWN].includes(task.category)))
       throw new ValidationException('Task is not unassigned');
     
     // Only users that have role on project, can be assigned to task
@@ -120,7 +120,7 @@ export class TaskService {
 
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ASSIGNED,
-      dateAssigned: () => 'NOW()', // TODO: Check if working
+      dateAssigned: () => 'NOW()',
       assignedUserId: userId,
     });
   }

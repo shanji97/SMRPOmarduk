@@ -216,16 +216,18 @@ export class TaskController {
     // Check if task exists
     const task = await this.taskService.getTaskById(taskId);
     
+    const hasOverridePermissions: boolean = token.isAdmin || await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster);
+
     // User can accept task; admin and scrum master can reassign people
-    if (task.assignedUserId != null && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
+    if (task.assignedUserId != null && !hasOverridePermissions)
       throw new ForbiddenException('Someone is already assigned to task');
 
     // User can assign only himself, project scrum master can also others
-    if (token.sid !== userId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
+    if (token.sid !== userId && !hasOverridePermissions)
       throw new ForbiddenException("Can't assign other users to task");
 
     try {
-      await this.taskService.assignTaskToUser(taskId, userId);
+      await this.taskService.assignTaskToUser(taskId, userId, hasOverridePermissions);
 
       // If user asigns himself to task automatically accepts
       if (userId === token.sid)
