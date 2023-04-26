@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
   createStory,
   editStory,
-  getAllStory,
+  getAllStoryById,
   reset,
 } from "../features/stories/storySlice";
 
@@ -18,7 +18,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getProject } from "../features/projects/projectSlice";
+import { getActiveProject, getProject } from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
 
 interface StoryProps {
@@ -55,6 +55,21 @@ const StoryForm: React.FC<StoryProps> = ({
   const { projectID } = useParams();
   const [userId, setUserId] = useState(-1);
 
+
+  useEffect(() => {
+    dispatch(getActiveProject());
+  }, []);
+
+  useEffect(() => {
+    
+    if (projectsState.activeProject.id) {
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+      
+    }
+  }, [projectsState.activeProject]);
+
+
+
   useEffect(() => {
     if (storyState.isUpdateSuccess && !storyState.isLoading) {
       toast.success(
@@ -62,13 +77,19 @@ const StoryForm: React.FC<StoryProps> = ({
       );
       resetInputs();
       dispatch(reset());
-      dispatch(getAllStory());
+      if (projectsState.activeProject.id) {
+        dispatch(getAllStoryById(projectsState.activeProject.id!));
+        
+      }
       closeModal();
     }
     if (storyState.isUpdateError && !storyState.isLoading) {
       toast.error(storyState.message);
       dispatch(reset());
-      dispatch(getAllStory());
+      if (projectsState.activeProject.id) {
+        dispatch(getAllStoryById(projectsState.activeProject.id!));
+        
+      }
     }
   }, [
     storyState.isUpdateSuccess,

@@ -4,10 +4,11 @@ import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
   deleteStory,
-  getAllStory,
+  getAllStoryById,
   reset,
 } from "../features/stories/storySlice";
 import { toast } from "react-toastify";
+import { getActiveProject } from "../features/projects/projectSlice";
 
 export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
@@ -26,12 +27,25 @@ function DeleteConfirmation({
   let { isDeleteSuccess, isLoading, isDeleteError, message } = useAppSelector(
     (state) => state.stories
   );
+  const { activeProject } = useAppSelector((state) => state.projects);
+  useEffect(() => {
+    dispatch(getActiveProject());
+  }, []);
+
+  useEffect(() => {
+    
+    if (activeProject.id) {
+      dispatch(getAllStoryById(activeProject.id!));
+      console.log(activeProject)
+    }
+  }, [activeProject]);
+
 
   useEffect(() => {
     if (isDeleteSuccess && !isLoading) {
       toast.success("Story successfully deleted");
       dispatch(reset());
-      dispatch(getAllStory());
+      dispatch(getAllStoryById(activeProject.id!));
       onCancel();
     }
     if (isDeleteError && !isLoading) {

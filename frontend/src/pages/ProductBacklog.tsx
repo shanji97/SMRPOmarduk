@@ -43,11 +43,12 @@ import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 import produce from "immer";
 import DeleteConfirmation from "./DeleteConfirmation";
 import {
-  getAllStory,
+  getAllStoryById,
   deleteStory,
   reset,
   updateStoryCategory,
   updateTimeComplexity,
+  confirmStory,
 } from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
@@ -79,44 +80,8 @@ import RejectStoryModal from "./RejectStoryModal";
 //npm install --save react-bootstrap
 //npm install bootstrap --save
 
-/*
-
-const itemsFromBackend123 = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-
-
-
-    
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: []
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
   
 
-  
-
-*/
 
 const defaultItems = {
   [ProductBacklogItemStatus.WONTHAVE]: [],
@@ -137,7 +102,7 @@ function ProductBacklog() {
   //helper funkcija za updatat useState
   const [sgs, setSgs] = useState("undefined");
 
-  let { stories, isSuccess, isLoading, isError, message } = useAppSelector(
+  let { stories, isSuccess, isLoading, isError, message, isSuccessConfirm, isSuccessLoading } = useAppSelector(
     (state) => state.stories
   );
   let projectroles = useAppSelector((state) => state.projects);
@@ -157,10 +122,15 @@ function ProductBacklog() {
     SprintSelector.isLoading,
   ]);
 
+
+
+ 
+
   //console.log(SprintSelector)
   useEffect(() => {
     if (isSuccess && !isLoading) {
       dispatch(reset);
+      toast.success(message)
       console.log("kul");
     }
     if (isError && !isLoading) {
@@ -171,7 +141,18 @@ function ProductBacklog() {
   }, [isSuccess, isError, isLoading]);
 
   useEffect(() => {
-    dispatch(getAllStory());
+    if (isSuccessConfirm && !isSuccessLoading) {
+      dispatch(reset);
+      if (tempDataApproved) {
+        handleDragCustom({status: tempDataApproved.status!, index: tempDataApproved.index!,destination: 'Done'})  
+      }
+    }
+  }, [isSuccessConfirm, isSuccessLoading]);
+
+  
+ 
+  useEffect(() => {
+    
     dispatch(getActiveProject());
     
     
@@ -180,6 +161,7 @@ function ProductBacklog() {
   useEffect(() => {
     
     if (activeProject.id) {
+      dispatch(getAllStoryById(activeProject.id!));
       dispatch(getAllSprints(activeProject.id!));
       dispatch(getProjectUserRoles(activeProject.id!))
       console.log(activeProject)
@@ -199,9 +181,13 @@ function ProductBacklog() {
     
     if (activeProject.id) {
       const dataArray = Object.values(userRoles);
-      const filteredData = dataArray.filter(item => item.role === 1);
-      if (filteredData) {
-        setScrumMasterId(filteredData[0].userId)
+      const filteredDataScramMaster = dataArray.filter(item => item.role === 1);
+      const filteredDataProductOwner = dataArray.filter(item => item.role === 2);
+      if (filteredDataScramMaster) {
+        setScrumMasterId(filteredDataScramMaster[0].userId)
+      }
+      if (filteredDataProductOwner) {
+        setScrumProductOwnerId(filteredDataProductOwner[0].userId)
       }
       
     }
@@ -225,6 +211,8 @@ function ProductBacklog() {
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState();
   const [scrumMasterId, setScrumMasterId] = useState();
+  const [productOwnerId, setScrumProductOwnerId] = useState();
+
   useEffect(() => {
     if (user === null) {
       return;
@@ -238,6 +226,12 @@ function ProductBacklog() {
 
   const isUserScramMaster = () => {
     if (scrumMasterId === userId && userId && scrumMasterId)
+    return true;
+    else return false;
+    
+  };
+  const isUserProductOwn = () => {
+    if (productOwnerId === userId && userId && productOwnerId)
     return true;
     else return false;
     
@@ -324,14 +318,15 @@ function ProductBacklog() {
     status: string;
     //itemToDelete: StoryData;
     index: number;
+    destination: string;
   }) => void;
 
   
-  const handleReject: HandrejectFunc = ({ status, index }) =>
+  const handleDragCustom: HandrejectFunc = ({ status, index, destination }) =>
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         //item, damo na unasigned
-        const destination = "Unallocated";
+        const dest = destination;
        /*
         const niki = draft[
                   status as ProductBacklogItemStatus
@@ -341,14 +336,14 @@ function ProductBacklog() {
           status as ProductBacklogItemStatus
         ].splice(index, 1);
 
-        draft[destination as ProductBacklogItemStatus].splice(
+        draft[dest as ProductBacklogItemStatus].splice(
           0,
           0,
           removed
         );
         let projectRoleData = {
           projectId: parseInt(activeProject?.id || ""),
-          category: categoryChange(destination),
+          category: categoryChange(dest),
           storyId: removed.id || "",
         };
         dispatch(updateStoryCategory(projectRoleData));
@@ -436,7 +431,7 @@ function ProductBacklog() {
         );
         setShow(false);
         dispatch(deleteStory(itemToDelete.id!));
-        dispatch(getAllStory());
+        dispatch(getAllStoryById(activeProject.id!));
       })
     );
 
@@ -623,6 +618,13 @@ function ProductBacklog() {
     //console.log(item);
     return setShowRejectStoryModal(true);
   };
+  const [tempDataApproved, setTempDataApproved] = useState<{item: StoryData, status: string, index: number}>();
+  const getDataApproved = (item: StoryData, status: string, index: number) => {
+    setTempDataApproved({item, status, index});
+    //console.log(item);
+    dispatch(confirmStory(item.id!));
+  };
+ 
 
   // utility function for edit story
   function getTestsForEdit(items: any): string[] {
@@ -684,6 +686,8 @@ function ProductBacklog() {
                                   ? true
                                   : status === ProductBacklogItemStatus.DONE
                                   ? true
+                                  : status === ProductBacklogItemStatus.ALLOCATED
+                                  ? true
                                   : undefined
                                 }
                               >
@@ -704,6 +708,23 @@ function ProductBacklog() {
                                           <p className="fs-6 text-muted m-1">
                                             TSK-{item.sequenceNumber}
                                           </p>
+                                          {status === ProductBacklogItemStatus.ALLOCATED && isUserProductOwn() && (
+                                          <><p className="fs-6 text-muted m-1 mx-auto">Task Finished: </p>
+                                          <Button
+                                              className="m-0 p-0 px-2"
+                                              variant="danger"
+                                              onClick={() => getDataReject(item, status, index)}
+                                            >
+                                              Reject
+                                            </Button>
+                                            <Button
+                                              className="m-0 p-0 px-2"
+                                              variant="primary"
+                                              onClick={() => getDataApproved(item, status, index)}
+                                            >
+                                                Approve
+                                              </Button></>
+                                                )}
                                           {status !==
                                                 ProductBacklogItemStatus.WONTHAVE && (
                                           <Dropdown className="ms-auto">
@@ -923,6 +944,7 @@ function ProductBacklog() {
       )}
       {showRejectStoryModal && (
         <RejectStoryModal
+          handleReject={handleDragCustom}
           elements={tempDataReject!}
           onCancel={() => setShowRejectStoryModal(false)}
           show={showRejectStoryModal}

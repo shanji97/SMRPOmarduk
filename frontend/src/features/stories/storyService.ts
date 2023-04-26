@@ -8,14 +8,14 @@ const SPRINTS_API_URL = `${getBaseUrl()}/api/sprint`;
 
 // const STORY_API_URL = `http://localhost:3000/api/story`;
 
-const getAllStory = async (token: string) => {
+const getAllStoryById = async (projectId: string, token: string) => {
     const config = {
         headers: {
             Authorization: `JWT ${token}`
         }
     }
 
-    const response = await axios.get(`${STORY_API_URL}`, config);
+    const response = await axios.get(`${STORY_API_URL}/${projectId}/stories-by-project`, config);
 
     return response.data;
 }
@@ -133,6 +133,15 @@ const updateTimeComplexity = async (updateTimeComplexity: UpdateTimeComplexity, 
     const response = await axios.patch(`${STORY_API_URL}/${updateTimeComplexity.storyId}/time-complexity`, updatedTimeComplexity, config);
     return response.data;
 }
+const confirmStory = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.patch(`${STORY_API_URL}/${storyId}/confirm`, storyId, config);
+    return response.data;
+}
 const rejectStory = async (rejectStory: RejectStory, token: string) => {
     const config = {
         headers: {
@@ -150,7 +159,7 @@ const rejectStory = async (rejectStory: RejectStory, token: string) => {
 
 const storyService = {
     create,
-    getAllStory,
+    getAllStoryById,
     getStoriesForSprint,
     deleteStory,
     updateStoryCategory,
@@ -158,6 +167,7 @@ const storyService = {
     updateTimeComplexity,
     rejectStory,
     getStoriesForUser,
+    confirmStory
 }
 
 export default storyService;

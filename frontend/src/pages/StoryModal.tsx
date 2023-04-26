@@ -9,7 +9,7 @@ import { getAllUsers} from "../features/users/userSlice";
 import { parseJwt } from '../helpers/helpers';
 import { useParams } from 'react-router-dom';
 import { getActiveProject } from '../features/projects/projectSlice';
-import { createNotification, getNotifications, reset } from '../features/stories/storyNotificationSlice';
+import { createNotification, getNotifications, getRejectMessage, reset } from '../features/stories/storyNotificationSlice';
 import { toast } from 'react-toastify';
 import PostNotification from '../components/PostNotification';
 
@@ -85,7 +85,7 @@ const [userName, setUserName] = useState('');
 //comments
 
 const params = useParams();
-const {message, isError, storiesNotification} = useAppSelector(state => state.storyNotifications);
+const {message, isError, storiesNotification, rejectMessage} = useAppSelector(state => state.storyNotifications);
 const {activeProject} = useAppSelector(state => state.projects);
 const [postContent, setPostContent] = useState('');
 const [currentUser, setUser] = useState({
@@ -108,6 +108,7 @@ useEffect(() => {
 
 useEffect(() => {
   dispatch(getNotifications(item.id!));
+  dispatch(getRejectMessage(item.id!));
 }, [activeProject]);
 
 useEffect(() => {
@@ -137,6 +138,36 @@ const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
 }
 
 
+
+/*
+
+ <Card border={"info"}>
+                    <Card.Body>
+                      <Row>
+                        <Col>
+                          <Card.Text>{content}</Card.Text>
+                        </Col>
+                        
+                        
+                      </Row>
+                      </Card.Body>
+                    </Card>
+
+
+                {rejectMessage.map((post, i) => {
+                    return <PostNotification
+                  key={i}
+                  id={post.id!}
+                  content={post.notificationText}
+                  author={post.authorName}
+                  created={post.created!}
+                  user={currentUser}
+                  approved={post.approved}
+  
+              />
+      })} 
+
+      */
     return (
     
         <Modal
@@ -166,6 +197,9 @@ const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
               <Tab.Pane eventKey="first">
                 <Card.Title>{item.title}</Card.Title>
                 <Card.Text>
+
+
+               
                   {item.description}
                 </Card.Text>
               </Tab.Pane>

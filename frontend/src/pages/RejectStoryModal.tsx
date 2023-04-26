@@ -3,7 +3,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
-  getAllStory,
+  getAllStoryById,
   rejectStory,
   reset,
 } from "../features/stories/storySlice";
@@ -13,18 +13,24 @@ export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
   show: boolean;
   elements: {item: StoryData, status: string, index: number};
-
+  handleReject: (args: {
+    status: string,
+    index: number,
+    destination: string
+  }) => void;
 }
 
 function RejectStoryModal({
   onCancel,
   show,
   elements,
+  handleReject
 }: DeleteConfirmationProps) {
   const dispatch = useAppDispatch();
   let { isRejectSuccess, isLoading, isRejectError, message } = useAppSelector(
     (state) => state.stories
   );
+  let { activeProject } = useAppSelector((state) => state.projects);
 
   const [description, setDescription] = useState("");
   const [descriptionTouched, setDescriptionTouched] = useState(false);
@@ -43,9 +49,10 @@ function RejectStoryModal({
 
   useEffect(() => {
     if (isRejectSuccess && !isLoading) {
-      toast.success("Story successfully deleted");
-      dispatch(reset());
-      dispatch(getAllStory());
+      toast.success("Story successfully Rejected");
+      handleReject({status: elements.status,index: elements.index, destination: "Unallocated"})
+      //dispatch(reset());
+      //dispatch(getAllStoryById(activeProject.id!));
       onCancel();
     }
     if (isRejectError && !isLoading) {
@@ -78,6 +85,7 @@ function RejectStoryModal({
       storyId: elements.item.id!
     }
     dispatch(rejectStory(updatedRejectStory))
+
   };
 
   return (
