@@ -11,6 +11,7 @@ import { UpdateUserDto, UpdateUserSchema } from './dto/update-user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { ValidationException } from '../common/exception/validation.exception';
+import { TokenDto } from '../auth/dto/token.dto';
 
 @ApiTags('user')
 @ApiBearerAuth()
@@ -65,7 +66,13 @@ export class UserController {
       if (!token.isAdmin) { // Non-admin user => chaning own info
         if (token.sid !== userId) // Don't allow normal user to update other users data
           throw new ForbiddenException();
+        const oldUser = await this.userService.getUserById(userId);
+        if (oldUser.username !== user.username) // Only admin can change user's username
+          throw new ForbiddenException('Only admininstrator can change username of a user');
+        if (!oldUser.isAdmin && user.isAdmin)
+          throw new ForbiddenException('Can\'t elevate permissions');
       }
+      
       if (user.password && (!token.isAdmin || token.sid === userId)) { // If changing password, user must enter also old one
         const passwordOld: string = await this.userService.getUserPassword(token.sid);
         if (!passwordOld || !await this.userService.comparePassword(user.passwordOld || '', passwordOld))
@@ -89,6 +96,23 @@ export class UserController {
       if (token.sid !== userId) // Don't allow normal user to update other users data
         throw new ForbiddenException();
     await this.userService.deleteUserById(userId);
+  }
+
+  @ApiOperation({ summary: 'Check if 2FA is enabled for user' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @Get(':userId/2fa/status')
+  async status2FA(
+    @Token() token: TokenDto,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<{ status: boolean }> {
+    if (!token.isAdmin) // Non-admin user => chaning own info
+      if (token.sid !== userId) // Don't allow normal user to update other users data
+        throw new ForbiddenException();
+
+    return {
+      status: await this.userService.hasUser2FA(userId),
+    };
   }
 
   @ApiOperation({ summary: 'Setup 2FA for user '})

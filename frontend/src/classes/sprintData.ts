@@ -4,6 +4,8 @@ export interface SprintData {
 }
 
 export interface SprintBody {
+    projectId: string,
+    id?: string,
     name: string,
     velocity: number,
     startDate: string,
@@ -15,4 +17,9 @@ export interface DateRangeSpecs {
     endDate: Date,
     key: string,
     selection?: any
+}
+
+export interface StorySprint {
+    sprintId: number,
+    storyId: number
 }

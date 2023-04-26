@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
 import { DeepPartial, Repository, QueryFailedError } from 'typeorm';
-
 import { CommonPasswordService } from './common-password.service';
 import { User } from './user.entity';
 import { ValidationException } from '../common/exception/validation.exception';

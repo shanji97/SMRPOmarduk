@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 
 export class CreateSprintDto {
   @ApiProperty({
-    example: 'Sample project',
+    example: 'Sample sprint',
     minLength: 1,
     maxLength: 255,
     nullable: false,
@@ -40,8 +40,8 @@ export const CreateSprintSchema = Joi.object().keys({
   id: Joi.any().strip(),
   name: Joi.string().max(255).required(),
   velocity: Joi.number().min(0).required(),
-  startDate: Joi.string().required(), // TODO
-  endDate: Joi.string().required(), // TODO
+  startDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).required(),
+  endDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).required(),
   projectId: Joi.any().strip(),
   project: Joi.any().strip(),
 });

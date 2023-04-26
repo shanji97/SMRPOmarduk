@@ -4,14 +4,20 @@ import {
   PersonCircle,
   Calendar,
   Journals,
+  Stack,
+  Sticky,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 
 import { getLastLogin, logout } from "../features/users/userSlice";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { parseDate, parseJwt } from "../helpers/helpers";
 import { useNavigate } from "react-router-dom";
+import {
+  getAllSprints,
+  setActiveSprint,
+} from "../features/sprints/sprintSlice";
 
 function Header() {
   const dispatch = useAppDispatch();
@@ -19,6 +25,9 @@ function Header() {
 
   const { user, lastLogin, userData } = useAppSelector((state) => state.users);
   const { sprints } = useAppSelector((state) => state.sprints);
+  const { activeProject } = useAppSelector((state) => state.projects);
+
+  const [sub, setSub] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastLoginDate, setLastLoginDate] = useState("");
 
@@ -28,18 +37,42 @@ function Header() {
     }
     const token = JSON.parse(localStorage.getItem("user")!).token;
     const userData1 = parseJwt(token);
+
+    setSub(userData1.sub);
     setIsAdmin(userData1.isAdmin);
 
     dispatch(getLastLogin(userData1.sid));
     setLastLoginDate(lastLogin);
   }, [user, lastLogin]);
 
+  useEffect(() => {
+    if (activeProject.id !== "") {
+      dispatch(getAllSprints(activeProject.id!));
+    }
+  }, [activeProject, dispatch, sprints.length]);
+
   useEffect(() => {}, [userData]);
+
+  const activeSprint = useMemo(() => {
+    const activeSpr = sprints.find((sprint) => {
+      const startDate = new Date(sprint.startDate);
+      const endDate = new Date(sprint.endDate);
+      const today = new Date();
+
+      return today >= startDate && today <= endDate;
+    });
+
+    dispatch(setActiveSprint(activeSpr));
+
+    return activeSpr;
+  }, [sprints]);
+
+  //useEffect(() => {}, [sprints]);
 
   const handleLoginAndLogout = () => {
     if (user !== null) {
       dispatch(logout());
-      window.location.replace("/login");
+      navigate("/login");
     }
   };
 
@@ -48,10 +81,6 @@ function Header() {
   };
   const redirectToUsers = () => {
     navigate("/users");
-  };
-
-  const redirectToNewSprint = () => {
-    navigate("/add-sprint");
   };
 
   const redirectToProjectList = () => {
@@ -69,20 +98,58 @@ function Header() {
   const redirectToChangePassword = () => {
     navigate("/change-password");
   };
-
+  const redirectToProductBacklog = () => {
+    navigate("/product-backlog");
+  };
+  const redirectToSprintBacklog = () => {
+    navigate("/sprint-backlog");
+  };
+  const redirectToMyTask = () => {
+    navigate("/my-tasks");
+  };
   const redirectToEditProfile = () => {
     navigate("/profile");
+  };
+  const redirectToWall = (projectId: string) => {
+    navigate(`/projects/${projectId}/wall`);
   };
 
   return (
     <Navbar collapseOnSelect expand="lg" bg="light" variant="light">
       <Container>
         <Navbar.Brand onClick={redirectHome} className="hstack">
-          <HouseDoorFill className="me-2"></HouseDoorFill> Dashboard
+          <HouseDoorFill className="me-2"></HouseDoorFill> Dashboard&nbsp;
+          {activeProject.id !== "" &&
+            (activeSprint ? (
+              <Navbar.Text style={{ marginRight: "5rem" }}>
+                Active sprint: <b>{activeSprint?.name}</b>{" "}
+                {activeSprint?.startDate} - {activeSprint?.endDate}
+              </Navbar.Text>
+            ) : (
+              <Navbar.Text> No active sprint</Navbar.Text>
+            ))}
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="ms-auto">
+            <NavDropdown
+              id="backlog-dropdown"
+              title={
+                <span>
+                  <Stack className="mb-1"></Stack> Backlog
+                </span>
+              }
+            >
+              <NavDropdown.Item onClick={redirectToProductBacklog}>
+                ProductBacklog
+              </NavDropdown.Item>
+              {
+                <NavDropdown.Item onClick={redirectToSprintBacklog}>
+                  SprintBacklog
+                </NavDropdown.Item>
+              }
+            </NavDropdown>
+
             <NavDropdown
               id="sprint-dropdown"
               title={
@@ -99,6 +166,15 @@ function Header() {
                   Add Project
                 </NavDropdown.Item>
               )}
+              {activeProject.id !== "" && (
+                <NavDropdown.Item
+                  onClick={() => {
+                    redirectToWall(activeProject.id!);
+                  }}
+                >
+                  <Sticky /> Wall
+                </NavDropdown.Item>
+              )}
             </NavDropdown>
             <NavDropdown
               id="sprint-dropdown"
@@ -108,12 +184,21 @@ function Header() {
                 </span>
               }
             >
-              <NavDropdown.Item onClick={redirectToNewSprint}>
-                + Add sprint
-              </NavDropdown.Item>
-              {sprints.map((sprint) => (
-                <NavDropdown.Item>{sprint.name}</NavDropdown.Item>
-              ))}
+              {sprints.length > 0 ? (
+                <Fragment>
+                  <NavDropdown.Item
+                    onClick={() =>
+                      navigate(`/projects/${activeProject.id}/sprints`)
+                    }
+                  >
+                    Sprint list
+                  </NavDropdown.Item>
+                </Fragment>
+              ) : (
+                <p style={{ marginLeft: "1.5rem" }} className="text-secondary">
+                  No active project
+                </p>
+              )}
             </NavDropdown>
 
             <NavDropdown
@@ -121,8 +206,7 @@ function Header() {
                 user !== null ? (
                   <div style={{ display: "inline-flex" }}>
                     <span>
-                      <PersonCircle className="mb-1"></PersonCircle>{" "}
-                      {userData.username},{" "}
+                      <PersonCircle className="mb-1"></PersonCircle> {sub},{" "}
                     </span>
                     {lastLoginDate ? (
                       <p>Last login: {parseDate(lastLoginDate)}</p>
@@ -138,6 +222,9 @@ function Header() {
               }
               id="basic-nav-dropdown"
             >
+              <NavDropdown.Item onClick={redirectToMyTask}>
+                My Tasks
+              </NavDropdown.Item>
               <NavDropdown.Item onClick={handleLoginAndLogout}>
                 {user === null ? "Log in" : "Logout"}
               </NavDropdown.Item>
@@ -147,7 +234,7 @@ function Header() {
               <NavDropdown.Item onClick={redirectToEditProfile}>
                 Edit profile
               </NavDropdown.Item>
-              {userData.isAdmin && (
+              {isAdmin && (
                 <Fragment>
                   <NavDropdown.Item onClick={redirectToUsers}>
                     Users

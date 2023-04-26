@@ -1,10 +1,13 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { DocumentationModule } from './documentation/documentation.module';
 import { Project } from './project.entity';
 import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
 import { ProjectUserRole } from './project-user-role.entity';
+import { ProjectWallNotificationModule } from '../project-wall-notification/project-wall-notification.module';
+import { ProjectWallNotificationCommentModule } from '../project-wall-notification-comment/project-wall-notification-comment.module';
 import { UserModule } from '../user/user.module';
 
 @Module({
@@ -13,7 +16,10 @@ import { UserModule } from '../user/user.module';
       Project,
       ProjectUserRole,
     ]),
-    UserModule
+    forwardRef(() => DocumentationModule),
+    UserModule,
+    ProjectWallNotificationModule,
+    ProjectWallNotificationCommentModule
   ],
   controllers: [
     ProjectController,

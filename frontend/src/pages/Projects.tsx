@@ -1,50 +1,108 @@
-import {
-  DropdownButton,
-  Table,
-  Dropdown,
-  Modal,
-  Form,
-  Button,
-} from "react-bootstrap";
-import { Check, PencilFill, TrashFill, X } from "react-bootstrap-icons";
+import { DropdownButton, Table, Dropdown, Modal } from "react-bootstrap";
 import Card from "../components/Card";
-import React, { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AddUser from "./AddUser";
 
 import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { deleteUser, getAllUsers } from "../features/users/userSlice";
 import { parseJwt } from "../helpers/helpers";
+import {
+  activateProject, getActiveProject,
+  getAllProjects,
+  reset,
+} from "../features/projects/projectSlice";
+import { UserRole } from "../classes/projectData";
+import ProjectDataForm from "../components/ProjectDataForm";
+import ProjectRolesForm from "../components/ProjectRolesForm";
 import { toast } from "react-toastify";
-import { getAllProjects } from "../features/projects/projectSlice";
+import { getAllUsers } from "../features/users/userSlice";
 
 const Projects = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { users, userData } = useAppSelector((state) => state.users);
+  // const isAdmin = userData.isAdmin ? userData.isAdmin : false;
+  // const userId = userData.id ? userData.id : "";
 
-  let { projects } = useAppSelector((state) => state.projects);
-  console.log(projects);
+  let { projects, activeProject, isError, isSuccess } = useAppSelector(
+    (state) => state.projects
+  );
 
-  // store isAdmin in state for now
-  // TODO rewrite this later
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState("");
+
+  const [editIndexProject, setEditIndexProject] = useState(-1);
+  const [editIndexRoles, setEditIndexRoles] = useState(-1);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
+  const [showEditRolesModal, setShowEditRolesModal] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem("user") == null) {
       navigate("/login");
       return;
     }
+    dispatch(getAllProjects());
 
     const token = JSON.parse(localStorage.getItem("user")!).token;
-    setIsAdmin(parseJwt(token).isAdmin);
-    // console.log(isAdmin);
+    const isAdmin = parseJwt(token).isAdmin;
+    setIsAdmin(isAdmin);
+    const id = parseJwt(token).sid;
+    setUserId(id);
+  }, []);
 
-    dispatch(getAllProjects());
-  }, [isAdmin]);
+  useEffect(() => {
+    dispatch(getActiveProject());
+  }, []);
+
+  // when projects are fetched, reset project state
+  // so it doesn't interfere with other components
+  useEffect(() => {
+    dispatch(reset());
+  }, [isSuccess, isError]);
 
   const redirectToAddStory = (projectID: any) => {
     navigate(`/${projectID}/add-story`);
+  };
+
+  const redirectToAddSprint = (projectID: any) => {
+    navigate(`/${projectID}/add-sprint`);
+  };
+
+  const handleActivateProject = (projectId: string) => {
+    dispatch(activateProject(projectId));
+    toast.info("Project active");
+  };
+
+  useEffect(() => {
+    dispatch(getAllUsers());
+  }, []);
+
+  const openEditProjectModal = (index: number) => {
+    setEditIndexProject(index);
+    setShowEditProjectModal(true);
+  };
+
+  const openEditRolesModal = (index: number) => {
+    setEditIndexRoles(index);
+    setShowEditRolesModal(true);
+  };
+
+  const hideEditProjectModal = () => {
+    setShowEditProjectModal(false);
+  };
+
+  const hideEditRolesModal = () => {
+    setShowEditRolesModal(false);
+  };
+
+  const isUserScrumMaster = (userRoles: UserRole[]) => {
+    let scrumMasterId = userRoles.filter((user) => user.role === 1)[0].userId;
+    return parseInt(userId) === scrumMasterId;
+  };
+
+  const isUserProductOwner = (userRoles: UserRole[]) => {
+    let productOwnerId = userRoles.filter((user) => user.role === 2)[0].userId;
+    return parseInt(userId) === productOwnerId;
   };
 
   return (
@@ -58,24 +116,55 @@ const Projects = () => {
             </tr>
           </thead>
           <tbody>
-            {projects.map((project, i) => {
+            {projects.map((project, index) => {
               return (
-                <tr key={i}>
+                <tr key={index}>
                   <td>{project.id}</td>
                   <td>
                     <div className={classes.usernameContainer}>
-                      {project.projectName}
-                      {/* <button onClick={() => redirectToAddStory(project.id)}>
-                        {" "}
-                        Add story
-                      </button> */}
-                      <Button
-                        variant="primary"
-                        type="button"
-                        onClick={() => redirectToAddStory(project.id)}
+                      {project.id === activeProject.id ? (
+                        <b>{project.projectName}</b>
+                      ) : (
+                        project.projectName
+                      )}
+                      <DropdownButton
+                        id="dropdown-basic-button"
+                        title="Options"
                       >
-                        Add story
-                      </Button>
+                        <Dropdown.Item
+                          onClick={() => handleActivateProject(project.id!)}
+                        >
+                          Make active
+                        </Dropdown.Item>
+                        {(isAdmin ||
+                          isUserScrumMaster(project.userRoles) ||
+                          isUserProductOwner(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => redirectToAddStory(project.id)}
+                          >
+                            Add story
+                          </Dropdown.Item>
+                        )}
+                        <Dropdown.Item
+                          onClick={() => redirectToAddSprint(project.id)}
+                        >
+                          Add sprint
+                        </Dropdown.Item>
+                        {(isAdmin || isUserScrumMaster(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => openEditProjectModal(index)}
+                          >
+                            Edit project data
+                          </Dropdown.Item>
+                        )}
+                        {(isAdmin || isUserScrumMaster(project.userRoles)) && (
+                          <Dropdown.Item
+                            onClick={() => openEditRolesModal(index)}
+                          >
+                            Edit project roles
+                          </Dropdown.Item>
+                        )}
+                      </DropdownButton>
                     </div>
                   </td>
                 </tr>
@@ -84,6 +173,32 @@ const Projects = () => {
           </tbody>
         </Table>
       </Card>
+      {showEditProjectModal && (
+        <Modal show={showEditProjectModal} onHide={hideEditProjectModal}>
+          <Modal.Body>
+            <ProjectDataForm
+              idInit={projects[editIndexProject].id}
+              projectNameInit={projects[editIndexProject].projectName}
+              projectDescriptionInit={
+                projects[editIndexProject].projectDescription
+              }
+              closeModal={hideEditProjectModal}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
+      {showEditRolesModal && (
+        <Modal show={showEditRolesModal} onHide={hideEditRolesModal}>
+          <Modal.Body>
+            <ProjectRolesForm
+              idInit={projects[editIndexRoles].id}
+              users={users}
+              userRoles={projects[editIndexRoles].userRoles}
+              isAdmin={isAdmin}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
     </Fragment>
   );
 };
