@@ -360,16 +360,16 @@ function SprintBacklog() {
                                   <td>{renderStatus(task)}</td>
 
                                   <td className="text-center">
-                                    <Dropdown className="ms-auto">
-                                      <Dropdown.Toggle
-                                        variant="link"
-                                        id="dropdown-custom-components"
-                                        bsPrefix="p-0"
-                                      >
-                                        <ThreeDots />
-                                      </Dropdown.Toggle>
-                                      <Dropdown.Menu>
-                                        {!isTaskFinished(task) && (
+                                    {!isTaskFinished(task) && (
+                                      <Dropdown className="ms-auto">
+                                        <Dropdown.Toggle
+                                          variant="link"
+                                          id="dropdown-custom-components"
+                                          bsPrefix="p-0"
+                                        >
+                                          <ThreeDots />
+                                        </Dropdown.Toggle>
+                                        <Dropdown.Menu>
                                           <Dropdown.Item
                                             onClick={() =>
                                               openEditTaskModal(task)
@@ -377,30 +377,30 @@ function SprintBacklog() {
                                           >
                                             <Pencil /> Edit
                                           </Dropdown.Item>
-                                        )}
-                                        {(isTaskUnassigned(task) ||
-                                          (isUserScrumMaster(userRoles) &&
-                                            isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
-                                          <Dropdown.Item
-                                            onClick={() =>
-                                              openAssignUserModal(task)
-                                            }
-                                          >
-                                            <Person /> Assign User
-                                          </Dropdown.Item>
-                                        )}
-                                        {(isTaskUnassigned(task) ||
-                                          isTaskAssigned(task)) && (
-                                          <Dropdown.Item
-                                            onClick={() =>
-                                              openDeleteTaskModal(task)
-                                            }
-                                          >
-                                            <Trash /> Delete
-                                          </Dropdown.Item>
-                                        )}
-                                      </Dropdown.Menu>
-                                    </Dropdown>
+                                          {(isTaskUnassigned(task) ||
+                                            (isUserScrumMaster(userRoles) &&
+                                              isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
+                                            <Dropdown.Item
+                                              onClick={() =>
+                                                openAssignUserModal(task)
+                                              }
+                                            >
+                                              <Person /> Assign User
+                                            </Dropdown.Item>
+                                          )}
+                                          {(isTaskUnassigned(task) ||
+                                            isTaskAssigned(task)) && (
+                                            <Dropdown.Item
+                                              onClick={() =>
+                                                openDeleteTaskModal(task)
+                                              }
+                                            >
+                                              <Trash /> Delete
+                                            </Dropdown.Item>
+                                          )}
+                                        </Dropdown.Menu>
+                                      </Dropdown>
+                                    )}
                                   </td>
                                 </tr>
                               ))}
