@@ -141,7 +141,6 @@ export class StoryController {
       const story: Story = await this.storyService.getStoryById(storyId);
       if (!story)
         throw new NotFoundException('Story for the given ID not found.');
-      console.log(token.sid);
       if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner, UserRole.ScrumMaster, UserRole.Developer]))
         throw new ForbiddenException('The user you are trying to add the story with is neither a scrum master nor a product owner but certainly not a developer.');
 
@@ -259,7 +258,7 @@ export class StoryController {
       throw new BadRequestException('The story is already outside an active sprint.');
 
     if (story.category == Category.Finished)
-      throw new BadRequestException('The story was already finished.');
+      throw new BadRequestException('The story is already finished.');
 
     await this.storyService.setRealizeFlag(storyId, true);
   }
