@@ -54,7 +54,7 @@ const EditTaskForm: React.FC<DeleteTaskProps> = ({
       toast.info("Task successfully deleted!");
       dispatch(reset());
       if (activeSprint != undefined) {
-        // dispatch(getTasksForSprint(activeSprint.id!));
+        dispatch(getTasksForSprint(activeSprint.id!));
       }
       closeModal();
     }
