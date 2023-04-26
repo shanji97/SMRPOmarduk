@@ -92,6 +92,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
               value={spentTime}
               onChange={handleSpentTimeChanged}
               min={0}
+              style={{ width: '100px' }}
             />
           </div>
         </Form.Group>
@@ -109,6 +110,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
               value={remainingTime}
               onChange={handleRemainingChanged}
               min={0}
+              style={{ width: '100px' }}
             />
           </div>
         </Form.Group>

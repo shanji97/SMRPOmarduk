@@ -67,7 +67,7 @@ function Header() {
     return activeSpr;
   }, [sprints]);
 
-  useEffect(() => {}, [sprints]);
+  //useEffect(() => {}, [sprints]);
 
   const handleLoginAndLogout = () => {
     if (user !== null) {

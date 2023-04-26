@@ -45,7 +45,7 @@ import classesSprint from "./SprintBacklog.module.css";
 import produce from "immer";
 import DeleteConfirmation from "./DeleteConfirmation";
 import {
-  getAllStory,
+  getAllStoryById,
   deleteStory,
   getStoriesForSprint,
 } from "../features/stories/storySlice";

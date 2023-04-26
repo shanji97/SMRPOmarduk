@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { Modal, Button, Tab, Card, Nav, CloseButton, FormControl, Table, ListGroup, Row, Form, Col } from "react-bootstrap";
-import { StoryData } from '../classes/storyData';
-import classes from './Dashboard.module.css';
-import { X } from 'react-bootstrap-icons';
+import { NotificationData, StoryData } from '../classes/storyData';
+
+
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import Users from './Users';
+
 import { getAllUsers} from "../features/users/userSlice";
-import { UserData } from '../classes/userData';
 import { parseJwt } from '../helpers/helpers';
+import { useParams } from 'react-router-dom';
+import { getActiveProject } from '../features/projects/projectSlice';
+import { createNotification, getNotifications, getRejectMessage, reset } from '../features/stories/storyNotificationSlice';
+import { toast } from 'react-toastify';
+import PostNotification from '../components/PostNotification';
 
 
 export interface StoryModalProps {
@@ -65,31 +69,105 @@ function StoryModal({
   };
 
   let {users, user} = useAppSelector(state => state.users);
-  const [allUsers, setAllUsers] = useState<String[]>([]);
 
-useEffect(() => {
-  if (!(users.length === 0)){
-    const usernames = users.map(user => user.username);
-    setAllUsers(usernames)
-  }
-}, [users]);
+
+
+
+
+
+
+
+
 
 const [isAdmin, setIsAdmin]   = useState(false);
 const [userName, setUserName] = useState('');
+
+//comments
+
+const params = useParams();
+const {message, isError, storiesNotification, rejectMessage} = useAppSelector(state => state.storyNotifications);
+const {activeProject} = useAppSelector(state => state.projects);
+const [postContent, setPostContent] = useState('');
+const [currentUser, setUser] = useState({
+  sub: '',
+  sid: ''
+});
+
 useEffect(() => {
   if (user === null) {
-      return;
+    return;
   }
-  const token = JSON.parse(localStorage.getItem('user')!).token;
+  const token = JSON.parse(localStorage.getItem("user")!).token;
   const userData = parseJwt(token);
+
+  setUser(userData);
   setIsAdmin(userData.isAdmin);
   setUserName(userData.sub);
+  dispatch(getActiveProject());
+}, []);
 
-}, [user, ]);
+useEffect(() => {
+  dispatch(getNotifications(item.id!));
+  dispatch(getRejectMessage(item.id!));
+}, [activeProject]);
+
+useEffect(() => {
+  if (isError) {
+    toast.error(message);
+  }
+
+  return () => {
+    dispatch(reset());
+  }
+}, [isError, message]);
+
+const postContentChanged = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  setPostContent(e.currentTarget.value);
+}
+
+
+const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  const newPost: NotificationData = {
+    description: postContent,
+    storyId: item.id!
+  };
+  dispatch(createNotification(newPost));
+  toast.info('Post created!');
+  setPostContent('');
+}
 
 
 
+/*
 
+ <Card border={"info"}>
+                    <Card.Body>
+                      <Row>
+                        <Col>
+                          <Card.Text>{content}</Card.Text>
+                        </Col>
+                        
+                        
+                      </Row>
+                      </Card.Body>
+                    </Card>
+
+
+                {rejectMessage.map((post, i) => {
+                    return <PostNotification
+                  key={i}
+                  id={post.id!}
+                  content={post.notificationText}
+                  author={post.authorName}
+                  created={post.created!}
+                  user={currentUser}
+                  approved={post.approved}
+  
+              />
+      })} 
+
+      */
     return (
     
         <Modal
@@ -119,82 +197,46 @@ useEffect(() => {
               <Tab.Pane eventKey="first">
                 <Card.Title>{item.title}</Card.Title>
                 <Card.Text>
+
+
+               
                   {item.description}
                 </Card.Text>
-                
-      {isAdmin && 
-          (  
-                                        
-      <Table responsive="lg"   className={` ${classes["gfg"]} small`}>
-      <thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Status</th>
-            <th>User</th>
-            <th>workedTime</th>
-            <th>Remaining time</th>
-            <th>Estimated time</th>
-          </tr>
-        </thead>
-        
-      <tbody>
-
-      {list.map((item) => (
-        <tr key={item.id}>
-          <td >{item.id}</td>
-          <td >{item.title}</td>
-          <td >{item.status}</td>
-          <td >{item.user}</td>
-          <td >{item.workedTime}</td>
-          <td >{item.remainingTime}</td>
-          <td >{item.estimatedTime}</td>
-        </tr>
-      ))}
-      
-  
-      <tr className="align-middle">
-            <th><Button form='my_form' size="sm" type="button" onClick={handleAdd}>
-          Add
-        </Button></th>
-            <th>
-         
-         <Form.Control form='my_form' size="sm" placeholder="Title"/>
-       </th>
-            <th>Status</th>
-            <th>
-        
-        <Form.Select form='my_form' size="sm" defaultValue="Choose..." >
-        <option>/</option>
-        {allUsers.map((user) => (
-          <option key={allUsers.indexOf(user)}>{user}</option>
-
-           ))}
-        
-        </Form.Select>
-            </th>
-            <th >/</th>
-            <th>/</th>
-            <th>
-         
-         <Form.Control form='my_form' size="sm" placeholder="Title"/>
-      </th>
-          </tr>
-
-</tbody>
-
-
-
-
-      </Table>
-     
-     )
-    }
-
-                
               </Tab.Pane>
               <Tab.Pane eventKey="second">
-                dfvdf
+
+              
+     
+
+       {storiesNotification.map((post, i) => {
+        return <PostNotification
+                  key={i}
+                  id={post.id!}
+                  content={post.notificationText}
+                  author={post.authorName}
+                  created={post.created!}
+                  user={currentUser}
+                  approved={post.approved}
+  
+              />
+      })} 
+
+      <Form onSubmit={submitNewPost}>
+        <Form.Group className="mb-3" controlId="postContent" >
+          <Form.Label>Write a new post</Form.Label>
+          <Form.Control
+            as='textarea'
+            
+            value={postContent}
+            onChange={postContentChanged}
+          />
+          <Button type='submit' disabled={postContent === ''} style={{ marginTop: '.5rem' }}>Post</Button>
+        </Form.Group>
+      </Form>
+ 
+                
+
+                
               </Tab.Pane>
             </Tab.Content>
             </Card.Body>

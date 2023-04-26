@@ -43,11 +43,12 @@ import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 import produce from "immer";
 import DeleteConfirmation from "./DeleteConfirmation";
 import {
-  getAllStory,
+  getAllStoryById,
   deleteStory,
   reset,
   updateStoryCategory,
   updateTimeComplexity,
+  confirmStory,
 } from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
@@ -79,44 +80,8 @@ import RejectStoryModal from "./RejectStoryModal";
 //npm install --save react-bootstrap
 //npm install bootstrap --save
 
-/*
-
-const itemsFromBackend123 = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-
-
-
-    
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: []
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
   
 
-  
-
-*/
 
 const defaultItems = {
   [ProductBacklogItemStatus.WONTHAVE]: [],
@@ -137,7 +102,7 @@ function ProductBacklog() {
   //helper funkcija za updatat useState
   const [sgs, setSgs] = useState("undefined");
 
-  let { stories, isSuccess, isLoading, isError, message } = useAppSelector(
+  let { stories, isSuccess, isLoading, isError, message, isSuccessConfirm, isSuccessLoading } = useAppSelector(
     (state) => state.stories
   );
   let projectroles = useAppSelector((state) => state.projects);
@@ -145,7 +110,7 @@ function ProductBacklog() {
   
   useEffect(() => {
     if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
-      toast.success("Story successfully created!");
+      toast.success("Story successfully Added to sprint!");
       dispatch(reset());
     }
     if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
@@ -157,10 +122,16 @@ function ProductBacklog() {
     SprintSelector.isLoading,
   ]);
 
+
+
+ 
+
   //console.log(SprintSelector)
   useEffect(() => {
     if (isSuccess && !isLoading) {
       dispatch(reset);
+      toast.success(message)
+      console.log("kul");
     }
     if (isError && !isLoading) {
       dispatch(reset);
@@ -170,7 +141,18 @@ function ProductBacklog() {
   }, [isSuccess, isError, isLoading]);
 
   useEffect(() => {
-    dispatch(getAllStory());
+    if (isSuccessConfirm && !isSuccessLoading) {
+      dispatch(reset);
+      if (tempDataApproved) {
+        handleDragCustom({status: tempDataApproved.status!, index: tempDataApproved.index!,destination: 'Done'})  
+      }
+    }
+  }, [isSuccessConfirm, isSuccessLoading]);
+
+  
+ 
+  useEffect(() => {
+    
     dispatch(getActiveProject());
     
     
@@ -179,19 +161,33 @@ function ProductBacklog() {
   useEffect(() => {
     
     if (activeProject.id) {
+      dispatch(getAllStoryById(activeProject.id!));
       dispatch(getAllSprints(activeProject.id!));
       dispatch(getProjectUserRoles(activeProject.id!))
-      dispatch(getActiveSprint(activeProject.id!))
+      console.log(activeProject)
     }
   }, [activeProject]);
 
   useEffect(() => {
     
+    if (SprintSelector.isSuccessActive) {
+      console.log("active")
+      dispatch(getActiveSprint(activeProject.id!))
+    }
+  }, [SprintSelector.isSuccessActive]);
+
+
+  useEffect(() => {
+    
     if (activeProject.id) {
       const dataArray = Object.values(userRoles);
-      const filteredData = dataArray.filter(item => item.role === 1);
-      if (filteredData) {
-        setScrumMasterId(filteredData[0].userId)
+      const filteredDataScramMaster = dataArray.filter(item => item.role === 1);
+      const filteredDataProductOwner = dataArray.filter(item => item.role === 2);
+      if (filteredDataScramMaster) {
+        setScrumMasterId(filteredDataScramMaster[0].userId)
+      }
+      if (filteredDataProductOwner) {
+        setScrumProductOwnerId(filteredDataProductOwner[0].userId)
       }
       
     }
@@ -215,6 +211,8 @@ function ProductBacklog() {
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState();
   const [scrumMasterId, setScrumMasterId] = useState();
+  const [productOwnerId, setScrumProductOwnerId] = useState();
+
   useEffect(() => {
     if (user === null) {
       return;
@@ -228,6 +226,12 @@ function ProductBacklog() {
 
   const isUserScramMaster = () => {
     if (scrumMasterId === userId && userId && scrumMasterId)
+    return true;
+    else return false;
+    
+  };
+  const isUserProductOwn = () => {
+    if (productOwnerId === userId && userId && productOwnerId)
     return true;
     else return false;
     
@@ -311,40 +315,42 @@ function ProductBacklog() {
   };
 
   type HandrejectFunc = (args: {
-    status: ProductBacklogItemStatus;
-    itemToDelete: StoryData;
+    status: string;
+    //itemToDelete: StoryData;
+    index: number;
+    destination: string;
   }) => void;
 
-  /* 
-  const handleReject: HandrejectFunc = ({ status, itemToDelete }) =>
+  
+  const handleDragCustom: HandrejectFunc = ({ status, index, destination }) =>
     setItemsByStatus((current) =>
       produce(current, (draft) => {
-        
-
-       
+        //item, damo na unasigned
+        const dest = destination;
+       /*
         const niki = draft[
-                  source.droppableId as ProductBacklogItemStatus
-                ][source.index];
-                
+                  status as ProductBacklogItemStatus
+                ][index];
+              */  
         const [removed] = draft[
-          itemToDelete.id as ProductBacklogItemStatus
-        ].splice(source.index, 1);
+          status as ProductBacklogItemStatus
+        ].splice(index, 1);
 
-        draft[destination.droppableId as ProductBacklogItemStatus].splice(
-          destination.index,
+        draft[dest as ProductBacklogItemStatus].splice(
+          0,
           0,
           removed
         );
         let projectRoleData = {
           projectId: parseInt(activeProject?.id || ""),
-          category: categoryChange(destination.droppableId),
+          category: categoryChange(dest),
           storyId: removed.id || "",
         };
         dispatch(updateStoryCategory(projectRoleData));
       })
     );
 
-    */
+    
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
     destination,
@@ -352,15 +358,33 @@ function ProductBacklog() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
-        if (!destination) {
+        if (!destination || destination.droppableId === source.droppableId) {
+          console.log("istu")
           return;
+        }
+
+        
+        if (destination.droppableId === "Allocated") {
+          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+            toast.error("Sprint Velocity is full");
+      
+            return;
+           
+          }
+        }
+        if (source.droppableId === "Unallocated" && destination.droppableId === "Done") {
+          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+            toast.error("Story is not in active Sprint and is not realised");
+            return;
+
+          }
         }
 
         /*
         const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
                 ][source.index];
-                */
+           */    
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -386,8 +410,7 @@ function ProductBacklog() {
         dispatch(addStoryToSprint(storySprint)); 
         } 
         //itemsByStatus[destination.droppableId].length
-        console.log(typeof destination.droppableId)
-        console.log(destination.droppableId === "")
+        
         if (source.droppableId === "Allocated" && destination.droppableId != "Done") {
           
         };
@@ -408,7 +431,7 @@ function ProductBacklog() {
         );
         setShow(false);
         dispatch(deleteStory(itemToDelete.id!));
-        dispatch(getAllStory());
+        dispatch(getAllStoryById(activeProject.id!));
       })
     );
 
@@ -537,6 +560,8 @@ function ProductBacklog() {
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
 
+  
+
   const [showNewStoryModal, setShowNewStoryModal] = useState(false);
 
   // modal za edit story
@@ -561,8 +586,8 @@ function ProductBacklog() {
   const hideEditStoryModal = () => {
     setShowEditStoryModal(false);
   };
-  const openRejectStoryModal = (item: StoryData) => {
-    setTempDataStory(item);
+  const openRejectStoryModal = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({item, status, index});
     setShowRejectStoryModal(true);
   };
   const hideRejectStoryModal = () => {
@@ -587,6 +612,19 @@ function ProductBacklog() {
     //console.log(item);
     return setShowStory(true);
   };
+  const [tempDataReject, setTempDataReject] = useState<{item: StoryData, status: string, index: number}>();
+  const getDataReject = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({item, status, index});
+    //console.log(item);
+    return setShowRejectStoryModal(true);
+  };
+  const [tempDataApproved, setTempDataApproved] = useState<{item: StoryData, status: string, index: number}>();
+  const getDataApproved = (item: StoryData, status: string, index: number) => {
+    setTempDataApproved({item, status, index});
+    //console.log(item);
+    dispatch(confirmStory(item.id!));
+  };
+ 
 
   // utility function for edit story
   function getTestsForEdit(items: any): string[] {
@@ -642,9 +680,15 @@ function ProductBacklog() {
                                 draggableId={item.id!}
                                 index={index}
                                 isDragDisabled={
-                                  status ===
-                                    ProductBacklogItemStatus.WONTHAVE ||
+
+                                  status === ProductBacklogItemStatus.WONTHAVE ||
                                   !Boolean(itemTime[item.id!]) || !isUserScramMaster()
+                                  ? true
+                                  : status === ProductBacklogItemStatus.DONE
+                                  ? true
+                                  : status === ProductBacklogItemStatus.ALLOCATED
+                                  ? true
+                                  : undefined
                                 }
                               >
                                 {(provided, snapshot) => {
@@ -664,6 +708,23 @@ function ProductBacklog() {
                                           <p className="fs-6 text-muted m-1">
                                             TSK-{item.sequenceNumber}
                                           </p>
+                                          {status === ProductBacklogItemStatus.ALLOCATED && isUserProductOwn() && (
+                                          <><p className="fs-6 text-muted m-1 mx-auto">Task Finished: </p>
+                                          <Button
+                                              className="m-0 p-0 px-2"
+                                              variant="danger"
+                                              onClick={() => getDataReject(item, status, index)}
+                                            >
+                                              Reject
+                                            </Button>
+                                            <Button
+                                              className="m-0 p-0 px-2"
+                                              variant="primary"
+                                              onClick={() => getDataApproved(item, status, index)}
+                                            >
+                                                Approve
+                                              </Button></>
+                                                )}
                                           {status !==
                                                 ProductBacklogItemStatus.WONTHAVE && (
                                           <Dropdown className="ms-auto">
@@ -679,8 +740,18 @@ function ProductBacklog() {
                                             {status !==
                                                 ProductBacklogItemStatus.UNALLOCATED && (
                                                 <Dropdown.Item
-                                                  onClick={() =>
-                                                    openRejectStoryModal(item)
+                                                  onClick={() => {
+                                                    getDataReject(item, status, index)
+                                                    /*
+                                                    openRejectStoryModal(item.id!, status, index)
+                                                    let handleRejectVar = {
+                                                      status: status,
+                                                      index: index,
+                                                      
+                                                    };
+                                                    handleReject(handleRejectVar);
+                                                    */
+                                                  }
                                                   }
                                                 >
                                                   <Eraser /> Reject
@@ -873,7 +944,8 @@ function ProductBacklog() {
       )}
       {showRejectStoryModal && (
         <RejectStoryModal
-          item={tempDataStory}
+          handleReject={handleDragCustom}
+          elements={tempDataReject!}
           onCancel={() => setShowRejectStoryModal(false)}
           show={showRejectStoryModal}
         />

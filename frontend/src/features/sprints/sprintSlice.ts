@@ -12,6 +12,10 @@ interface SprintState {
     message: any
     isNotStoryInSprint: boolean 
     isStoryInSprint: boolean
+    isUpdatedActive: boolean
+    isLoadingActive: boolean
+    isSuccessActive: boolean
+    isErrorActive: boolean
 }
 
 const initialState: SprintState = {
@@ -23,7 +27,11 @@ const initialState: SprintState = {
     isError: false,
     message: '',
     isNotStoryInSprint: false,
-    isStoryInSprint: false
+    isStoryInSprint: false,
+    isUpdatedActive: false,
+    isLoadingActive: false,
+    isSuccessActive: false,
+    isErrorActive: false,
 }
 
 export const createSprint = createAsyncThunk('sprint/create', async (sprintBody: SprintBody, thunkAPI: any) => {
@@ -100,6 +108,9 @@ export const sprintSlice = createSlice({
             state.isUpdated = false;
             state.isStoryInSprint = false
             state.isNotStoryInSprint = false
+            state.isLoadingActive = false
+            state.isErrorActive = false
+            state.isSuccessActive = false
         },
         setActiveSprint: (state, action) => {
             state.activeSprint = action.payload;
@@ -201,19 +212,19 @@ export const sprintSlice = createSlice({
             state.message = action.payload
         })
         .addCase(getActiveSprint.pending, (state) => {
-            state.isLoading = true
+            state.isLoadingActive = true
         })
         .addCase(getActiveSprint.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isSuccess = false;
-            state.isError = false;
+            state.isLoadingActive = false;
+            state.isSuccessActive = false;
+            state.isErrorActive = false;
             state.message = '';
             state.activeSprint = action.payload;
         })
         .addCase(getActiveSprint.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
+            state.isLoadingActive = false
+            state.isSuccessActive = false;
+            state.isErrorActive = true
             state.message = action.payload
         })
     }

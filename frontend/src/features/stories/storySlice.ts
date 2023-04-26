@@ -18,7 +18,8 @@ interface StoryState {
     isDeleteError: boolean
     isRejectError: boolean
     isRejectSuccess: boolean
-    
+    isSuccessConfirm: boolean
+    isSuccessLoading: boolean
 }
 
 const initialState: StoryState = {
@@ -34,14 +35,16 @@ const initialState: StoryState = {
     isDeleteError: false,
     message: '',
     isRejectError: false,
-    isRejectSuccess: false
+    isRejectSuccess: false,
+    isSuccessConfirm: false,
+    isSuccessLoading: false
 }
 
 
-export const getAllStory = createAsyncThunk('/story/getAllStory', async (_, thunkAPI: any) => { 
+export const getAllStoryById = createAsyncThunk('/story/getAllStoryById', async (projectId: string, thunkAPI: any) => { 
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await storyService.getAllStory(token!);
+        return await storyService.getAllStoryById(projectId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         console.log(message);
@@ -119,6 +122,15 @@ export const updateTimeComplexity = createAsyncThunk('/story/timeCompl', async (
         return thunkAPI.rejectWithValue(message)
     }  
 });
+export const confirmStory = createAsyncThunk('/story/confirmStory', async (storyId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.confirmStory(storyId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
 export const rejectStory = createAsyncThunk('/story/rejectStory', async (rejectStory: RejectStory, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -143,6 +155,8 @@ export const storySlice = createSlice({
             state.isUpdateError = false
             state.message = ''
             state.isRejectError = false
+            state.isSuccessConfirm = false
+            state.isSuccessLoading = false
         }
     },
     extraReducers: builder => {
@@ -162,10 +176,10 @@ export const storySlice = createSlice({
                 state.isUpdateError = true
                 state.message = action.payload
             })
-            .addCase(getAllStory.pending, (state) => {
+            .addCase(getAllStoryById.pending, (state) => {
                 state.isLoading = true
             })
-            .addCase(getAllStory.fulfilled, (state, action) => {
+            .addCase(getAllStoryById.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.isError = false;
@@ -294,9 +308,30 @@ export const storySlice = createSlice({
             .addCase(rejectStory.rejected, (state, action) => {
                 state.isLoading = false
                 state.isSuccess = false;
-                state.isError = true
-                state.message = action.payload
+                state.isError = true;
+                state.message = action.payload;
                 state.isRejectSuccess = false;
+            })
+            .addCase(confirmStory.pending, (state) => {
+                state.isLoading = true
+                state.isSuccessLoading = true
+            })
+            .addCase(confirmStory.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = action.payload;
+                state.isSuccessConfirm = true;
+                state.isSuccessLoading = false
+                
+            })
+            .addCase(confirmStory.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = false;
+                state.isError = true;
+                state.message = action.payload;
+                state.isSuccessLoading = false
+                state.isSuccessConfirm = false;
             })
     }
 })

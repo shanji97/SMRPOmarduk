@@ -1,5 +1,4 @@
 import { CreateDateColumn, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-
 import { PlanningPokerVote } from './planning-poker-vote.entity';
 import { Story } from './story.entity';
 
