@@ -44,6 +44,19 @@ export class TaskController {
     return await this.taskService.getTasksForStory(storyId);
   }
 
+  @ApiOperation({ summary: '' })
+  @ApiOkResponse()
+  @Get('story/:storyId/categories')
+  async listTaskCategoryCountForStory(
+    @Token() token: TokenDto,
+    @Param('storyId', ParseIntPipe) storyId: number,
+  ) {
+    if (!token.isAdmin && !await this.storyService.hasUserPermissionForStory(token.sid, storyId))
+      throw new ForbiddenException();
+    
+    return await this.taskService.getTaskCategoryCoundForStory(storyId);
+  }
+
   @ApiOperation({ summary: 'List tasks for sprint'})
   @ApiOkResponse()
   @Get('sprint/:sprintId')
@@ -216,16 +229,18 @@ export class TaskController {
     // Check if task exists
     const task = await this.taskService.getTaskById(taskId);
     
+    const hasOverridePermissions: boolean = token.isAdmin || await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster);
+
     // User can accept task; admin and scrum master can reassign people
-    if (task.assignedUserId != null && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
+    if (task.assignedUserId != null && !hasOverridePermissions)
       throw new ForbiddenException('Someone is already assigned to task');
 
     // User can assign only himself, project scrum master can also others
-    if (token.sid !== userId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster))
+    if (token.sid !== userId && !hasOverridePermissions)
       throw new ForbiddenException("Can't assign other users to task");
 
     try {
-      await this.taskService.assignTaskToUser(taskId, userId);
+      await this.taskService.assignTaskToUser(taskId, userId, hasOverridePermissions);
 
       // If user asigns himself to task automatically accepts
       if (userId === token.sid)
@@ -236,6 +251,14 @@ export class TaskController {
       }
       throw ex;
     }
+  }
+
+  @ApiOperation({summary: 'Get task for burndown diagramm.'})
+  @ApiOkResponse()
+  @Get('/burdown-diagramm-data/:projectId')
+  async getDataForProjectBurnDown(@Token() token: TokenDto,
+  @Param('projectId', ParseIntPipe) projectId: number,): Promise<any>{
+    return this.taskService.getTaskDataForBD(projectId);
   }
 
   @ApiOperation({ summary: 'Accept task' })

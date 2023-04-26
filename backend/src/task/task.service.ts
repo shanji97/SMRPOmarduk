@@ -23,10 +23,30 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(TaskUserTime)
     private readonly taskUserTimeRepository: Repository<TaskUserTime>,
-  ) {}
+  ) { }
 
   async getTasksForStory(storyId: number): Promise<Task[]> {
     return await this.taskRepository.find({ where: { storyId: storyId }, relations: ['assignedUser'] });
+  }
+
+  async getTaskCategoryCoundForStory(storyId: number): Promise<{ count: { category: number, count: number }[], finished: boolean }> {
+    let result = await this.taskRepository.createQueryBuilder('task')
+      .select('task.category, COUNT(task.category) AS count')
+      .where('task.storyId = :storyId', { storyId: storyId })
+      .groupBy('task.category')
+      .getRawMany();
+    result = result.map(category => {
+      category.count = +category.count;
+      return category;
+    });
+
+    const catsum = result.reduce((acc, category) => acc + category.count, 0);
+    const finished = result.reduce((acc, category) => (category.category === TaskCategory.ENDED) ? acc + category.count : acc, 0);
+    
+    return {
+      count: result,
+      finished: catsum === finished,
+    };
   }
 
   async getTasksForSprint(sprintId: number): Promise<Task[]> {
@@ -45,7 +65,7 @@ export class TaskService {
 
   async getStoryIdForTaskById(taskId: number): Promise<number | null> {
     const result = await this.taskRepository.findOne({ where: { id: taskId }, select: ['storyId'] });
-    return result.storyId || null;
+    return result?.storyId || null;
   }
 
   async createTask(storyId: number, task: DeepPartial<Task>): Promise<number> {
@@ -53,6 +73,12 @@ export class TaskService {
     if (!await this.storyService.isStoryInActiveSprint(storyId))
       throw new ValidationException('Story not in active sprint');
 
+    task.storyId = storyId;
+
+    if (task.assignedUserId) {
+      task.category = TaskCategory.ASSIGNED;
+      task.dateAssigned = moment().format('YYYY-MM-DD');
+    }
     // Check if story already completed
     if (await this.storyService.isStoryFinished(storyId))
       throw new ValidationException('Story already finished');
@@ -65,7 +91,6 @@ export class TaskService {
       throw new ValidationException('Timeremaining too big');
 
     task.storyId = storyId;
-
     const result = await this.taskRepository.insert(task);
     return result.raw.insertId || null;
   }
@@ -96,13 +121,13 @@ export class TaskService {
   }
 
   async getTaskProjectId(taskId: number): Promise<number | null> {
-    const task = await this.taskRepository.findOne({ where: { id: taskId }, relations: ['story']});
+    const task = await this.taskRepository.findOne({ where: { id: taskId }, relations: ['story'] });
     if (!task)
       return null;
     return task.story.projectId;
   }
 
-  async assignTaskToUser(taskId: number, userId: number): Promise<void> {
+  async assignTaskToUser(taskId: number, userId: number, override: boolean = false): Promise<void> {
     // Check if task is part of active sprint
     if (!await this.isTaskInActiveSprint(taskId))
       throw new ValidationException('Task not in active sprint');
@@ -110,9 +135,9 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category != TaskCategory.UNASSIGNED)
+    if (task.category != TaskCategory.UNASSIGNED && !(override && [TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED, TaskCategory.UNKNOWN].includes(task.category)))
       throw new ValidationException('Task is not unassigned');
-    
+
     // Only users that have role on project, can be assigned to task
     const projectId: number = await this.getTaskProjectId(task.id);
     if (!await this.projectService.hasUserRoleOnProject(projectId, userId, [UserRole.Developer, UserRole.ScrumMaster]))
@@ -120,7 +145,7 @@ export class TaskService {
 
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ASSIGNED,
-      dateAssigned: () => 'NOW()', // TODO: Check if working
+      dateAssigned: () => 'NOW()',
       assignedUserId: userId,
     });
   }
@@ -135,7 +160,7 @@ export class TaskService {
       throw new ValidationException('Invalid task id');
     if (!task.assignedUserId || task.category != TaskCategory.ASSIGNED)
       throw new ValidationException('Task not assigned to user');
-    
+
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ACCEPTED,
       dateAccepted: () => 'NOW()',
@@ -152,7 +177,7 @@ export class TaskService {
       throw new ValidationException('Invalid task id');
     if (!task.assignedUserId || task.category != TaskCategory.ASSIGNED)
       throw new ValidationException('Task not assigned to user');
-    
+
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.UNASSIGNED,
       dateAssigned: null,
@@ -178,6 +203,32 @@ export class TaskService {
       dateAssigned: null,
       assignedUserId: null,
     });
+  }
+
+  async getTaskDataForBD(projectId: number): Promise<any> {
+    const taskData = await this.taskRepository
+      .createQueryBuilder("task")
+      .leftJoin("task.story", "story")
+      .leftJoinAndSelect("task.userTime", "userTime")
+      .where("story.projectId = :projectId", { projectId: projectId })
+      .getMany();
+
+    const userTime = taskData.flatMap(task => task.userTime);
+    
+    return userTime.reduce((acc, cur) => {
+      const key = `${cur.date}-${cur.taskId}`;
+      if (!acc[key]) {
+        acc[key] = {
+          date: cur.date,
+          taskId: cur.taskId,
+          spent: 0,
+          remaining: 0
+        };
+      }
+      acc[key].spent += cur.spent;
+      acc[key].remaining += cur.remaining;
+      return acc;
+    }, {});
   }
 
   async startTaskTiming(taskId: number): Promise<void> {
@@ -255,7 +306,7 @@ export class TaskService {
   }
 
   async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
-    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' }})
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' } })
   }
 
   async getWorkOnTaskForUser(taskId: number, userId: number): Promise<TaskUserTime[]> {
