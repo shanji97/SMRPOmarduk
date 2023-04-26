@@ -44,6 +44,19 @@ export class TaskController {
     return await this.taskService.getTasksForStory(storyId);
   }
 
+  @ApiOperation({ summary: '' })
+  @ApiOkResponse()
+  @Get('story/:storyId/categories')
+  async listTaskCategoryCountForStory(
+    @Token() token: TokenDto,
+    @Param('storyId', ParseIntPipe) storyId: number,
+  ) {
+    if (!token.isAdmin && !await this.storyService.hasUserPermissionForStory(token.sid, storyId))
+      throw new ForbiddenException();
+    
+    return await this.taskService.getTaskCategoryCoundForStory(storyId);
+  }
+
   @ApiOperation({ summary: 'List tasks for sprint'})
   @ApiOkResponse()
   @Get('sprint/:sprintId')
