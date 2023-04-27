@@ -9,6 +9,7 @@ interface TaskState {
     tasksForSprint: any[]
     tasksForStory: any[]
     workLogs: any[]
+    tasksForUser: any[]
     currentlyWorkingOnTaskId: string;
     isLoading: boolean
     isSuccess: boolean
@@ -24,6 +25,7 @@ const initialState: TaskState = {
     tasksForSprint: [],
     tasksForStory: [],
     workLogs: [],
+    tasksForUser: [],
     currentlyWorkingOnTaskId: "",
     isLoading: false,
     isSuccess: false,
@@ -44,6 +46,16 @@ export const getTasksForSprint = createAsyncThunk('/task/getTaskForSprint', asyn
         return thunkAPI.rejectWithValue(message)
     }
 });
+export const getTaskForUser = createAsyncThunk('/task/getTaskForUser', async (_, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.getTaskForUser(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 
 export const getTasksForStory = createAsyncThunk('/task/getTask2ForSprint', async (storyId: string, thunkAPI: any) => {
     try {
@@ -306,6 +318,22 @@ export const taskSlice = createSlice({
             state.isLoading = false;
             state.isTimerSuccess = false;
             state.isTimerError = true;
+            state.message = action.payload;
+        })
+        .addCase(getTaskForUser.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getTaskForUser.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.tasksForUser = action.payload
+        })
+        .addCase(getTaskForUser.rejected, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = true;
             state.message = action.payload;
         })
     }

@@ -96,8 +96,14 @@ type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
+
+
+
   const { activeProject, userRoles } = useAppSelector((state) => state.projects);
+
+
   
+  const projectVar = useAppSelector((state) => state.projects);
   //dispatch(getActiveProject());
   //helper funkcija za updatat useState
   const [sgs, setSgs] = useState("undefined");
@@ -111,7 +117,7 @@ function ProductBacklog() {
   useEffect(() => {
     if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
       toast.success("Story successfully Added to sprint!");
-      dispatch(reset());
+      //dispatch(reset());
     }
     if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
       toast.error(SprintSelector.message);
@@ -129,12 +135,12 @@ function ProductBacklog() {
   //console.log(SprintSelector)
   useEffect(() => {
     if (isSuccess && !isLoading) {
-      dispatch(reset);
+      //dispatch(reset);
       toast.success(message)
       console.log("kul");
     }
     if (isError && !isLoading) {
-      dispatch(reset);
+      //dispatch(reset);
       toast.error(message);
       console.log("error");
     }
@@ -142,7 +148,7 @@ function ProductBacklog() {
 
   useEffect(() => {
     if (isSuccessConfirm && !isSuccessLoading) {
-      dispatch(reset);
+      //dispatch(reset);
       if (tempDataApproved) {
         handleDragCustom({status: tempDataApproved.status!, index: tempDataApproved.index!,destination: 'Done'})  
       }
@@ -153,10 +159,15 @@ function ProductBacklog() {
  
   useEffect(() => {
     
-    dispatch(getActiveProject());
-    
-    
-  }, []);
+    if (projectVar.isSuccess && !projectVar.isLoading) {
+     
+      if (activeProject) {
+      dispatch(getActiveProject());
+      console.log(activeProject)
+      }
+      //dispatch(reset);
+    }
+  }, [projectVar.isSuccess]);
 
   useEffect(() => {
     

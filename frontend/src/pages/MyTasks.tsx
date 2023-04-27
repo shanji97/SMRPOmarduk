@@ -5,7 +5,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { useNavigate } from "react-router-dom";
 
-import { getStoriesForUser } from "../features/stories/storySlice";
+import { getTaskForUser } from "../features/tasks/taskSlice";
 import classes from "./Dashboard.module.css";
 import Tasks from "../components/Tasks";
 
@@ -13,10 +13,10 @@ function Dashboard() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.users);
-  let { storiesForUser } = useAppSelector((state) => state.stories);
+  let { tasksForUser, isSuccess } = useAppSelector((state) => state.tasks);
 
   useEffect(() => {
-    dispatch(getStoriesForUser());
+    dispatch(getTaskForUser());
   }, []);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ function Dashboard() {
     }
   }, [user]);
 
-  if (storiesForUser.length === 0) {
+  if (tasksForUser.length === 0) {
     return <h2>No stories</h2>
   }
 
@@ -33,7 +33,7 @@ function Dashboard() {
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
         <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
-          {storiesForUser.map((item) => {
+          {tasksForUser.map((item) => {
             return (
               <Card className="mt-3" key={item.id}>
                 <Tab.Container id="left-tabs-example" defaultActiveKey="first">
@@ -50,8 +50,8 @@ function Dashboard() {
                   <Card.Body>
                     <Tab.Content>
                       <Tab.Pane eventKey="first">
-                        <Card.Title>{item.title}</Card.Title>
-                        <Card.Text>{item.description}</Card.Text>
+                        <Card.Title>{item.story.title}</Card.Title>
+                        <Card.Text>{item.story.description}</Card.Text>
 
                         <Table
                           borderless
