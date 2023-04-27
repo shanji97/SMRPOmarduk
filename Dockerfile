@@ -45,6 +45,7 @@ ENV ARCH="${ARCH}" \
 	CONTAINER_GROUP="node" \
 	CONTAINER_USER="node" \
 	DOCKER_CONTAINER=true \
+	DATA_DIR="/data" \
 	HOME="/root" \
 	NODE_ENV="production" \
 	PS1="\[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ " \
@@ -68,6 +69,8 @@ COPY root /
 COPY --from=build-backend /root/backend/dist /root/backend/package.json /root/backend/package-lock.json /app/
 RUN cd /app && \
   mkdir -p static && \
+	mkdir -p /data && \
+	chown -R ${CONTAINER_USER}:${CONTAINER_GROUP} /data && \
 	npm install --only=prod
 
 # Frontend files

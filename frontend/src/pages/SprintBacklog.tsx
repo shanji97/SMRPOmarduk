@@ -281,7 +281,7 @@ function SprintBacklog() {
 
   const isTaskFinished = (task: any) => {
     // return task.dateEnded != null;
-    return task.category === 4;
+    return task.category === 250;
   };
 
   const renderStatus = (task: any) => {
