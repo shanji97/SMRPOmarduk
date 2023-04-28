@@ -5,15 +5,15 @@ import { getTasksForStory, reset } from "../features/tasks/taskSlice";
 import LogTimeModal from "./LogTimeModal";
 import Task from "./Task";
 import { toast } from "react-toastify";
-
+import {TaskProps} from "../classes/taskData"
 interface TasksProps {
-  storyId: string;
+  stories: any;
 }
 
-const Tasks: React.FC<TasksProps> = ({ storyId }) => {
+const Tasks: React.FC<TasksProps> = ({ stories }) => {
   const dispatch = useAppDispatch();
-  const { tasksForStory } = useAppSelector((state) => state.tasks);
-  const [tasks, setTasks] = useState<any[]>([]);
+  
+  //const [tasks, setTasks] = useState<any[]>([]);
   const {
     currentlyWorkingOnTaskId,
     isTimerSuccess,
@@ -38,21 +38,17 @@ const Tasks: React.FC<TasksProps> = ({ storyId }) => {
     }
   }, [isTimerSuccess, isTimerError, isLoading]);
 
-  useEffect(() => {
-    dispatch(getTasksForStory(storyId));
-  }, [storyId]);
 
+/*
     useEffect(() => {
         if (tasksForStory.length > 0) {
             setTasks(tasksForStory);
         }
     }, [tasksForStory]);
-
+*/
     return (
         <Fragment>
-            {tasksForStory.map(task => {
-                return <Task key={task.id} task={task} />
-            })}
+              <Task key={stories.id} task={stories} />
         </Fragment>
     )
 }

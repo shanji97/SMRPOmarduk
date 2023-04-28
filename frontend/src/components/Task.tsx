@@ -68,10 +68,33 @@ const Task: React.FC<TaskProps> = ({task}) => {
       dispatch(stopTime(task.id));
   };
 
+
+
   return (
     <Fragment>
       <tr key={task.id}>
-        <td>{task.id}</td>
+        <td>
+        {task.category === 2 && (
+                                         
+                                         <div className="flex-row">
+                                         <Button
+                                              className="m-0 p-0 px-2"
+                                              variant="primary"
+                                              
+                                            >
+                                                Accept
+                                          </Button>
+                                         <Button
+                                              className="m-0 p-0 px-2"
+                                              variant="danger"
+                                              
+                                            >
+                                              Decline
+                                            </Button>
+                                            </div>
+                                                )}
+
+        </td>
         <td>{task.name}</td>
           <td>{getStatusFromCategory(task.category)}</td>
 
