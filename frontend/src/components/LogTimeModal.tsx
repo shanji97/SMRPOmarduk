@@ -1,11 +1,10 @@
-import {Button, Form, Modal} from "react-bootstrap";
+import {Button, Modal} from "react-bootstrap";
 import React, {useEffect, useMemo, useState} from "react";
 
 import TimeInputs from "./TimeInputs";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { getWorkLogs, reset } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
-import { Calendar } from "react-bootstrap-icons";
 
 interface LogTimeModalProps {
   taskId: string,

@@ -268,7 +268,12 @@ export const taskSlice = createSlice({
             state.isSuccess = true;
             state.isError = false;
             state.message = '';
-            state.changed = !state.changed;
+
+            const newWorkLog = action.meta.arg;
+            const index = state.workLogs.findIndex(log => log.date === newWorkLog.date);
+            const newWorkLogs = [...state.workLogs];
+            newWorkLogs[index] = newWorkLog;
+            state.workLogs = newWorkLogs;
         })
         .addCase(logWork.rejected, (state, action) => {
             state.isLoading = false
