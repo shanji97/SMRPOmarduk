@@ -160,9 +160,9 @@ export class StoryController {
 
       // Product owner can directly approve the notification
       if (await this.projectService.hasUserRoleOnProject(storyId, token.sid, [UserRole.ProjectOwner])) {
-        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, true,token.sub);
+        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, true, token.sub);
       } else {
-        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, false,token.sub);
+        await this.storyNotificationService.createNotification(storyNotification.description, token.sid, storyId, NotificationStatus.Info, false, token.sub);
       }
     } catch (ex) {
       if (ex instanceof ConflictException) {
@@ -280,12 +280,14 @@ export class StoryController {
   @ApiOperation({ summary: 'Reject story.' })
   @ApiOkResponse()
   @Patch(':storyId/reject')
-  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(StoryNotificationSchema)) rejectStoryData: StoryNotificationDto) {
-    let story: Story = await this.storyService.getStoryById(storyId);
+  async rejectStories(@Token() token, @Param('storyId', ParseIntPipe) storyId: number, @Body(new JoiValidationPipe(StoryNotificationSchema)) storyData: StoryNotificationDto) {
 
-    if (!story) {
+    if (!storyData.description)
+      throw new BadRequestException('To reject a story you need also to provide the reason for doing so.');
+
+    const story: Story = await this.storyService.getStoryById(storyId);
+    if (!story)
       throw new BadRequestException('The story by the given ID does not exist.');
-    }
 
     if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner]))
       throw new ForbiddenException('Only a product owner can realize a story.');
@@ -297,9 +299,8 @@ export class StoryController {
       throw new BadRequestException('The story was already finished.');
 
     await this.storyService.setRealizeFlag(storyId, false);
-    if (rejectStoryData.description) {
-      await this.storyNotificationService.createNotification(rejectStoryData.description, token.sid, storyId, NotificationStatus.Rejected, true, token.sub);
-    }
+
+    await this.storyNotificationService.createNotification(storyData.description, token.sid, storyId, NotificationStatus.Rejected, true, token.sub);
   }
 
   @ApiOperation({ summary: 'Approve notification for a story.' })
