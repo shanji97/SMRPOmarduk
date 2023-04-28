@@ -5,7 +5,7 @@ import { getTasksForStory, reset } from "../features/tasks/taskSlice";
 import LogTimeModal from "./LogTimeModal";
 import Task from "./Task";
 import { toast } from "react-toastify";
-import {TaskProps} from "../classes/taskData"
+
 interface TasksProps {
   stories: any;
 }
@@ -13,7 +13,6 @@ interface TasksProps {
 const Tasks: React.FC<TasksProps> = ({ stories }) => {
   const dispatch = useAppDispatch();
   
-  //const [tasks, setTasks] = useState<any[]>([]);
   const {
     currentlyWorkingOnTaskId,
     isTimerSuccess,

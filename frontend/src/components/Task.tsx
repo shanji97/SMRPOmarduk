@@ -75,24 +75,23 @@ const Task: React.FC<TaskProps> = ({task}) => {
       <tr key={task.id}>
         <td>
         {task.category === 2 && (
-                                         
-                                         <div className="flex-row">
-                                         <Button
-                                              className="m-0 p-0 px-2"
-                                              variant="primary"
-                                              
-                                            >
-                                                Accept
-                                          </Button>
-                                         <Button
-                                              className="m-0 p-0 px-2"
-                                              variant="danger"
-                                              
-                                            >
-                                              Decline
-                                            </Button>
-                                            </div>
-                                                )}
+         <div className="flex-row">
+         <Button
+              className="m-0 p-0 px-2"
+              variant="primary"
+
+            >
+                Accept
+          </Button>
+         <Button
+              className="m-0 p-0 px-2"
+              variant="danger"
+
+            >
+              Decline
+            </Button>
+            </div>
+                )}
 
         </td>
         <td>{task.name}</td>
