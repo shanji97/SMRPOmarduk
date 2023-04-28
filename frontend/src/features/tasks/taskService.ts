@@ -29,14 +29,14 @@ const getTaskForStory = async (storyId: string, token: string) => {
     return response.data;
 }
 
-const getTaskForUser = async (sprintId: string, token: string) => {
+const getTaskForUser = async (token: string) => {
     const config = {
         headers: {
             Authorization: `JWT ${token}`
         }
     }
 
-    const response = await axios.get(`${TASK_API_URL}/sprint/${sprintId}`, config);
+    const response = await axios.get(`${TASK_API_URL}/user`, config);
 
     return response.data;
 }
