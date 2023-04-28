@@ -75,7 +75,7 @@ const CustomTimeLog: React.FC<CustomTimeLogProps> = ({hide, taskId, userId}) => 
               type="number"
               value={spent}
               onChange={handleFormDataChange}
-              min={0}
+              step={0.1}
               style={{ width: '100px' }}
             />
           </div>
@@ -93,7 +93,7 @@ const CustomTimeLog: React.FC<CustomTimeLogProps> = ({hide, taskId, userId}) => 
               name="remaining"
               value={remaining}
               onChange={handleFormDataChange}
-              min={0}
+              step={0.1}
               style={{ width: '100px' }}
             />
           </div>

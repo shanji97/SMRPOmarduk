@@ -148,6 +148,17 @@ const stopTime = async (taskId: string, token: string) => {
     return response.data;
 }
 
+const deleteWork = async (body: {taskId: string, userId: string, date: string}, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.delete(`${TASK_API_URL}/${body.taskId}/time/${body.userId}/${body.date}`, config);
+
+    return response.data;
+}
+
 const taskService = {
     getTaskForSprint,
     createTask,
@@ -159,7 +170,8 @@ const taskService = {
     getWorkLogs,
     logWork,
     startTime,
-    stopTime
+    stopTime,
+    deleteWork
 }
 
 export default taskService;

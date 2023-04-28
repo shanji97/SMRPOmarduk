@@ -127,6 +127,16 @@ export const logWork = createAsyncThunk('/task/logWork', async (body: {date: str
     }
 });
 
+export const deleteWork = createAsyncThunk('/task/deleteWork', async (body: {date: string, userId: string, taskId: string}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.deleteWork(body, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
 export const startTime = createAsyncThunk('/task/startTime', async (taskId: string, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -299,6 +309,22 @@ export const taskSlice = createSlice({
             state.isError = true
             state.message = action.payload
         })
+          .addCase(deleteWork.pending, (state) => {
+              state.isLoading = true
+          })
+          .addCase(deleteWork.fulfilled, (state, action) => {
+              state.isLoading = false;
+              state.isSuccess = true;
+              state.isError = false;
+              state.message = '';
+              state.workLogs = state.workLogs.filter(log => log.date !== action.meta.arg.date);
+          })
+          .addCase(deleteWork.rejected, (state, action) => {
+              state.isLoading = false
+              state.isSuccess = false;
+              state.isError = true
+              state.message = action.payload
+          })
         .addCase(startTime.pending, (state) => {
             state.isLoading = true
         })

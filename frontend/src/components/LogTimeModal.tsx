@@ -80,25 +80,6 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
     setInitialLogs(timelogs);
   }, [workLogs]);
 
-  const today = useMemo(() => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
-    return formattedDate;
-  }, []);
-
-  const hasToday = useMemo(() => {
-    return logs.some(log => {
-      const today = new Date();
-      const d = new Date(log.date);
-      return d.getFullYear() === today.getFullYear() &&
-        d.getMonth() === today.getMonth() &&
-        d.getDate() === today.getDate();
-    });
-  }, [logs]);
-
   const closeModal = () => {
     hideModal();
   };

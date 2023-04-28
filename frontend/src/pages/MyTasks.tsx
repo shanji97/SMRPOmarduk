@@ -80,7 +80,7 @@ function Dashboard() {
                               <tbody>
                               {StoryDesc.map((storyidentity) => {
                                 return (
-                                <Tasks key={storyidentity.id} stories={storyidentity}></Tasks>
+                                <Tasks key={storyidentity.id} tasks={storyidentity}></Tasks>
                                 )
                               })}
                               </tbody>
@@ -91,8 +91,6 @@ function Dashboard() {
                       </Card.Body>
                     </Tab.Container>
                   </Card>
-
-
             </div>
           </div>
       );

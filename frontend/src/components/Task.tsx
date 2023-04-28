@@ -15,10 +15,6 @@ const Task: React.FC<TaskProps> = ({task}) => {
 
   const {
     currentlyWorkingOnTaskId,
-    isTimerSuccess,
-    isTimerError,
-    isLoading,
-    message,
   } = useAppSelector((state) => state.tasks);
 
   useEffect(() => {
@@ -68,8 +64,6 @@ const Task: React.FC<TaskProps> = ({task}) => {
       dispatch(stopTime(task.id));
   };
 
-
-
   return (
     <Fragment>
       <tr key={task.id}>
@@ -95,10 +89,9 @@ const Task: React.FC<TaskProps> = ({task}) => {
 
         </td>
         <td>{task.name}</td>
-          <td>{getStatusFromCategory(task.category)}</td>
-
+        <td>{getStatusFromCategory(task.category)}</td>
         <td>{hoursSpentInTotal}h</td>
-        <td>{`${workLogs?.[workLogs.length - 1]?.remaining}h` ?? '/'}</td>
+        <td>{task.remaining}</td>
         <td>{task.estimatedTime}</td>
         <td>
           <Button
