@@ -8,12 +8,13 @@ import { logWork, reset } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
 
 interface TimeInputsProps {
-  taskId: string;
-  index: number;
-  onChange: (id: number, timeSpent: number, timeRemaining: number) => void;
-  date: string;
-  spentTimeInit: number;
-  remainingTimeInit: number;
+  taskId: string
+  userId: string
+  index: number
+  onChange: (id: number, timeSpent: number, timeRemaining: number) => void
+  date: string
+  spentTimeInit: number
+  remainingTimeInit: number
 }
 const TimeInputs: React.FC<TimeInputsProps> = ({
   taskId,
@@ -22,15 +23,14 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
   date,
   spentTimeInit,
   remainingTimeInit,
+  userId
 }) => {
   const dispatch = useAppDispatch();
   const { isError, message, isSuccess } = useAppSelector(
     (state) => state.tasks
   );
-  const { user } = useAppSelector((state) => state.users);
   const [spentTime, setSpentTime] = useState(spentTimeInit);
   const [remainingTime, setRemainingTime] = useState(remainingTimeInit);
-  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     if (isError) {
@@ -41,16 +41,6 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
       dispatch(reset());
     };
   }, [isSuccess, message, isError]);
-
-  useEffect(() => {
-    if (user === null) {
-      return;
-    }
-    const token = JSON.parse(localStorage.getItem("user")!).token;
-    const userData = parseJwt(token);
-
-    setUserId(userData.sid);
-  }, [user]);
 
   const handleSpentTimeChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSpentTime(+e.currentTarget.value);
@@ -70,6 +60,7 @@ const TimeInputs: React.FC<TimeInputsProps> = ({
       spent: spentTime,
       remaining: remainingTime,
       description: "Log",
+      type: 'update'
     };
 
     dispatch(logWork(body));

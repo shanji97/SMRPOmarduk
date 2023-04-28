@@ -105,7 +105,7 @@ export const getWorkLogs = createAsyncThunk('/task/getWorkLogs', async (taskId: 
     }
 });
 
-export const logWork = createAsyncThunk('/task/logWork', async (body: {date: string, userId: string, taskId: string, spent: number, remaining: number, description: string}, thunkAPI: any) => {
+export const logWork = createAsyncThunk('/task/logWork', async (body: {date: string, userId: string, taskId: string, spent: number, remaining: number, description: string, type?: string}, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.logWork(body, token!);
@@ -269,11 +269,17 @@ export const taskSlice = createSlice({
             state.isError = false;
             state.message = '';
 
-            const newWorkLog = action.meta.arg;
-            const index = state.workLogs.findIndex(log => log.date === newWorkLog.date);
-            const newWorkLogs = [...state.workLogs];
-            newWorkLogs[index] = newWorkLog;
-            state.workLogs = newWorkLogs;
+            const newWorkLog = {...action.meta.arg};
+            delete newWorkLog.type;
+
+            if (action.meta.arg.type === 'update') {
+                const index = state.workLogs.findIndex(log => log.date === newWorkLog.date);
+                const newWorkLogs = [...state.workLogs];
+                newWorkLogs[index] = newWorkLog;
+                state.workLogs = newWorkLogs;
+            } else {
+                state.workLogs.push(newWorkLog);
+            }
         })
         .addCase(logWork.rejected, (state, action) => {
             state.isLoading = false
