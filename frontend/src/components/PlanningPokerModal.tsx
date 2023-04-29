@@ -1,6 +1,5 @@
 import React, {useEffect} from "react";
 import {Button, Modal} from "react-bootstrap";
-import {StoryData} from "../classes/storyData";
 
 interface PlanningPokerModalProps {
   isUserScrumMaster: boolean
@@ -18,6 +17,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({storyIdForPoker,
     <Modal show={showModal} onHide={closeModal}>
       <Modal.Header closeButton>
         <Modal.Title>Planning Poker</Modal.Title>
+        {isUserScrumMaster && <Button style={{marginLeft: '.5rem'}}>New round</Button>}
       </Modal.Header>
 
       <Modal.Body>
