@@ -28,6 +28,7 @@ import "./App.css";
 import EditTaskForm from "./components/EditTaskForm";
 import AssignUserForm from "./components/AssignUserForm";
 import DeleteTaskModal from "./components/DeleteTaskModal";
+import Docs from "./pages/Docs";
 
 function App() {
   return (
@@ -84,6 +85,7 @@ function App() {
           <Route path="/product-backlog" element={<ProductBacklog />} />
           <Route path="/sprint-backlog" element={<SprintBacklog />} />
           <Route path="/my-tasks" element={<MyTasks />} />
+          <Route path="/docs" element={<Docs />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />
