@@ -278,6 +278,13 @@ export class TaskService {
     return await this.storyService.isStoryInActiveSprint(storyId);
   }
 
+  async hasBeenTaskInActiveSprint(taskId: number, date: string) {
+    const storyId = await this.getStoryIdForTaskById(taskId);
+    if (!storyId) // Task does not exit
+      return false;
+    return await this.storyService.hasBeenStoryInActiveSprint(storyId, date);
+  }
+
   async hasUserPermissionForTask(userId: number, taskId: number, role: UserRole[] | UserRole | number[] | number | null = null): Promise<boolean> {
     const storyId = await this.getStoryIdForTaskById(taskId);
     if (!storyId)

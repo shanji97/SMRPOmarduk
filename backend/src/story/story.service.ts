@@ -198,6 +198,15 @@ export class StoryService {
     return count > 0;
   }
 
+  async hasBeenStoryInActiveSprint(storyId: number, date: string): Promise<boolean> {
+    const count = await this.storyRepository.createQueryBuilder('st')
+      .innerJoin(SprintStory, 'ss', 'ss.storyId = st.id')
+      .innerJoin(Sprint, 'sp', 'sp.id = ss.sprintId')
+      .where('st.id = :storyId AND sp.startDate <= :date AND sp.endDate >= :date', { storyId: storyId, date: date })
+      .getCount();
+    return count > 0;
+  }
+
   async getStoryIdsForSprint(sprintId: number): Promise<number[]> {
     return (await this.entityManager.findBy(SprintStory, { sprintId: sprintId })).map(ss => ss.storyId);
   }

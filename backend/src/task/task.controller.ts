@@ -466,8 +466,8 @@ export class TaskController {
       throw new ForbiddenException();
 
     // Check if task part of active sprint
-    if (!await this.taskService.isTaskInActiveSprint(taskId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException("Task isn't part of active sprint");
+    if (!await this.taskService.hasBeenTaskInActiveSprint(taskId, date) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
+      throw new ForbiddenException("Task isn't or wasn't part of active sprint");
 
     // Check if user assigned to task
     const task = await this.taskService.getTaskById(taskId);
@@ -512,7 +512,7 @@ export class TaskController {
     const task = await this.taskService.getTaskById(taskId);
     if (!task)
       throw new NotFoundException();
-      
+
     // User can remove only his time, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException("Can't rime time on task");
