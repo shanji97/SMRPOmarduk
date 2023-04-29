@@ -241,7 +241,8 @@ export class TaskService {
       throw new ValidationException('Task not active');
 
     // Add log time record
-    let elapsed = +(moment().diff(moment((<Date><unknown>task.dateActive).toISOString().replace('Z', '')), 'm') / 60.0).toFixed(2); // Because problems with dates
+    let elapsed = +(moment().diff(moment((<Date><unknown>task.dateActive).toISOString().replace('Z', '')), 's') / 3600.0); // Because problems with dates
+    elapsed = +(Math.ceil(elapsed * 100) / 100).toFixed(2); // Round up to 2 decimal places
     if (elapsed < 0) // Failsafe (calculation error)
       elapsed = 0;
     const today: string = moment().format('YYYY-MM-DD');
