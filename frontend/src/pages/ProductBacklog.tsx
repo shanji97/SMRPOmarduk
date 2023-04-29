@@ -33,7 +33,7 @@ import {
   ConeStriped,
   X,
   Eraser,
-  Stickies,
+  Stickies, SuitSpadeFill,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
@@ -68,6 +68,7 @@ import { parseJwt } from "../helpers/helpers";
 
 import { toast } from "react-toastify";
 import RejectStoryModal from "./RejectStoryModal";
+import PlanningPokerModal from "../components/PlanningPokerModal";
 
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -97,7 +98,8 @@ type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 function ProductBacklog() {
   const dispatch = useAppDispatch();
   const { activeProject, userRoles } = useAppSelector((state) => state.projects);
-  
+  const [showPlanningPokerModal, setShowPlanningPokerModal] = useState(false);
+  const [storyIdForPoker, setStoryIdForPoker] = useState('');
   const projectVar = useAppSelector((state) => state.projects);
   //dispatch(getActiveProject());
   //helper funkcija za updatat useState
@@ -124,10 +126,6 @@ function ProductBacklog() {
   ]);
 
 
-
- 
-
-  //console.log(SprintSelector)
   useEffect(() => {
     if (isSuccess && !isLoading && message !== '') {
       toast.success(message)
@@ -154,7 +152,6 @@ function ProductBacklog() {
      
       if (activeProject) {
       dispatch(getActiveProject());
-      console.log(activeProject)
       }
       //dispatch(reset);
     }
@@ -166,14 +163,12 @@ function ProductBacklog() {
       dispatch(getAllStoryById(activeProject.id!));
       dispatch(getAllSprints(activeProject.id!));
       dispatch(getProjectUserRoles(activeProject.id!))
-      console.log(activeProject)
     }
   }, [activeProject]);
 
   useEffect(() => {
     
     if (SprintSelector.isSuccessActive) {
-      console.log("active")
       dispatch(getActiveSprint(activeProject.id!))
     }
   }, [SprintSelector.isSuccessActive]);
@@ -194,9 +189,6 @@ function ProductBacklog() {
       
     }
   }, [userRoles]);
-
-//console.log(projectroles.userRoles)
-
 
   //uporabniki
   let { users, user } = useAppSelector((state) => state.users);
@@ -240,10 +232,6 @@ function ProductBacklog() {
   };
 
 
-  
-//console.log(isUserScramMaster())
-
-
 
   // NOTE: temporary fix, change this if needed
   /*
@@ -258,10 +246,7 @@ function ProductBacklog() {
 
   */
   //let stories = useAppSelector((state) => state.stories);
-  //console.log(stories)
   const navigate = useNavigate();
-
-  
 
   useEffect(() => {
     if (user === null) {
@@ -488,10 +473,6 @@ function ProductBacklog() {
   //doda začetne elemnte
 
   useEffect(() => {
-    //console.log(ProductBacklogItemStatus)
-    //console.log(itemsByStatus)
-
-    //console.log("doblejni podatki1")
     if (isSuccess) {
       resetState();
       setItemsByStatus((current) =>
@@ -504,9 +485,6 @@ function ProductBacklog() {
             (value) => value.length === 0
           );
 
-          // Adding new item as "to do"
-          //console.log("zgodbice ob updatu")
-          //console.log(stories)
           const visibilityObject: { [itemId: string]: boolean } = {};
           const insertTimeObject: { [itemId: string]: number } = {};
           if (stories) {
@@ -609,19 +587,16 @@ function ProductBacklog() {
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
   const getDataStory = (item: StoryData) => {
     setTempDataStory(item);
-    //console.log(item);
     return setShowStory(true);
   };
   const [tempDataReject, setTempDataReject] = useState<{item: StoryData, status: string, index: number}>();
   const getDataReject = (item: StoryData, status: string, index: number) => {
     setTempDataReject({item, status, index});
-    //console.log(item);
     return setShowRejectStoryModal(true);
   };
   const [tempDataApproved, setTempDataApproved] = useState<{item: StoryData, status: string, index: number}>();
   const getDataApproved = (item: StoryData, status: string, index: number) => {
     setTempDataApproved({item, status, index});
-    //console.log(item);
     dispatch(confirmStory(item.id!));
   };
  
@@ -631,7 +606,14 @@ function ProductBacklog() {
     return items.map((item: any) => item.description);
   }
 
-  //{if Object.keys(defaultItems).includes(status)}
+  function handleShowPlanningPokerModal(story: StoryData) {
+    setStoryIdForPoker(story.id!)
+    setShowPlanningPokerModal(true);
+  }
+
+  function closePlanningPokerModal() {
+    setShowPlanningPokerModal(false);
+  }
 
   return (
     <>
@@ -747,7 +729,7 @@ function ProductBacklog() {
                                                     let handleRejectVar = {
                                                       status: status,
                                                       index: index,
-                                                      
+
                                                     };
                                                     handleReject(handleRejectVar);
                                                     */
@@ -775,6 +757,14 @@ function ProductBacklog() {
                                                   <Trash /> Delete
                                                 </Dropdown.Item>
                                               )}
+                                              {status ===
+                                                ProductBacklogItemStatus.UNALLOCATED && (
+                                                  <Dropdown.Item
+                                                    onClick={() => {handleShowPlanningPokerModal(item)}}
+                                                  >
+                                                    <SuitSpadeFill /> Planning Poker
+                                                  </Dropdown.Item>
+                                                )}
                                               <DeleteConfirmation
                                                 item={item}
                                                 status={status}
@@ -872,7 +862,7 @@ function ProductBacklog() {
                                                     className="m-0 p-0 float-end text-decoration-none"
                                                   >
                                                     {itemTime[item.id!]}
-                                                    
+
                                                   </Button>
                                                 )}
                                                 {!isUserScramMaster() && (
@@ -950,6 +940,7 @@ function ProductBacklog() {
           show={showRejectStoryModal}
         />
       )}
+      {showPlanningPokerModal && <PlanningPokerModal storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
     </>
   );
 }
