@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import { DeepPartial, In, EntityManager, QueryFailedError } from 'typeorm';
+import { DeepPartial, In, EntityManager, IsNull, QueryFailedError } from 'typeorm';
 
 
 import { PlanningPokerRound } from './planning-poker-round.entity';
@@ -23,11 +23,11 @@ export class PlanningPokerService {
   }
 
   async getRoundById(roundId: number, showVotes: boolean = false): Promise<PlanningPokerRound> {
-    return await this.entityManager.findOne(PlanningPokerRound, { where: { id: roundId }, relations: ((showVotes) ? ['votes'] : []) });
+    return await this.entityManager.findOne(PlanningPokerRound, { where: { id: roundId }, relations: ((showVotes) ? ['votes', 'votes.user'] : []) });
   }
 
   async getActiveRoundForStory(storyId: number, showVotes: boolean = false): Promise<PlanningPokerRound | null> {
-    return await this.entityManager.findOne(PlanningPokerRound, { where: { storyId: storyId, dateEnded: null }, relations: ((showVotes) ? ['votes'] : []) });
+    return await this.entityManager.findOne(PlanningPokerRound, { where: { storyId: storyId, dateEnded: IsNull() }, relations: ((showVotes) ? ['votes', 'votes.user'] : []) });
   }
 
   async getStoryIdForRoundById(roundId: number): Promise<number | null> {
