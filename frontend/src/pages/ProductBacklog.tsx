@@ -940,7 +940,7 @@ function ProductBacklog() {
           show={showRejectStoryModal}
         />
       )}
-      {showPlanningPokerModal && <PlanningPokerModal storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
+      {showPlanningPokerModal && <PlanningPokerModal projectId={activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
     </>
   );
 }

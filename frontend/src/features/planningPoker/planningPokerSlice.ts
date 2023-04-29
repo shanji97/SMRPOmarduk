@@ -44,7 +44,7 @@ export const getAllPokerRounds = createAsyncThunk('poker/getAllRounds', async (s
   }
 });
 
-export const getPokerRound = createAsyncThunk('poker/getAllRounds', async (roundId: string, thunkAPI: any) => {
+export const getPokerRound = createAsyncThunk('poker/getRound', async (roundId: string, thunkAPI: any) => {
   try {
     const token = JSON.parse(localStorage.getItem('user')!).token;
     return await planningPokerService.getPokerRound(roundId, token);
@@ -54,7 +54,7 @@ export const getPokerRound = createAsyncThunk('poker/getAllRounds', async (round
   }
 });
 
-export const getActivePokerRound = createAsyncThunk('poker/getAllRounds', async (storyId: string, thunkAPI: any) => {
+export const getActivePokerRound = createAsyncThunk('poker/getActiveRound', async (storyId: string, thunkAPI: any) => {
   try {
     const token = JSON.parse(localStorage.getItem('user')!).token;
     return await planningPokerService.getActivePokerRound(storyId, token);
@@ -64,10 +64,20 @@ export const getActivePokerRound = createAsyncThunk('poker/getAllRounds', async 
   }
 });
 
-export const newPokerRound = createAsyncThunk('poker/getAllRounds', async (storyId: string, thunkAPI: any) => {
+export const newPokerRound = createAsyncThunk('poker/newRound', async (storyId: string, thunkAPI: any) => {
   try {
     const token = JSON.parse(localStorage.getItem('user')!).token;
     return await planningPokerService.newPokerRound(storyId, token);
+  } catch (error: any) {
+    const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+    return thunkAPI.rejectWithValue(message)
+  }
+});
+
+export const voteForRound = createAsyncThunk('poker/voteForRound', async (body: {roundId: string, value: number}, thunkAPI: any) => {
+  try {
+    const token = JSON.parse(localStorage.getItem('user')!).token;
+    return await planningPokerService.voteForRound(body, token);
   } catch (error: any) {
     const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
     return thunkAPI.rejectWithValue(message)
@@ -103,17 +113,17 @@ export const planningPokerSlice = createSlice({
         state.isError = true
         state.message = action.payload
       })
-      .addCase(getAllPokerRounds.pending, (state) => {
+      .addCase(getPokerRound.pending, (state) => {
         state.isLoading = true
       })
-      .addCase(getAllPokerRounds.fulfilled, (state, action) => {
+      .addCase(getPokerRound.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
         state.singleRound = action.payload;
       })
-      .addCase(getAllPokerRounds.rejected, (state, action) => {
+      .addCase(getPokerRound.rejected, (state, action) => {
         state.isLoading = false
         state.isSuccess = false;
         state.isError = true
@@ -135,17 +145,17 @@ export const planningPokerSlice = createSlice({
         state.isError = true
         state.message = action.payload
       })
-      .addCase(getActivePokerRound.pending, (state) => {
+      .addCase(newPokerRound.pending, (state) => {
         state.isLoading = true
       })
-      .addCase(getActivePokerRound.fulfilled, (state, action) => {
+      .addCase(newPokerRound.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
         // TODO maybe
       })
-      .addCase(getActivePokerRound.rejected, (state, action) => {
+      .addCase(newPokerRound.rejected, (state, action) => {
         state.isLoading = false
         state.isSuccess = false;
         state.isError = true
