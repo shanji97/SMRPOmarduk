@@ -49,11 +49,11 @@ const AddProject = () => {
   useEffect(() => {
     if (projectState.isSuccess && !projectState.isLoading) {
       toast.success("Project successfully created!");
-      dispatch(reset);
+      dispatch(reset());
     }
     if (projectState.isError && !projectState.isLoading) {
       toast.error(projectState.message);
-      dispatch(reset);
+      dispatch(reset());
     }
   }, [projectState.isSuccess, projectState.isError, projectState.isLoading]);
 
@@ -207,7 +207,6 @@ const AddProject = () => {
       userRoles,
     };
 
-    console.log(newProject);
     dispatch(createProject(newProject));
 
     // reset inputs and touched states

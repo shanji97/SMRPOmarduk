@@ -257,6 +257,14 @@ export class TaskController {
     }
   }
 
+  @ApiOperation({summary: 'Get task for burndown diagramm.'})
+  @ApiOkResponse()
+  @Get('/burdown-diagramm-data/:projectId')
+  async getDataForProjectBurnDown(@Token() token: TokenDto,
+  @Param('projectId', ParseIntPipe) projectId: number,): Promise<any>{
+    return this.taskService.getTaskDataForBD(projectId);
+  }
+
   @ApiOperation({ summary: 'Accept task' })
   @ApiOkResponse()
   @ApiForbiddenResponse()

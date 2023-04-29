@@ -8,6 +8,7 @@ import {
 } from "@hello-pangea/dnd";
 import { v4 as uuid } from "uuid";
 import {
+  Badge,
   Button,
   Card,
   CloseButton,
@@ -21,6 +22,7 @@ import {
   ProgressBar,
   Row,
   Tab,
+  Table,
 } from "react-bootstrap";
 import {
   CircleFill,
@@ -31,93 +33,140 @@ import {
   Stack,
   ConeStriped,
   X,
+  Person,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { Link, useNavigate } from "react-router-dom";
 import { StoryData, SprintBacklogItemStatus } from "../classes/storyData";
 
+import classesSprint from "./SprintBacklog.module.css";
+
 import produce from "immer";
 import DeleteConfirmation from "./DeleteConfirmation";
 import {
-  getAllStory,
+  getAllStoryById,
   deleteStory,
-  reset,
+  getStoriesForSprint,
 } from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
+import { parseJwt } from "../helpers/helpers";
+import TaskModal from "./TaskModal";
+import TaskForm from "../components/TaskForm";
+import EditTaskForm from "../components/EditTaskForm";
+import DeleteTaskModal from "../components/DeleteTaskModal";
+import AssignUserForm from "../components/AssignUserForm";
+import { getTasksForSprint } from "../features/tasks/taskSlice";
+import { reset } from "../features/tasks/taskSlice";
+import { getProjectUserRoles } from "../features/projects/projectRoleSlice";
+import {
+  getActiveSprint,
+  getAllSprints,
+} from "../features/sprints/sprintSlice";
+import { getActiveProject } from "../features/projects/projectSlice";
+import { getAllUsers } from "../features/users/userSlice";
+import { UserRole } from "../classes/projectData";
 
-//const token = JSON.parse(localStorage.getItem('user')!).token;
-
-//StoryData
-//installed packages:
-//npm install @hello-pangea/dnd --save
-//npm install uuidv4
-//npm install react-bootstrap-icons --save
-//npm install --save react-bootstrap
-//npm install bootstrap --save
-
-/*
-
-const itemsFromBackend123 = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-
-
-
-    
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: []
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
-  
-
-  
-
-*/
-
-const defaultItems = {
-  [SprintBacklogItemStatus.UNALLOCATED]: [],
-  [SprintBacklogItemStatus.ALLOCATED]: [],
-  [SprintBacklogItemStatus.IN_PROGRESS]: [],
-  [SprintBacklogItemStatus.DONE]: [],
-};
-
-type TaskboardData = Record<SprintBacklogItemStatus, StoryData[]>;
-
-function Dashboard() {
+function SprintBacklog() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  let { activeSprint } = useAppSelector((state) => state.sprints);
+  let taskState = useAppSelector((state) => state.tasks);
+  const { activeProject } = useAppSelector((state) => state.projects);
+  let { userRoles } = useAppSelector((state) => state.projectRoles);
+  let { users, user } = useAppSelector((state) => state.users);
+  let { stories, storiesForSprint, isSuccess } = useAppSelector(
+    (state) => state.stories
+  );
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState("");
+  const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
+  const [itemsByStatus, setItemsByStatus] = useState<StoryData[]>([]);
 
   useEffect(() => {
-    dispatch(getAllStory());
+    if (users.length === 0) {
+      dispatch(getAllUsers());
+    }
   }, []);
 
-  //let stories = useAppSelector((state) => state.stories);
-  //console.log(stories)
-  const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.users);
-  let storyState = useAppSelector((state) => state.stories);
+  useEffect(() => {
+    if (taskState.isSuccess || taskState.isError) {
+      dispatch(reset());
+    }
+  }, [taskState.isSuccess, taskState.isError]);
+
+  // get active project
+  useEffect(() => {
+    if (activeProject.id === "") {
+      dispatch(getActiveProject());
+    }
+  }, []);
+
+  // get active sprint id
+  useEffect(() => {
+    if (activeSprint == undefined && activeProject != undefined) {
+      dispatch(getActiveSprint(activeProject.id!));
+    }
+  }, [activeProject]);
+
+  // fetch stories in sprint
+  useEffect(() => {
+    if (activeSprint != undefined) {
+      dispatch(getStoriesForSprint(activeSprint.id!));
+    }
+  }, [activeSprint]);
+
+  // get developer list
+  useEffect(() => {
+    dispatch(getProjectUserRoles(activeProject.id));
+  }, []);
+
+  useEffect(() => {
+    setDevelopersOnProject([]);
+    userRoles.forEach((user: any) => {
+      if (user.role === 0) {
+        setDevelopersOnProject((prevDevelopers) => {
+          const newDevelopers = [...prevDevelopers];
+          newDevelopers.push(user.userId.toString());
+          return newDevelopers;
+        });
+      }
+    });
+  }, [activeProject, userRoles]);
+
+  useEffect(() => {
+    if (user === null) {
+      return;
+    }
+    const token = JSON.parse(localStorage.getItem("user")!).token;
+    const userData = parseJwt(token);
+    setIsAdmin(userData.isAdmin);
+    setUserName(userData.sub);
+    setUserId(userData.sid);
+  }, [user]);
+
+  const isUserScrumMaster = (userRoles: UserRole[]) => {
+    if (userRoles.length == 0) {
+      return false;
+    }
+    let scrumMasterId = userRoles.filter((user) => user.role === 1)[0].userId;
+    if (userId !== undefined) {
+      return parseInt(userId) === scrumMasterId;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (activeSprint !== undefined && activeSprint.id !== undefined) {
+      // getStoriesForSprint(activeSprint.id);
+      dispatch(getTasksForSprint(activeSprint.id));
+    }
+  }, [activeSprint]);
 
   useEffect(() => {
     if (user === null) {
@@ -126,119 +175,73 @@ function Dashboard() {
     }
   }, [user]);
 
-  // NOTE: temporary fix, change this if needed
-  useEffect(() => {
-    if (storyState.isSuccess && !storyState.isLoading) {
-      dispatch(reset());
-    }
-    if (storyState.isError && !storyState.isLoading) {
-      dispatch(reset());
-    }
-  }, [storyState.isSuccess, storyState.isError, storyState.isLoading]);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+  const [showDeleteTaskModal, setShowDeleteTaskModal] = useState(false);
+  const [showAssignUserModal, setShowAssignUserModal] = useState(false);
 
-  const { stories, isSuccess } = useAppSelector((state) => state.stories);
+  // this is for add/edit modals
+  const [selectedStoryId, setSelectedStoryId] = useState("");
+  const [selectedTask, setSelectedTask] = useState<any>({});
 
-  const [itemsByStatus, setItemsByStatus] = useState<TaskboardData>(
-    defaultItems
-    //stories
-  );
+  const openAddTaskModal = (id: string) => {
+    setSelectedStoryId(id);
+    setShowAddTaskModal(true);
+  };
+
+  const openEditTaskModal = (task: any) => {
+    setSelectedTask(task);
+    setShowEditTaskModal(true);
+  };
+
+  const openDeleteTaskModal = (task: any) => {
+    setSelectedTask(task);
+    setShowDeleteTaskModal(true);
+  };
+
+  const openAssignUserModal = (task: any) => {
+    setSelectedTask(task);
+    setShowAssignUserModal(true);
+  };
+
+  const hideAddTaskModal = () => {
+    setShowAddTaskModal(false);
+  };
+
+  const hideEditTaskModal = () => {
+    setShowEditTaskModal(false);
+  };
+
+  const hideDeleteTaskModal = () => {
+    setShowDeleteTaskModal(false);
+  };
+
+  const hideAssignUserkModal = () => {
+    setShowAssignUserModal(false);
+  };
 
   const stringPriority = (priority: number): string[] => {
     switch (priority) {
-      case 1:
+      case 0:
         return ["Must have", "badge-light-must"];
-      case 2:
+      case 1:
         return ["Could have", "badge-light-could"];
-      case 3:
+      case 2:
         return ["Should have", "badge-light-should"];
-      case 4:
+      case 3:
         return ["Won't have this time", "gray-wont"];
       default:
         return [];
     }
   };
 
-  const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
-    source,
-    destination,
-  }) => {
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        // dropped outside the list
-        if (!destination) {
-          return;
-        }
-        const [removed] = draft[
-          source.droppableId as SprintBacklogItemStatus
-        ].splice(source.index, 1);
-        draft[destination.droppableId as SprintBacklogItemStatus].splice(
-          destination.index,
-          0,
-          removed
-        );
-      })
-    );
-  };
-
-  type HandleDeleteFunc = (args: {
-    status: SprintBacklogItemStatus;
-    itemToDelete: StoryData;
-  }) => void;
-
-  const handleDelete: HandleDeleteFunc = ({ status, itemToDelete }) =>
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        draft[status] = draft[status].filter(
-          (item) => item.id !== itemToDelete.id
-        );
-        setShow(false);
-        dispatch(deleteStory(itemToDelete.id!));
-        dispatch(getAllStory());
-      })
-    );
-
   //doda začetne elemnte
-
   useEffect(() => {
-    //console.log(SprintBacklogItemStatus)
-    //console.log(itemsByStatus)
-
-    const isEmpty = Object.values(itemsByStatus).every(
-      (value) => value.length === 0
-    );
-    console.log(isEmpty);
+    const isEmpty = Object.values(itemsByStatus).every((value) => value);
     if (isEmpty && isSuccess) {
-      setItemsByStatus((current) =>
-        produce(current, (draft) => {
-          //for (const status of Object.values(SprintBacklogItemStatus)) {
-          //  draft[status] = draft[status].filter(() => false);
-          //}
-
-          // Adding new item as "to do"
-
-          stories.forEach((story: StoryData) => {
-            draft[SprintBacklogItemStatus.UNALLOCATED].push({
-              id: story.id?.toString(),
-              title: story.title,
-              description: story.description,
-              tests: story.tests,
-              priority: story.priority,
-              businessValue: story.businessValue,
-              sequenceNumber: story.sequenceNumber,
-            });
-          });
-        })
-      );
+      setItemsByStatus(stories);
     }
   }, [isSuccess]);
-
-  //{Object.values.map(([columnId, column], index) => {
-
-  //modal za delete
-  const [show, setShow] = useState(false);
-
-  //modal za zgodbe
-  const [showstory, setShowStory] = useState(false);
 
   const initvalue: StoryData = {
     id: "",
@@ -248,244 +251,237 @@ function Dashboard() {
     priority: 0,
     businessValue: 0,
     sequenceNumber: 0,
+    category: 0,
+    timeComplexity: 0,
+    isRealized: false,
   };
 
-  const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
-  const getDataStory = (item: StoryData) => {
-    setTempDataStory(item);
-    return setShowStory(true);
+  //modal za form
+  const [showForm, setShowForm] = useState(false);
+  const [tempDataStory, setTempDataTask] = useState<StoryData>(initvalue);
+  const getDataTask = (item: StoryData) => {
+    setTempDataTask(item);
+    return setShowForm(true);
   };
 
-  const [points, setPonts] = useState("");
-  const [visiblePoints, setVisiblePonts] = useState(true);
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    setVisiblePonts((prev) => !prev);
+  const isTaskUnassigned = (task: any) => {
+    // return task.assignedUserId == null;
+    return task.category === 1;
   };
-  const handleKeyDown = (e: any) => {
-    const val = e.target.value;
-    if (e.target.validity.valid) setPonts(e.target.value);
-    else if (val === "") setPonts(val);
+
+  const isTaskAssigned = (task: any) => {
+    // return task.assignedUserId != null && task.dateAccepted == null;
+    return task.category === 2;
+  };
+
+  const isTaskInProgress = (task: any) => {
+    // return task.dateAccepted != null && task.dateEnded == null;
+    return task.category === 3;
+  };
+
+  const isTaskFinished = (task: any) => {
+    // return task.dateEnded != null;
+    return task.category === 250;
+  };
+
+  const renderStatus = (task: any) => {
+    if (isTaskUnassigned(task)) {
+      return (
+        <Badge bg="secondary">
+          <span className={classesSprint.badgeStatus}>Unassigned</span>
+        </Badge>
+      );
+    } else if (isTaskAssigned(task)) {
+      return (
+        <Badge bg="primary">
+          <span className={classesSprint.badgeStatus}>Assigned</span>
+        </Badge>
+      );
+    } else if (isTaskInProgress(task)) {
+      return (
+        <Badge bg="warning">
+          <span className={classesSprint.badgeStatus}>In progress</span>
+        </Badge>
+      );
+    } else if (isTaskFinished(task)) {
+      return (
+        <Badge bg="success">
+          <span className={classesSprint.badgeStatus}>Finished</span>
+        </Badge>
+      );
+    }
   };
 
   return (
     <>
-      <div className="row flex-row flex-sm-nowrap m-1 mt-3">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          {Object.values(SprintBacklogItemStatus).map((status) => {
-            //console.log(columns)
+      <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
+        <div className="col-sm-8">
+          {storiesForSprint.map((story) => {
+            // console.log(item);
             return (
-              <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
-                <Card className="bg-light border-0 ">
-                  <div className="pt-3 hstack gap-2 mx-3">
-                    <Card.Title className="fs-6 my-0">{status}</Card.Title>
-                    <div className="vr my-0"></div>
-                    <p className="fs-6 my-0">6</p>
-                  </div>
-                  <hr className="hr mx-3" />
+              <Card className="mt-3" key={story.id}>
+                <Tab.Container id="left-tabs-example" defaultActiveKey="first">
+                  <Card.Header>
+                    <Nav variant="tabs" defaultActiveKey="first">
+                      <Nav.Item>
+                        <Nav.Link eventKey="first">Details</Nav.Link>
+                      </Nav.Item>
+                      <Nav.Item>
+                        <Nav.Link eventKey="second">Comments</Nav.Link>
+                      </Nav.Item>
+                    </Nav>
+                  </Card.Header>
+                  <Card.Body>
+                    <Tab.Content>
+                      <Tab.Pane eventKey="first">
+                        <Card.Title>{story.title}</Card.Title>
+                        <Card.Text>{story.description}</Card.Text>
 
-                  <Droppable droppableId={status} key={status}>
-                    {(provided, snapshot) => {
-                      return (
-                        <div
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          style={{
-                            background: snapshot.isDraggingOver
-                              ? "lightblue"
-                              : "#f8f9fa",
-                            borderRadius: "0px 0px 5px 5px",
-                          }}
+                        <Table
+                          responsive="lg"
+                          className={` ${classes["gfg"]} small`}
                         >
-                          {itemsByStatus[status].map((item, index) => {
-                            console.log(status);
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Description</th>
+                              <th>Estimated time (hrs)</th>
+                              <th>Status</th>
+                              <th>Options</th>
+                            </tr>
+                          </thead>
 
-                            return (
-                              <Draggable
-                                key={item.id}
-                                draggableId={item.id!}
-                                index={index}
-                                isDragDisabled={
-                                  status === SprintBacklogItemStatus.DONE
-                                }
-                              >
-                                {(provided, snapshot) => {
-                                  return (
-                                    <>
-                                      <Card
-                                        className="mb-3 mx-3"
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        style={{
-                                          userSelect: "none",
-                                          ...provided.draggableProps.style,
-                                        }}
-                                      >
-                                        <Card.Header className="hstack gap-2 align-items-center">
-                                          <p className="fs-6 text-muted m-1">
-                                            TSK-{item.sequenceNumber}
-                                          </p>
-                                          <p className="fs-6 text-muted m-1  text-truncate">
-                                            sivar.lapajne@gmail.com
-                                          </p>
+                          <tbody>
+                            {taskState.tasksForSprint
+                              .filter((task) => task.storyId === story.id)
+                              .map((task) => (
+                                <tr key={task.id}>
+                                  <td>{task.id}</td>
+                                  <td>{task.name}</td>
+                                  <td className="">{task.remaining}</td>
+                                  <td>{renderStatus(task)}</td>
 
-                                          <Dropdown className="">
-                                            <Dropdown.Toggle
-                                              variant="link"
-                                              id="dropdown-custom-components"
-                                              bsPrefix="p-0"
-                                            >
-                                              <ThreeDots />
-                                            </Dropdown.Toggle>
-                                            <Dropdown.Menu>
-                                              <Dropdown.Item>
-                                                <Pencil /> Edit
-                                              </Dropdown.Item>
-                                              <Dropdown.Item
-                                                onClick={() => setShow(true)}
-                                                /* onClick={() =>
-                                              Modal.confirm({
-                                                title: 'Delete?',
-                                                content: `Are you sure to delete "${item.title}"?`,
-                                                onOk: () =>
-                                                  onDelete({
-                                                    status,
-                                                    itemToDelete: item,
-                                                  }),
-                                              })
-                                            } */
-                                              >
-                                                <Trash /> Delete
-                                              </Dropdown.Item>
-                                              <Dropdown.Item href="#/action-3">
-                                                Something else
-                                              </Dropdown.Item>
-                                            </Dropdown.Menu>
-                                          </Dropdown>
-                                        </Card.Header>
-                                        <Card.Body>
-                                          <Card.Text
-                                            onClick={() => getDataStory(item)}
-                                            className="m-0"
+                                  <td className="text-center">
+                                    {!isTaskFinished(task) && (
+                                      <Dropdown className="ms-auto">
+                                        <Dropdown.Toggle
+                                          variant="link"
+                                          id="dropdown-custom-components"
+                                          bsPrefix="p-0"
+                                        >
+                                          <ThreeDots />
+                                        </Dropdown.Toggle>
+                                        <Dropdown.Menu>
+                                          <Dropdown.Item
+                                            onClick={() =>
+                                              openEditTaskModal(task)
+                                            }
                                           >
-                                            <Button
-                                              className="text-decoration-none"
-                                              variant="link"
+                                            <Pencil /> Edit
+                                          </Dropdown.Item>
+                                          {(isTaskUnassigned(task) ||
+                                            (isUserScrumMaster(userRoles) &&
+                                              isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
+                                            <Dropdown.Item
+                                              onClick={() =>
+                                                openAssignUserModal(task)
+                                              }
                                             >
-                                              {item.title}
-                                            </Button>
-                                          </Card.Text>
-
-                                          <div className="text-end">
-                                            <small className="custom-font-size text-muted mb-1 d-inline-block">
-                                              25%
-                                            </small>
-                                          </div>
-                                          <ProgressBar
-                                            style={{ height: "3px" }}
-                                            now={60}
-                                          />
-
-                                          <div className="pt-3 hstack gap-2 ">
-                                            <p
-                                              className={`my-0 badge rounded-pill ${
-                                                classes[
-                                                  stringPriority(
-                                                    item.priority
-                                                  )[1]
-                                                ]
-                                              }`}
+                                              <Person /> Assign User
+                                            </Dropdown.Item>
+                                          )}
+                                          {(isTaskUnassigned(task) ||
+                                            isTaskAssigned(task)) && (
+                                            <Dropdown.Item
+                                              onClick={() =>
+                                                openDeleteTaskModal(task)
+                                              }
                                             >
-                                              {stringPriority(item.priority)[0]}{" "}
-                                            </p>
+                                              <Trash /> Delete
+                                            </Dropdown.Item>
+                                          )}
+                                        </Dropdown.Menu>
+                                      </Dropdown>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </Table>
 
-                                            <p className="  ms-auto fs-6  text-muted my-0">
-                                              BV: {item.businessValue}
-                                            </p>
-
-                                            <div className="vr"></div>
-                                            <p className="text-nowrap text-muted my-0">
-                                              {" "}
-                                              2h
-                                            </p>
-
-                                            <Clock className=" text-muted" />
-                                          </div>
-                                        </Card.Body>
-                                        <Card.Footer className="bg-transparent pb-0 px-2">
-                                          <ListGroup className="pb-0 px-2">
-                                            <ListGroup.Item
-                                              className={`d-flex justify-content-between align-items-center border-0 mb-2 rounded ${classes["listItem-bg"]}`}
-                                            >
-                                              <div className="d-flex align-items-center">
-                                                <input
-                                                  className="form-check-input me-2"
-                                                  type="checkbox"
-                                                  value=""
-                                                  aria-label="..."
-                                                />
-                                                Cras justo odio
-                                              </div>
-                                              <a
-                                                href="#!"
-                                                data-mdb-toggle="tooltip"
-                                                title="Remove item"
-                                              >
-                                                <X className="text-primary" />
-                                              </a>
-                                            </ListGroup.Item>
-                                            <ListGroup.Item
-                                              className={`d-flex justify-content-between align-items-center border-0 mb-2 rounded ${classes["listItem-bg"]}`}
-                                            >
-                                              <div className="d-flex align-items-center">
-                                                <input
-                                                  className="form-check-input me-2"
-                                                  type="checkbox"
-                                                  value=""
-                                                  aria-label="..."
-                                                />
-                                                Cras justo odio
-                                              </div>
-                                              <a
-                                                href="#!"
-                                                data-mdb-toggle="tooltip"
-                                                title="Remove item"
-                                              >
-                                                <X className="text-primary" />
-                                              </a>
-                                            </ListGroup.Item>
-                                          </ListGroup>
-                                        </Card.Footer>
-                                      </Card>
-                                    </>
-                                  );
-                                }}
-                              </Draggable>
-                            );
-                          })}
-
-                          {provided.placeholder}
-                        </div>
-                      );
-                    }}
-                  </Droppable>
-                </Card>
-              </div>
+                        <Button
+                          form="my_form"
+                          size="sm"
+                          type="button"
+                          onClick={() => openAddTaskModal(story.id!)}
+                        >
+                          Add new task
+                        </Button>
+                      </Tab.Pane>
+                      <Tab.Pane eventKey="second"></Tab.Pane>
+                    </Tab.Content>
+                  </Card.Body>
+                </Tab.Container>
+              </Card>
             );
           })}
-        </DragDropContext>
+        </div>
       </div>
 
-      {showstory && (
-        <StoryModal
+      {showForm && (
+        <TaskModal
           item={tempDataStory}
-          onCancel={() => setShowStory(false)}
-          show={showstory}
+          onCancel={() => setShowForm(false)}
+          show={showForm}
+        />
+      )}
+
+      {/* TODO 14 15 */}
+      {showAddTaskModal && (
+        <TaskForm
+          storyId={+selectedStoryId}
+          descriptionInit=""
+          timeRequiredInit=""
+          assignedUserIdInit=""
+          closeModal={hideAddTaskModal}
+          showModal={showAddTaskModal}
+          developersOnProject={developersOnProject}
+        />
+      )}
+
+      {showEditTaskModal && (
+        <EditTaskForm
+          id={selectedTask.id.toString()}
+          descriptionInit={selectedTask.name}
+          timeRequiredInit={selectedTask.remaining.toString()}
+          showModal={showEditTaskModal}
+          closeModal={hideEditTaskModal}
+        />
+      )}
+
+      {showAssignUserModal && (
+        <AssignUserForm
+          id={selectedTask.id.toString()}
+          assignedUserIdInit={
+            selectedTask.assignedUserId
+              ? selectedTask.assignedUserId.toString()
+              : ""
+          }
+          developersOnProject={developersOnProject}
+          showModal={showAssignUserModal}
+          closeModal={hideAssignUserkModal}
+        />
+      )}
+
+      {showDeleteTaskModal && (
+        <DeleteTaskModal
+          id={selectedTask.id.toString()}
+          closeModal={hideDeleteTaskModal}
+          showModal={showDeleteTaskModal}
         />
       )}
     </>
   );
 }
 
-export default Dashboard;
+export default SprintBacklog;

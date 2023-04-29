@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import sprintService from "./sprintService";
-import {SprintBody} from "../../classes/sprintData";
+import {SprintBody, StorySprint} from "../../classes/sprintData";
 
 interface SprintState {
     sprints: SprintBody[]
@@ -10,6 +10,12 @@ interface SprintState {
     isSuccess: boolean
     isError: boolean
     message: any
+    isNotStoryInSprint: boolean 
+    isStoryInSprint: boolean
+    isUpdatedActive: boolean
+    isLoadingActive: boolean
+    isSuccessActive: boolean
+    isErrorActive: boolean
 }
 
 const initialState: SprintState = {
@@ -20,12 +26,28 @@ const initialState: SprintState = {
     isSuccess: false,
     isError: false,
     message: '',
+    isNotStoryInSprint: false,
+    isStoryInSprint: false,
+    isUpdatedActive: false,
+    isLoadingActive: false,
+    isSuccessActive: false,
+    isErrorActive: false,
 }
 
 export const createSprint = createAsyncThunk('sprint/create', async (sprintBody: SprintBody, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await sprintService.createSprint(sprintBody, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const addStoryToSprint = createAsyncThunk('sprint/addStoryToSprint', async (storySprint: StorySprint, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.addStoryToSprint(storySprint, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -51,6 +73,16 @@ export const getAllSprints = createAsyncThunk('sprint/getAll', async (projectId:
         return thunkAPI.rejectWithValue(message)
     }  
 });
+export const getActiveSprint = createAsyncThunk('sprint/getActiveSprint', async (projectId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.getActiveSprint(projectId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
 
 export const deleteSprint = createAsyncThunk('sprint/delete', async (sprintId: string, thunkAPI: any) => {
     try {
@@ -62,6 +94,8 @@ export const deleteSprint = createAsyncThunk('sprint/delete', async (sprintId: s
     }
 });
 
+
+
 export const sprintSlice = createSlice({
     name: 'sprints',
     initialState,
@@ -72,6 +106,11 @@ export const sprintSlice = createSlice({
             state.isSuccess = false
             state.message = ''
             state.isUpdated = false;
+            state.isStoryInSprint = false
+            state.isNotStoryInSprint = false
+            state.isLoadingActive = false
+            state.isErrorActive = false
+            state.isSuccessActive = false
         },
         setActiveSprint: (state, action) => {
             state.activeSprint = action.payload;
@@ -93,6 +132,22 @@ export const sprintSlice = createSlice({
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
+            state.message = action.payload
+        })
+        .addCase(addStoryToSprint.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(addStoryToSprint.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isStoryInSprint = true;
+            state.isNotStoryInSprint = false;
+            state.message = '';
+            state.sprints.push(action.payload);
+        })
+        .addCase(addStoryToSprint.rejected, (state, action) => {
+            state.isLoading = false
+            state.isStoryInSprint = false;
+            state.isNotStoryInSprint = true
             state.message = action.payload
         })
         .addCase(updateSprint.pending, (state) => {
@@ -154,6 +209,22 @@ export const sprintSlice = createSlice({
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getActiveSprint.pending, (state) => {
+            state.isLoadingActive = true
+        })
+        .addCase(getActiveSprint.fulfilled, (state, action) => {
+            state.isLoadingActive = false;
+            state.isSuccessActive = false;
+            state.isErrorActive = false;
+            state.message = '';
+            state.activeSprint = action.payload;
+        })
+        .addCase(getActiveSprint.rejected, (state, action) => {
+            state.isLoadingActive = false
+            state.isSuccessActive = false;
+            state.isErrorActive = true
             state.message = action.payload
         })
     }
