@@ -45,6 +45,9 @@ export class Task {
   @UpdateDateColumn()
   dateUpdated: string;
 
+  @Column({ type: 'tinyint', default: false })
+  deleted: boolean;
+
   @Column({ unsigned: true })
   storyId: number;
 

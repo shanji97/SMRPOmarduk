@@ -26,13 +26,13 @@ export class TaskService {
   ) {}
 
   async getTasksForStory(storyId: number): Promise<Task[]> {
-    return await this.taskRepository.find({ where: { storyId: storyId }, relations: ['assignedUser'] });
+    return await this.taskRepository.find({ where: { storyId: storyId, deleted: false }, relations: ['assignedUser'] });
   }
 
   async getTaskCategoryCoundForStory(storyId: number): Promise<{ count: { category: number, count: number }[], finished: boolean }> {
     let result = await this.taskRepository.createQueryBuilder('task')
       .select('task.category, COUNT(task.category) AS count')
-      .where('task.storyId = :storyId', { storyId: storyId })
+      .where('task.storyId = :storyId AND task.deleted = 0', { storyId: storyId })
       .groupBy('task.category')
       .getRawMany();
     result = result.map(category => {
@@ -52,20 +52,24 @@ export class TaskService {
   async getTasksForSprint(sprintId: number): Promise<Task[]> {
     const storyIds: number[] = await this.storyService.getStoryIdsForSprint(sprintId);
 
-    return await this.taskRepository.find({ where: { storyId: In(storyIds) }, relations: ['assignedUser'] });
+    return await this.taskRepository.find({ where: { storyId: In(storyIds), deleted: false }, relations: ['assignedUser'] });
   }
 
   async getTasksForUser(userId: number): Promise<Task[]> {
-    return await this.taskRepository.find({ where: { assignedUserId: userId }, relations: ['story'] });
+    return await this.taskRepository.find({ where: { assignedUserId: userId, deleted: false }, relations: ['story'] });
   }
 
   async getTaskById(taskId: number): Promise<Task> {
-    return await this.taskRepository.findOne({ where: { id: taskId }, relations: ['assignedUser'] });
+    return await this.taskRepository.findOne({ where: { id: taskId, deleted: false }, relations: ['assignedUser'] });
   }
 
   async getStoryIdForTaskById(taskId: number): Promise<number | null> {
-    const result = await this.taskRepository.findOne({ where: { id: taskId }, select: ['storyId'] });
+    const result = await this.taskRepository.findOne({ where: { id: taskId, deleted: false }, select: ['storyId'] });
     return result?.storyId || null;
+  }
+
+  async taskExists(taskId: number): Promise<boolean> {
+    return await this.taskRepository.countBy({ id: taskId, deleted: false }) > 0;
   }
 
   async createTask(storyId: number, task: DeepPartial<Task>): Promise<number> {
@@ -104,7 +108,7 @@ export class TaskService {
     if (task.remaining > maxTime)
       throw new ValidationException('Timeremaining too big');
 
-    await this.taskRepository.update({ id: taskId }, task);
+    await this.taskRepository.update({ id: taskId, deleted: false }, task);
   }
 
   async deleteTask(taskId: number): Promise<void> {
@@ -112,11 +116,17 @@ export class TaskService {
     if (!await this.isTaskInActiveSprint(taskId))
       throw new ValidationException('Task not in active sprint');
 
-    await this.taskRepository.delete({ id: taskId });
+    // Delete task if it hasn't got work logged
+    if (!await this.hasTaskGotWork(taskId)) {
+      await this.taskRepository.delete({ id: taskId });
+      return;
+    }
+    
+    await this.taskRepository.update({ id: taskId, deleted: false }, { deleted: true });
   }
 
   async getTaskProjectId(taskId: number): Promise<number | null> {
-    const task = await this.taskRepository.findOne({ where: { id: taskId }, relations: ['story']});
+    const task = await this.taskRepository.findOne({ where: { id: taskId, deleted: false }, relations: ['story']});
     if (!task)
       return null;
     return task.story.projectId;
@@ -274,25 +284,40 @@ export class TaskService {
     return await this.storyService.hasUserPermissionForStory(userId, storyId, role);
   }
 
+  async hasTaskGotWork(taskId: number): Promise<boolean> {
+    return await this.taskUserTimeRepository.countBy({ taskId: taskId }) > 0;
+  }
+
   async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
+    if (!await this.taskExists(taskId))
+      return [];
     return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' }})
   }
 
   async getWorkOnTaskForUser(taskId: number, userId: number): Promise<TaskUserTime[]> {
+    if (!await this.taskExists(taskId))
+      return [];
     return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' }})
   }
 
   async getWorkOnTaskForUserByDate(taskId: number, userId: number, date: string): Promise<TaskUserTime | null> {
+    if (!await this.taskExists(taskId))
+      return null;
     const result = await this.taskUserTimeRepository.findOneBy({ taskId: taskId, userId: userId, date: date });
     return result || null;
   }
 
   async getLastWorkOnTask(taskId: number): Promise<TaskUserTime | null> {
+    if (!await this.taskExists(taskId))
+      return null;
     const result = await this.taskUserTimeRepository.findOne({ where: { taskId: taskId }, order: { date: 'DESC', remaining: 'DESC' } });
     return result || null;
   }
 
   async setWorkOnTask(date: string, taskId: number, userId: number, work: DeepPartial<TaskUserTime>): Promise<void> {
+    if (!await this.taskExists(taskId))
+      throw new ValidationException('Task does not exist');
+
     // We can't enter work for future
     if (moment(date, 'YYYY-MM-DD').isAfter(moment(), 'd'))
       throw new ValidationException('Can\'t enter work on task for future');
@@ -304,6 +329,8 @@ export class TaskService {
   }
 
   async removeWorkOnTask(date: string, taskId: number, userId: number): Promise<void> {
+    if (!await this.taskExists(taskId))
+      throw new ValidationException('Task does not exist');
     await this.taskUserTimeRepository.delete({ date: date, taskId: taskId, userId: userId });
   }
 }

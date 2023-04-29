@@ -189,13 +189,15 @@ export class TaskController {
 
     // Can't delete active or ended tasks
     const task = await this.taskService.getTaskById(taskId);
-    
+    if (!task)
+      throw new NotFoundException();
+
     if (task.category === TaskCategory.ENDED)
       throw new ForbiddenException('Can\'t delete ended task');
 
     // After task is assigned it can be deleted only by assigned user, scrum master or admin 
     if (task.assignedUserId && task.assignedUserId !== token.sid && !token.isAdmin && !await this.storyService.hasUserPermissionForStory(task.storyId, token.sid, UserRole.ScrumMaster))
-      throw new ForbiddenException('Insufficient permissions to delete task');
+      throw new ForbiddenException('Assigned task can only be deleted by assigned user or scrum master');
     
     try {
       await this.taskService.deleteTask(taskId);
@@ -228,7 +230,9 @@ export class TaskController {
 
     // Check if task exists
     const task = await this.taskService.getTaskById(taskId);
-    
+    if (!task)
+      throw new NotFoundException();
+
     const hasOverridePermissions: boolean = token.isAdmin || await this.projectService.hasUserRoleOnProject(projectId, token.sid, UserRole.ScrumMaster);
 
     // User can accept task; admin and scrum master can reassign people
@@ -270,6 +274,8 @@ export class TaskController {
       throw new ForbiddenException("Task isn't part of active sprint");
 
     const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
 
     // User can only accept tasks that were assigned to him
     if (task.assignedUserId !== token.sid)
@@ -305,6 +311,8 @@ export class TaskController {
 
     // Check if someone is already assigned to task or if task even exitsts
     const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
 
     // User can assign only himself, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
@@ -367,6 +375,8 @@ export class TaskController {
 
     // Check if someone is already assigned to task or if task even exitsts
     const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
 
     // User can assign only himself, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
@@ -395,6 +405,8 @@ export class TaskController {
     
     // Check if someone is already assigned to task or if task even exitsts
     const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
 
     // User can assign only himself, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
@@ -423,6 +435,8 @@ export class TaskController {
     
     // Check if someone is already assigned to task or if task even exitsts
     const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
 
     // User can assign only himself, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
@@ -457,6 +471,8 @@ export class TaskController {
 
     // Check if user assigned to task
     const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
 
     // User can assign only himself, project scrum master can also others
     if ((token.sid !== userId || userId !== task.assignedUserId) && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
@@ -494,7 +510,9 @@ export class TaskController {
 
     // Check if user assigned to task
     const task = await this.taskService.getTaskById(taskId);
-
+    if (!task)
+      throw new NotFoundException();
+      
     // User can remove only his time, project scrum master can also others
     if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.projectService.hasUserRoleOnProject(await this.taskService.getTaskProjectId(taskId), token.sid, UserRole.ScrumMaster))
       throw new ForbiddenException("Can't rime time on task");
