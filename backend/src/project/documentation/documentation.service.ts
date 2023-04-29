@@ -62,17 +62,25 @@ export class DocumentationService {
       fileName = fileName.substring(0, fileName.lastIndexOf('.'));
     }
 
-    let count = 0;
-    while ((!newFilename || await this.fileInProjectDirExists(projectId, newFilename)) && count < 1000) {
-      if (!newFilename) {
-        newFilename = fileName + ext;
-      } else {
-        newFilename = `${fileName}_${moment().format('hhmmss_DDMMYYYY')}_${Math.floor(Math.random() * 1000)}${ext}`;
+    if (!this.configService.get<boolean>('UPLOAD_OVERWRITE')) {
+      let count = 0;
+      while ((!newFilename || await this.fileInProjectDirExists(projectId, newFilename)) && count < 1000) {
+        if (!newFilename) {
+          newFilename = fileName + ext;
+        } else {
+          newFilename = `${fileName}_${moment().format('hhmmss_DDMMYYYY')}_${Math.floor(Math.random() * 1000)}${ext}`;
+        }
+        count++;
+        if (count > 500)
+          throw new Error("Duplicate filename");
       }
-      count++;
-      if (count > 500)
-        throw new Error("Duplicate filename");
+    } else {
+      newFilename = fileName + ext;
     }
+    
+    // Remove existing file
+    if (await this.fileInProjectDirExists(projectId, newFilename))
+      await fs.promises.rm(this.getFileInProjectDirPath(projectId, newFilename));
 
     await fs.promises.rename(filePath, this.getFileInProjectDirPath(projectId, newFilename));
   }

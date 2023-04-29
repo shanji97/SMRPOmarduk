@@ -9,6 +9,8 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   STATIC_DIR: Joi.string().default('static'),
   DATA_DIR: Joi.string().default('data'),
 
+  UPLOAD_OVERWRITE: Joi.boolean().default(true),
+
   CONFIG: Joi.string(),
   IGNORE_CONFIG: Joi.boolean(),
 
