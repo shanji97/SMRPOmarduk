@@ -48,6 +48,9 @@ export class DocumentationController {
     @Param('projectId', ParseIntPipe) projectId: number,
     @UploadedFile() file,
   ) {
+    if (!file)
+      throw new BadRequestException('No file');
+
     // Check permissions
     if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, null))
       throw new ForbiddenException('Unsufficient permissions');

@@ -11,7 +11,7 @@ export class TaskUserTime {
   @PrimaryColumn({ unsigned: true })
   taskId: number;
 
-  @ManyToOne(type => Task, task => task.userTime, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  @ManyToOne(type => Task, task => task.userTime, { onUpdate: 'CASCADE', onDelete: 'RESTRICT' })
   task: Task;
 
   @PrimaryColumn({ unsigned: true })
