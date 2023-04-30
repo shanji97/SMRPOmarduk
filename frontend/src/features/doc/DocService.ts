@@ -8,12 +8,13 @@ const PROJECT_API_URL = `${getBaseUrl()}/api/project`;
 const uploadFile = async ({ file, projectId }: { file: FormData, projectId: string }, token: string) => {
     const config = {
         headers: {
-            Authorization: `JWT ${token}`
+            Authorization: `JWT ${token}`,
         }
     }
 
     // TODO
     projectId = "3"
+    console.log(file);
 
     const response = await axios.post(`${PROJECT_API_URL}/${projectId}/documentation/upload`, file, config);
 

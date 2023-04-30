@@ -17,7 +17,6 @@ const Editor: React.FC<EditorProps> = ({ content }) => {
   }, [content]);
 
   const [markdownText, setMarkdownText] = useState(content);
-  console.log(markdownText);
 
   function handleEditorChange({ text }: { text: string }) {
     setMarkdownText(text);
@@ -33,7 +32,7 @@ const Editor: React.FC<EditorProps> = ({ content }) => {
 
     let projectId = "3";
 
-    dispatch(upload({ file: formData, projectId }));
+    // dispatch(upload({ file: formData, projectId }));
   };
 
   const mdParser = new MarkdownIt(/* Markdown-it options */);
@@ -42,11 +41,10 @@ const Editor: React.FC<EditorProps> = ({ content }) => {
     <>
       <MdEditor
         value={markdownText}
-        style={{ height: "500px" }}
+        style={{ height: "700px" }}
         renderHTML={(text: any) => mdParser.render(text)}
         onChange={handleEditorChange}
       />
-      <button onClick={handleSave}>Save</button>
     </>
   );
 };

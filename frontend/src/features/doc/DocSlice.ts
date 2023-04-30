@@ -5,8 +5,10 @@ let user = JSON.parse(localStorage.getItem('user')!);
 
 interface DocState {
     isLoading: boolean
-    isSuccess: boolean
-    isError: boolean
+    isUploadSuccess: boolean
+    isDownloadSuccess: boolean
+    isUploadError: boolean
+    isDownloadError: boolean
     message: any
     fileNames: string[]
     downloadedFile: string
@@ -14,8 +16,10 @@ interface DocState {
 
 const initialState: DocState = {
     isLoading: false,
-    isSuccess: false,
-    isError: false,
+    isUploadSuccess: false,
+    isDownloadSuccess: false,
+    isDownloadError: false,
+    isUploadError: false,
     message: '',
     fileNames: [],
     downloadedFile: ""
@@ -59,8 +63,10 @@ export const docSlice = createSlice({
     reducers: {
         reset: (state) => {
             state.isLoading = false
-            state.isError = false
-            state.isSuccess = false
+            state.isUploadError = false
+            state.isDownloadError = false
+            state.isUploadSuccess = false
+            state.isDownloadSuccess = false
             state.message = ''
         },
     },
@@ -71,30 +77,14 @@ export const docSlice = createSlice({
             })
             .addCase(upload.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isUploadSuccess = true;
+                state.isUploadSuccess = false;
                 state.message = '';
             })
             .addCase(upload.rejected, (state, action) => {
                 state.isLoading = false
-                state.isError = true
-                state.isSuccess = false;
-                state.message = action.payload
-            })
-            .addCase(getFilesList.pending, (state) => {
-                state.isLoading = true
-            })
-            .addCase(getFilesList.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
-                state.message = '';
-                state.fileNames = action.payload.files;
-            })
-            .addCase(getFilesList.rejected, (state, action) => {
-                state.isLoading = false
-                state.isError = true
-                state.isSuccess = false;
+                state.isUploadError = true
+                state.isUploadSuccess = false;
                 state.message = action.payload
             })
             .addCase(download.pending, (state) => {
@@ -102,15 +92,15 @@ export const docSlice = createSlice({
             })
             .addCase(download.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isDownloadSuccess = true;
+                state.isDownloadError = false;
                 state.message = '';
                 state.downloadedFile = action.payload;
             })
             .addCase(download.rejected, (state, action) => {
                 state.isLoading = false
-                state.isError = true
-                state.isSuccess = false;
+                state.isDownloadError = true
+                state.isDownloadSuccess = false;
                 state.message = action.payload
             })
             

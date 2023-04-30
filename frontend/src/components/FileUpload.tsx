@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useFetcher } from "react-router-dom";
 import { getFilesList } from "../features/doc/DocSlice";
+import { Form } from "react-bootstrap";
 
 // interface Props {
 //   onFileUpload: (file: File) => void;
@@ -31,8 +32,10 @@ const FileUploader = () => {
 
   return (
     <div>
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Import</button>
+      <Form.Group controlId="formFileSm" className="mb-3">
+        <Form.Control type="file" size="sm" />
+        <Form.Label>Import a ".md" documentation file.</Form.Label>
+      </Form.Group>
     </div>
   );
 };
