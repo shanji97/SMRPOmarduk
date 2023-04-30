@@ -148,7 +148,6 @@ const Task: React.FC<TaskProps> = ({ task }) => {
 
         <td>{hoursSpentInTotal}h</td>
         <td>{`${workLogs?.[workLogs.length - 1]?.remaining}h` ?? "/"}</td>
-        <td>{task.estimatedTime}</td>
         <td>
           <Button
             variant="outline-primary"

@@ -61,7 +61,6 @@ export const getAllStoryById = createAsyncThunk('/story/getAllStoryById', async 
         return await storyService.getAllStoryById(projectId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-        console.log(message);
         return thunkAPI.rejectWithValue(message)
     }  
 });

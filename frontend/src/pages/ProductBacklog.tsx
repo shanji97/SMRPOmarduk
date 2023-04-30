@@ -134,12 +134,10 @@ function ProductBacklog() {
 
   //console.log(SprintSelector)
   useEffect(() => {
-    if (isSuccess && !isLoading) {
-      //dispatch(reset);
-      toast.success(message);
+    if (isSuccess && !isLoading && message !== '') {
+      toast.success(message)
     }
-    if (isError && !isLoading) {
-      //dispatch(reset);
+    if (isError && !isLoading && message !== '') {
       toast.error(message);
     }
   }, [isSuccess, isError, isLoading]);
@@ -250,7 +248,6 @@ function ProductBacklog() {
 
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -317,7 +314,6 @@ function ProductBacklog() {
       produce(current, (draft) => {
         // dropped outside the list
         if (!destination || destination.droppableId === source.droppableId) {
-          console.log("istu");
           return;
         }
 
