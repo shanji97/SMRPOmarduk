@@ -84,6 +84,16 @@ export const voteForRound = createAsyncThunk('poker/voteForRound', async (body: 
   }
 });
 
+export const endPlanningPoker = createAsyncThunk('poker/endPlanningPoker', async (body: {roundId: string, acceptResult: boolean}, thunkAPI: any) => {
+  try {
+    const token = JSON.parse(localStorage.getItem('user')!).token;
+    return await planningPokerService.endPlanningPoker(body, token);
+  } catch (error: any) {
+    const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+    return thunkAPI.rejectWithValue(message)
+  }
+});
+
 export const planningPokerSlice = createSlice({
   name: 'poker',
   initialState,
@@ -144,6 +154,13 @@ export const planningPokerSlice = createSlice({
         state.isSuccess = false;
         state.isError = true
         state.message = action.payload
+        state.activeRound = {
+          id: '',
+          storyId: '',
+          dateEnded: '',
+          dateStarted: '',
+          votes: [],
+        }
       })
       .addCase(newPokerRound.pending, (state) => {
         state.isLoading = true

@@ -16,7 +16,7 @@ const VotesContainer: React.FC<VotesContainerProps> = ({activeRoundId}) => {
   }
 
   const possibleVotes = useMemo(() => (
-    HOURS.map(hour => <Button onClick={() => {voteForHour(hour)}} variant='outline-primary' style={{margin: '.2rem'}}>{hour}</Button>)
+    HOURS.map(hour => <Button key={hour} onClick={() => {voteForHour(hour)}} variant='outline-primary' style={{margin: '.2rem'}}>{hour}</Button>)
   ), [HOURS]);
 
   return <div>
