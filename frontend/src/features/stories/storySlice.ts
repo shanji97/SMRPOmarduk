@@ -11,6 +11,9 @@ interface StoryState {
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
+    isStoriesLoading: boolean
+    isStoriesSuccess: boolean
+    isStoriesError: boolean
     message: any
     isUpdateSuccess: boolean
     isUpdateError: boolean
@@ -18,8 +21,12 @@ interface StoryState {
     isDeleteError: boolean
     isRejectError: boolean
     isRejectSuccess: boolean
+    isRejectLoading: boolean
     isSuccessConfirm: boolean
     isSuccessLoading: boolean
+    isCategoryLoading: boolean
+    isCategorySuccess: boolean
+    isCategoryError: boolean
 }
 
 const initialState: StoryState = {
@@ -29,6 +36,9 @@ const initialState: StoryState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
+    isStoriesLoading: false,
+    isStoriesSuccess: false,
+    isStoriesError: false,
     isUpdateSuccess: false,
     isUpdateError: false,
     isDeleteSuccess: false,
@@ -36,8 +46,12 @@ const initialState: StoryState = {
     message: '',
     isRejectError: false,
     isRejectSuccess: false,
+    isRejectLoading: false,
     isSuccessConfirm: false,
-    isSuccessLoading: false
+    isSuccessLoading: false,
+    isCategoryLoading: false,
+    isCategorySuccess: false,
+    isCategoryError: false,
 }
 
 
@@ -149,14 +163,22 @@ export const storySlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isStoriesLoading = false
+            state.isStoriesError = false
+            state.isStoriesSuccess = false
             state.isDeleteError = false
             state.isDeleteSuccess = false
             state.isUpdateSuccess = false
             state.isUpdateError = false
             state.message = ''
+            state.isRejectSuccess = false
             state.isRejectError = false
+            state.isRejectLoading = false
             state.isSuccessConfirm = false
             state.isSuccessLoading = false
+            state.isCategoryLoading = false
+            state.isCategoryError = false
+            state.isCategorySuccess = false
         }
     },
     extraReducers: builder => {
@@ -177,19 +199,19 @@ export const storySlice = createSlice({
                 state.message = action.payload
             })
             .addCase(getAllStoryById.pending, (state) => {
-                state.isLoading = true
+                state.isStoriesLoading = true
             })
             .addCase(getAllStoryById.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isStoriesLoading = false;
+                state.isStoriesSuccess = true;
+                state.isStoriesError = false;
                 state.message = '';
                 state.stories = action.payload
             })
             .addCase(getStoriesForSprint.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
+                state.isStoriesLoading = false
+                state.isStoriesSuccess = false;
+                state.isStoriesError = true
                 state.message = action.payload
             })
             .addCase(getStoriesForSprint.pending, (state) => {
@@ -249,24 +271,27 @@ export const storySlice = createSlice({
                 state.message = action.payload
             })
             .addCase(updateStoryCategory.pending, (state) => {
-                state.isLoading = true
+                state.isCategoryLoading = true
             })
             .addCase(updateStoryCategory.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isCategoryLoading = false;
+                state.isCategorySuccess = true;
+                state.isCategoryError = false;
                 state.message = '';
-                state.stories = action.payload;
+                //state.stories = action.payload;
+                console.log("zgodbice-updateTimeComplexity");
+                console.log(state.stories);
+                console.log(action);
 
             })
             .addCase(updateStoryCategory.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
-                state.message = action.payload
+                state.isCategoryLoading = false;
+                state.isCategorySuccess = false;
+                state.isCategoryError = true;
+                state.message = action.payload;
             })
             .addCase(updateTimeComplexity.pending, (state) => {
-                state.isLoading = true
+                state.isLoading = true;
             })
             .addCase(updateTimeComplexity.fulfilled, (state, action) => {
                 state.isLoading = false;
@@ -274,7 +299,7 @@ export const storySlice = createSlice({
                 state.isError = false;
                 state.message = '';
                 state.stories = action.payload;
-                console.log(state.stories);
+                
                 /*
                 const obj = action.meta.arg;
                 const index = state.stories.findIndex(story => story.id === obj.storyId);
@@ -295,10 +320,10 @@ export const storySlice = createSlice({
                 state.message = action.payload
             })
             .addCase(rejectStory.pending, (state) => {
-                state.isLoading = true
+                state.isRejectLoading = true
             })
             .addCase(rejectStory.fulfilled, (state, action) => {
-                state.isLoading = false;
+                state.isRejectLoading = false;
                 state.isRejectSuccess = true;
                 state.isRejectError = false;
                 state.message = '';
@@ -306,11 +331,10 @@ export const storySlice = createSlice({
                 
             })
             .addCase(rejectStory.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true;
-                state.message = action.payload;
+                state.isRejectLoading = false
                 state.isRejectSuccess = false;
+                state.isRejectError = true;
+                state.message = action.payload;
             })
             .addCase(confirmStory.pending, (state) => {
                 state.isLoading = true

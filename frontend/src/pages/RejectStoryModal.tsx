@@ -6,28 +6,25 @@ import {
   getAllStoryById,
   rejectStory,
   reset,
+  updateStoryCategory,
 } from "../features/stories/storySlice";
 import { toast } from "react-toastify";
+import { getAllSprints } from "../features/sprints/sprintSlice";
+import { getActiveProject, getProjectUserRoles } from "../features/projects/projectSlice";
 
 export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
   show: boolean;
   elements: {item: StoryData, status: string, index: number};
-  handleReject: (args: {
-    status: string,
-    index: number,
-    destination: string
-  }) => void;
 }
 
 function RejectStoryModal({
   onCancel,
   show,
-  elements,
-  handleReject
+  elements
 }: DeleteConfirmationProps) {
   const dispatch = useAppDispatch();
-  let { isRejectSuccess, isLoading, isRejectError, message } = useAppSelector(
+  let { isRejectSuccess, isRejectLoading, isRejectError, message } = useAppSelector(
     (state) => state.stories
   );
   let { activeProject } = useAppSelector((state) => state.projects);
@@ -44,21 +41,27 @@ function RejectStoryModal({
     setDescriptionTouched(true);
   };
 
-  
-  
+
 
   useEffect(() => {
-    if (isRejectSuccess && !isLoading) {
+    if (isRejectSuccess && !isRejectLoading) {
+      
       toast.success("Story successfully Rejected");
-      handleReject({status: elements.status,index: elements.index, destination: "Unallocated"})
-      //dispatch(reset());
-      //dispatch(getAllStoryById(activeProject.id!));
+      
+      let projectRoleData = {
+        projectId: parseInt(activeProject?.id || ""),
+        category: 1,
+        storyId: elements.item.id || "",
+      };
+      
+      dispatch(updateStoryCategory(projectRoleData));
+      dispatch(reset());
       onCancel();
     }
-    if (isRejectError && !isLoading) {
+    if (isRejectError && !isRejectLoading) {
       toast.error(message);
     }
-  }, [isRejectSuccess, isRejectError, isLoading]);
+  }, [isRejectSuccess, isRejectError, isRejectLoading]);
 
 
 
@@ -67,8 +70,6 @@ function RejectStoryModal({
 
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-
     setDescriptionTouched(true);
   
 
@@ -94,7 +95,7 @@ function RejectStoryModal({
         <Modal.Title>Rejec Confirmation</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        Are you sure you want to reject story #
+        Are you sure you want to reject story # 
         <strong>{`${elements.item.sequenceNumber} ${elements.item.title}`}</strong>?
         <Form onSubmit={submitFormHandler}>
         <Form.Group className="mb-4 mt-3" controlId="form-description">

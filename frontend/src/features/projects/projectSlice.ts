@@ -13,6 +13,9 @@ export interface ProjectState {
     message: any
     projects: ProjectData[]
     activeProject: ProjectData
+    isActiveProjectLoading: boolean
+    isActiveProjectSuccess: boolean
+    isActiveProjectError: boolean
 }
 
 const initialState: ProjectState = {
@@ -21,6 +24,9 @@ const initialState: ProjectState = {
     isLoading: false,
     isSuccess: false,
     isEditSuccess: false,
+    isActiveProjectLoading: false,
+    isActiveProjectSuccess: false,
+    isActiveProjectError: false,
     isError: false,
     message: '',
     projects: [],
@@ -111,6 +117,9 @@ export const projectSlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isActiveProjectLoading = false
+            state.isActiveProjectError = false
+            state.isActiveProjectSuccess = false
             state.isEditSuccess = false
             state.message = ''
         }
@@ -133,23 +142,32 @@ export const projectSlice = createSlice({
             state.message = action.payload
         })
           .addCase(getActiveProject.pending, (state) => {
-              state.isLoading = true
+              state.isLoading = true;
+              state.isActiveProjectLoading = true
           })
           .addCase(getActiveProject.fulfilled, (state, action) => {
               state.isLoading = false;
               state.isSuccess = true;
               state.isError = false;
+              state.isActiveProjectLoading = false;
+              state.isActiveProjectSuccess = true;
+              state.isActiveProjectError = false;
               state.message = '';
               state.activeProject = action.payload;
           })
           .addCase(getActiveProject.rejected, (state, action) => {
               state.isLoading = false
               state.isSuccess = false;
-              state.isError = true
+              state.isError = true;
+              state.isActiveProjectLoading = false
+              state.isActiveProjectSuccess = false;
+              state.isActiveProjectError = true;
               state.message = action.payload
+
           })
         .addCase(getAllProjects.pending, (state) => {
             state.isLoading = true
+            
         })
         .addCase(getAllProjects.fulfilled, (state, action) => {
             state.isLoading = false;
@@ -161,8 +179,8 @@ export const projectSlice = createSlice({
         .addCase(getAllProjects.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
-            state.isError = true
-            state.message = action.payload
+            state.isError = true;
+            state.message = action.payload;
         })
         .addCase(getProject.pending, (state) => {
             state.isLoading = true

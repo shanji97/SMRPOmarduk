@@ -1,18 +1,18 @@
 import { Fragment, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { Button } from "react-bootstrap";
-import { getTasksForStory, reset } from "../features/tasks/taskSlice";
+import { getTaskForUser, getTasksForStory, reset } from "../features/tasks/taskSlice";
 import LogTimeModal from "./LogTimeModal";
 import Task from "./Task";
 import { toast } from "react-toastify";
-import {TaskProps} from "../classes/taskData"
+
 interface TasksProps {
   stories: any;
 }
 
 const Tasks: React.FC<TasksProps> = ({ stories }) => {
   const dispatch = useAppDispatch();
-  
+
   //const [tasks, setTasks] = useState<any[]>([]);
   const {
     currentlyWorkingOnTaskId,
@@ -31,6 +31,8 @@ const Tasks: React.FC<TasksProps> = ({ stories }) => {
         toast.success("Stopped timer!");
       }
       dispatch(reset());
+      
+     
     }
     if (isTimerError && !isLoading) {
       toast.error(message);
@@ -38,19 +40,18 @@ const Tasks: React.FC<TasksProps> = ({ stories }) => {
     }
   }, [isTimerSuccess, isTimerError, isLoading]);
 
-
-/*
+  /*
     useEffect(() => {
         if (tasksForStory.length > 0) {
             setTasks(tasksForStory);
         }
     }, [tasksForStory]);
 */
-    return (
-        <Fragment>
-              <Task key={stories.id} task={stories} />
-        </Fragment>
-    )
-}
+  return (
+    <Fragment>
+      <Task key={stories.id} task={stories} />
+    </Fragment>
+  );
+};
 
 export default Tasks;

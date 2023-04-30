@@ -37,7 +37,7 @@ import {
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 
 import produce from "immer";
@@ -54,7 +54,10 @@ import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
-import { getActiveProject } from "../features/projects/projectSlice";
+import {
+  getActiveProject,
+  getProject,
+} from "../features/projects/projectSlice";
 import {
   addStoryToSprint,
   getActiveSprint,
@@ -63,12 +66,11 @@ import {
 } from "../features/sprints/sprintSlice";
 import { StorySprint } from "../classes/sprintData";
 import Projects from "./Projects";
-import { getProjectUserRoles } from  "../features/projects/projectSlice";
+import { getProjectUserRoles } from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
 
 import { toast } from "react-toastify";
 import RejectStoryModal from "./RejectStoryModal";
-
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -80,9 +82,6 @@ import RejectStoryModal from "./RejectStoryModal";
 //npm install --save react-bootstrap
 //npm install bootstrap --save
 
-  
-
-
 const defaultItems = {
   [ProductBacklogItemStatus.WONTHAVE]: [],
   [ProductBacklogItemStatus.UNALLOCATED]: [],
@@ -90,33 +89,38 @@ const defaultItems = {
   [ProductBacklogItemStatus.DONE]: [],
 };
 
-
-
 type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
+  const { projectID } = useParams();
 
+  useEffect(() => {
+    if (projectID !== undefined) {
+      dispatch(getProject(projectID));
+    }
+  }, [projectID]);
 
+  let projectsState = useAppSelector((state) => state.projects);
 
-  const { activeProject, userRoles } = useAppSelector((state) => state.projects);
-
-
-  
-  const projectVar = useAppSelector((state) => state.projects);
-  //dispatch(getActiveProject());
-  //helper funkcija za updatat useState
-  const [sgs, setSgs] = useState("undefined");
-
-  let { stories, isSuccess, isLoading, isError, message, isSuccessConfirm, isSuccessLoading } = useAppSelector(
-    (state) => state.stories
-  );
-  let projectroles = useAppSelector((state) => state.projects);
+  let {
+    stories,
+    isSuccess,
+    isLoading,
+    isError,
+    message,
+    isStoriesSuccess,
+    isStoriesLoading,
+    isStoriesError,
+    isCategoryError,
+    isCategorySuccess,
+    isCategoryLoading
+  } = useAppSelector((state) => state.stories);
   let SprintSelector = useAppSelector((state) => state.sprints);
-  
+
   useEffect(() => {
     if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
-      toast.success("Story successfully Added to sprint!");
+      toast.success(SprintSelector.message);
       //dispatch(reset());
     }
     if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
@@ -124,88 +128,84 @@ function ProductBacklog() {
     }
   }, [
     SprintSelector.isStoryInSprint,
-    SprintSelector.isNotStoryInSprint ,
+    SprintSelector.isNotStoryInSprint,
     SprintSelector.isLoading,
   ]);
-
-
-
- 
 
   //console.log(SprintSelector)
   useEffect(() => {
     if (isSuccess && !isLoading) {
       //dispatch(reset);
-      toast.success(message)
-      console.log("kul");
+      toast.success(message);
     }
     if (isError && !isLoading) {
       //dispatch(reset);
       toast.error(message);
-      console.log("error");
     }
   }, [isSuccess, isError, isLoading]);
 
-  useEffect(() => {
-    if (isSuccessConfirm && !isSuccessLoading) {
-      //dispatch(reset);
-      if (tempDataApproved) {
-        handleDragCustom({status: tempDataApproved.status!, index: tempDataApproved.index!,destination: 'Done'})  
-      }
-    }
-  }, [isSuccessConfirm, isSuccessLoading]);
 
-  
- 
-  useEffect(() => {
-    
-    if (projectVar.isSuccess && !projectVar.isLoading) {
-     
-      if (activeProject) {
-      dispatch(getActiveProject());
-      console.log(activeProject)
-      }
-      //dispatch(reset);
-    }
-  }, [projectVar.isSuccess]);
 
   useEffect(() => {
-    
-    if (activeProject.id) {
-      dispatch(getAllStoryById(activeProject.id!));
-      dispatch(getAllSprints(activeProject.id!));
-      dispatch(getProjectUserRoles(activeProject.id!))
-      console.log(activeProject)
-    }
-  }, [activeProject]);
+    dispatch(getActiveProject());
+  }, []);
 
   useEffect(() => {
-    
+    if (projectsState.isActiveProjectSuccess && !projectsState.isActiveProjectLoading) {
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+      dispatch(getAllSprints(projectsState.activeProject.id!));
+      dispatch(getProjectUserRoles(projectsState.activeProject.id!));
+    }
+    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading) {
+      toast.error(projectsState.message);
+    }
+  }, [projectsState.isActiveProjectSuccess, projectsState.isActiveProjectLoading, projectsState.isActiveProjectError]);
+
+
+
+  useEffect(() => {
+    if (isCategorySuccess && !isCategoryLoading) {
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+    }
+    if (isCategoryError && !isCategoryLoading) {
+      toast.error(message);
+    }
+  }, [isCategoryError, isCategorySuccess, isCategoryLoading]);
+
+
+
+  useEffect(() => {
     if (SprintSelector.isSuccessActive) {
-      console.log("active")
-      dispatch(getActiveSprint(activeProject.id!))
+      console.log("active");
+      dispatch(getActiveSprint(projectsState.activeProject.id!));
     }
   }, [SprintSelector.isSuccessActive]);
 
-
   useEffect(() => {
-    
-    if (activeProject.id) {
-      const dataArray = Object.values(userRoles);
-      const filteredDataScramMaster = dataArray.filter(item => item.role === 1);
-      const filteredDataProductOwner = dataArray.filter(item => item.role === 2);
+    if (projectsState.activeProject.id) {
+      const dataArray = Object.values(projectsState.userRoles);
+      const filteredDataScramMaster = dataArray.filter(
+        (item) => item.role === 1
+      );
+      const filteredDataProductOwner = dataArray.filter(
+        (item) => item.role === 2
+      );
       if (filteredDataScramMaster) {
-        setScrumMasterId(filteredDataScramMaster[0].userId)
+        setScrumMasterId(filteredDataScramMaster[0].userId);
       }
       if (filteredDataProductOwner) {
-        setScrumProductOwnerId(filteredDataProductOwner[0].userId)
+        setScrumProductOwnerId(filteredDataProductOwner[0].userId);
       }
-      
     }
-  }, [userRoles]);
+  }, [projectsState.userRoles]);
 
-//console.log(projectroles.userRoles)
 
+  
+  
+
+  
+
+  //console.log(projectroles.userRoles)
 
   //uporabniki
   let { users, user } = useAppSelector((state) => state.users);
@@ -232,45 +232,21 @@ function ProductBacklog() {
     const userData = parseJwt(token);
     setIsAdmin(userData.isAdmin);
     setUserName(userData.sub);
-    setUserId(userData.sid)
+    setUserId(userData.sid);
   }, [user]);
 
   const isUserScramMaster = () => {
-    if (scrumMasterId === userId && userId && scrumMasterId)
-    return true;
+    if (scrumMasterId === userId && userId && scrumMasterId) return true;
     else return false;
-    
   };
   const isUserProductOwn = () => {
-    if (productOwnerId === userId && userId && productOwnerId)
-    return true;
+    if (productOwnerId === userId && userId && productOwnerId) return true;
     else return false;
-    
   };
 
-
-  
-//console.log(isUserScramMaster())
-
-
-
-  // NOTE: temporary fix, change this if needed
-  /*
-  useEffect(() => {
-    if (isSuccess && !isLoading) {
-      dispatch(reset());
-    }
-    if (isError && !isLoading) {
-      dispatch(reset());
-    }
-  }, [isSuccess, isError, isLoading]);
-
-  */
-  //let stories = useAppSelector((state) => state.stories);
+ 
   //console.log(stories)
   const navigate = useNavigate();
-
-  
 
   useEffect(() => {
     if (user === null) {
@@ -332,36 +308,7 @@ function ProductBacklog() {
     destination: string;
   }) => void;
 
-  
-  const handleDragCustom: HandrejectFunc = ({ status, index, destination }) =>
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        //item, damo na unasigned
-        const dest = destination;
-       /*
-        const niki = draft[
-                  status as ProductBacklogItemStatus
-                ][index];
-              */  
-        const [removed] = draft[
-          status as ProductBacklogItemStatus
-        ].splice(index, 1);
 
-        draft[dest as ProductBacklogItemStatus].splice(
-          0,
-          0,
-          removed
-        );
-        let projectRoleData = {
-          projectId: parseInt(activeProject?.id || ""),
-          category: categoryChange(dest),
-          storyId: removed.id || "",
-        };
-        dispatch(updateStoryCategory(projectRoleData));
-      })
-    );
-
-    
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
     destination,
@@ -370,24 +317,30 @@ function ProductBacklog() {
       produce(current, (draft) => {
         // dropped outside the list
         if (!destination || destination.droppableId === source.droppableId) {
-          console.log("istu")
+          console.log("istu");
           return;
         }
 
-        
         if (destination.droppableId === "Allocated") {
-          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+          if (
+            SprintSelector.activeSprint?.velocity ==
+            itemsByStatus["Allocated"].length
+          ) {
             toast.error("Sprint Velocity is full");
-      
+
             return;
-           
           }
         }
-        if (source.droppableId === "Unallocated" && destination.droppableId === "Done") {
-          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+        if (
+          source.droppableId === "Unallocated" &&
+          destination.droppableId === "Done"
+        ) {
+          if (
+            SprintSelector.activeSprint?.velocity ==
+            itemsByStatus["Allocated"].length
+          ) {
             toast.error("Story is not in active Sprint and is not realised");
             return;
-
           }
         }
 
@@ -395,7 +348,7 @@ function ProductBacklog() {
         const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
                 ][source.index];
-           */    
+           */
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -406,45 +359,35 @@ function ProductBacklog() {
           removed
         );
         let projectRoleData = {
-          projectId: parseInt(activeProject?.id || ""),
+          projectId: parseInt(projectsState.activeProject?.id || ""),
           category: categoryChange(destination.droppableId),
           storyId: removed.id || "",
         };
         dispatch(updateStoryCategory(projectRoleData));
 
-        if (destination.droppableId === "Allocated" && destination.droppableId != source.droppableId) {
+        if (
+          destination.droppableId === "Allocated" &&
+          destination.droppableId != source.droppableId
+        ) {
           const storySprint: StorySprint = {
             sprintId: parseInt(SprintSelector.activeSprint?.id || ""),
-            storyId: parseInt(removed.id || "")
-          
-        };
-        dispatch(addStoryToSprint(storySprint)); 
-        } 
+            storyId: parseInt(removed.id || ""),
+          };
+          dispatch(addStoryToSprint(storySprint));
+        }
         //itemsByStatus[destination.droppableId].length
-        
-        if (source.droppableId === "Allocated" && destination.droppableId != "Done") {
-          
-        };
+
+        if (
+          source.droppableId === "Allocated" &&
+          destination.droppableId != "Done"
+        ) {
+        }
       })
     );
   };
 
-  type HandleDeleteFunc = (args: {
-    status: ProductBacklogItemStatus;
-    itemToDelete: StoryData;
-  }) => void;
+  
 
-  const handleDelete: HandleDeleteFunc = ({ status, itemToDelete }) =>
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        draft[status] = draft[status].filter(
-          (item) => item.id !== itemToDelete.id
-        );
-        setShow(false);
-        dispatch(deleteStory(itemToDelete.id!));
-        dispatch(getAllStoryById(activeProject.id!));
-      })
-    );
 
   //za beleženje časa
   const [itemVisibility, setItemVisibility] = useState<{
@@ -467,31 +410,26 @@ function ProductBacklog() {
       e.preventDefault();
       handleFormToggle(itemId);
 
-      
-
       let projectRoleData = {
         timeComplexity: itemTime[itemId],
         storyId: itemId,
       };
       dispatch(updateTimeComplexity(projectRoleData));
-
     };
   const handleKeyDown = (e: any) => {
     e.preventDefault();
 
     const val = e.target.value;
-    const targetId = e.target.id
-    
+    const targetId = e.target.id;
+
     if (val.length > 0 && /^\d+$/.test(val)) {
       setItemTime((prev) => {
         const newState = { ...prev };
         newState[targetId] = val;
         return newState;
       });
-  }
+    }
 
-    
-    
     //else if (e.target.value == '') dispatch(updateTimeComplexity(projectRoleData2));
     //dispatch(getAllStory());
   };
@@ -503,8 +441,15 @@ function ProductBacklog() {
     //console.log(itemsByStatus)
 
     //console.log("doblejni podatki1")
-    if (isSuccess) {
+      //dispatch(getAllStoryById(projectsState.activeProject.id!));
+
       resetState();
+      if (isStoriesSuccess && !isStoriesLoading) {
+      
+
+        //dispatch(reset());
+        //dispatch(getAllStoryById(projectsState.activeProject.id!));
+
       setItemsByStatus((current) =>
         produce(current, (draft) => {
           //for (const status of Object.values(ProductBacklogItemStatus)) {
@@ -514,54 +459,58 @@ function ProductBacklog() {
           const isEmpty = Object.values(current).every(
             (value) => value.length === 0
           );
-
+          console.log("zgodbice")
+          console.log(stories)
           // Adding new item as "to do"
           //console.log("zgodbice ob updatu")
           //console.log(stories)
           const visibilityObject: { [itemId: string]: boolean } = {};
           const insertTimeObject: { [itemId: string]: number } = {};
           if (stories) {
-          stories.forEach((story: StoryData) => {
-            //za beleženje časa init values
+            stories.forEach((story: StoryData) => {
+              //za beleženje časa init values
 
-            visibilityObject[story.id!] = false;
-            //za beleženje vnosa časa
-            insertTimeObject[story.id!] = story.timeComplexity;
-           
-            
-            //storyi
-            let cat;
-            if (story.priority === 0) {
-              cat = category(0);
-            } else {
-              cat = category(story.category);
-            }
+              visibilityObject[story.id!] = false;
+              //za beleženje vnosa časa
+              insertTimeObject[story.id!] = story.timeComplexity;
 
-            draft[
-              ProductBacklogItemStatus[
-                cat as keyof typeof ProductBacklogItemStatus
-              ]
-            ].push({
-              id: story.id?.toString(),
-              title: story.title,
-              description: story.description,
-              tests: story.tests,
-              priority: story.priority,
-              businessValue: story.businessValue,
-              sequenceNumber: story.sequenceNumber,
-              category: story.category,
-              timeComplexity: story.timeComplexity,
-              isRealized: story.isRealized,
+              //storyi
+              let cat;
+              if (story.priority === 0) {
+                cat = category(0);
+              } else {
+                cat = category(story.category);
+              }
+
+              draft[
+                ProductBacklogItemStatus[
+                  cat as keyof typeof ProductBacklogItemStatus
+                ]
+              ].push({
+                id: story.id?.toString(),
+                title: story.title,
+                description: story.description,
+                tests: story.tests,
+                priority: story.priority,
+                businessValue: story.businessValue,
+                sequenceNumber: story.sequenceNumber,
+                category: story.category,
+                timeComplexity: story.timeComplexity,
+                isRealized: story.isRealized,
+              });
             });
-          });
 
-          setItemVisibility(visibilityObject);
-          setItemTime(insertTimeObject);
-        }
+            setItemVisibility(visibilityObject);
+            setItemTime(insertTimeObject);
+          }
         })
       );
-    }
-  }, [isSuccess]);
+      }
+      if (isStoriesError && !isStoriesLoading) {
+        toast.error(message);
+      }
+    
+  }, [isStoriesSuccess, isStoriesLoading, isStoriesError]);
 
   //{Object.values.map(([columnId, column], index) => {
 
@@ -570,8 +519,6 @@ function ProductBacklog() {
 
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
-
-  
 
   const [showNewStoryModal, setShowNewStoryModal] = useState(false);
 
@@ -597,13 +544,7 @@ function ProductBacklog() {
   const hideEditStoryModal = () => {
     setShowEditStoryModal(false);
   };
-  const openRejectStoryModal = (item: StoryData, status: string, index: number) => {
-    setTempDataReject({item, status, index});
-    setShowRejectStoryModal(true);
-  };
-  const hideRejectStoryModal = () => {
-    setShowRejectStoryModal(false);
-  };
+  
   const initvalue: StoryData = {
     id: "",
     title: "",
@@ -623,19 +564,29 @@ function ProductBacklog() {
     //console.log(item);
     return setShowStory(true);
   };
-  const [tempDataReject, setTempDataReject] = useState<{item: StoryData, status: string, index: number}>();
+  const [tempDataReject, setTempDataReject] = useState<{
+    item: StoryData;
+    status: string;
+    index: number;
+  }>();
   const getDataReject = (item: StoryData, status: string, index: number) => {
-    setTempDataReject({item, status, index});
+    setTempDataReject({ item, status, index });
     //console.log(item);
     return setShowRejectStoryModal(true);
   };
-  const [tempDataApproved, setTempDataApproved] = useState<{item: StoryData, status: string, index: number}>();
+ 
   const getDataApproved = (item: StoryData, status: string, index: number) => {
-    setTempDataApproved({item, status, index});
+    //setTempDataApproved({ item, status, index });
     //console.log(item);
     dispatch(confirmStory(item.id!));
+    let projectRoleData = {
+      projectId: parseInt(projectsState.activeProject?.id || ""),
+      category: categoryChange("Done"),
+      storyId: item.id || "",
+    };
+    dispatch(updateStoryCategory(projectRoleData));
+    dispatch(reset());
   };
- 
 
   // utility function for edit story
   function getTestsForEdit(items: any): string[] {
@@ -653,7 +604,9 @@ function ProductBacklog() {
               <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
                 <Card className="bg-light border-0 ">
                   <div className="pt-3 hstack gap-2 mx-3">
-                    <Card.Title className="fs-6 my-0  text-truncate">{status}</Card.Title>
+                    <Card.Title className="fs-6 my-0  text-truncate">
+                      {status}
+                    </Card.Title>
                     <div className="vr my-0"></div>
                     <p className="fs-6 my-0">{itemsByStatus[status].length}</p>
                     {status === ProductBacklogItemStatus.UNALLOCATED && (
@@ -666,7 +619,9 @@ function ProductBacklog() {
                       </Button>
                     )}
                     {status === ProductBacklogItemStatus.ALLOCATED && (
-                      <p className="fs-6 my-0">/   {SprintSelector.activeSprint?.velocity}</p>
+                      <p className="fs-6 my-0">
+                        / {SprintSelector.activeSprint?.velocity}
+                      </p>
                     )}
                   </div>
                   <hr className="hr mx-3" />
@@ -691,15 +646,17 @@ function ProductBacklog() {
                                 draggableId={item.id!}
                                 index={index}
                                 isDragDisabled={
-
-                                  status === ProductBacklogItemStatus.WONTHAVE ||
-                                  !Boolean(itemTime[item.id!]) || !isUserScramMaster()
-                                  ? true
-                                  : status === ProductBacklogItemStatus.DONE
-                                  ? true
-                                  : status === ProductBacklogItemStatus.ALLOCATED
-                                  ? true
-                                  : undefined
+                                  status ===
+                                    ProductBacklogItemStatus.WONTHAVE ||
+                                  !Boolean(itemTime[item.id!]) ||
+                                  !isUserScramMaster()
+                                    ? true
+                                    : status === ProductBacklogItemStatus.DONE
+                                    ? true
+                                    : status ===
+                                      ProductBacklogItemStatus.ALLOCATED
+                                    ? true
+                                    : undefined
                                 }
                               >
                                 {(provided, snapshot) => {
@@ -719,41 +676,62 @@ function ProductBacklog() {
                                           <p className="fs-6 text-muted m-1">
                                             TSK-{item.sequenceNumber}
                                           </p>
-                                          {status === ProductBacklogItemStatus.ALLOCATED && isUserProductOwn() && (
-                                          <><p className="fs-6 text-muted m-1 mx-auto">Task Finished: </p>
-                                          <Button
-                                              className="m-0 p-0 px-2"
-                                              variant="danger"
-                                              onClick={() => getDataReject(item, status, index)}
-                                            >
-                                              Reject
-                                            </Button>
-                                            <Button
-                                              className="m-0 p-0 px-2"
-                                              variant="primary"
-                                              onClick={() => getDataApproved(item, status, index)}
-                                            >
-                                                Approve
-                                              </Button></>
-                                                )}
+                                          {status ===
+                                            ProductBacklogItemStatus.ALLOCATED &&
+                                            isUserProductOwn() && (
+                                              <>
+                                                <p className="fs-6 text-muted m-1 mx-auto">
+                                                  Task Finished:{" "}
+                                                </p>
+                                                <Button
+                                                  className="m-0 p-0 px-2"
+                                                  variant="danger"
+                                                  onClick={() =>
+                                                    getDataReject(
+                                                      item,
+                                                      status,
+                                                      index
+                                                    )
+                                                  }
+                                                >
+                                                  Reject
+                                                </Button>
+                                                <Button
+                                                  className="m-0 p-0 px-2"
+                                                  variant="primary"
+                                                  onClick={() =>
+                                                    getDataApproved(
+                                                      item,
+                                                      status,
+                                                      index
+                                                    )
+                                                  }
+                                                >
+                                                  Approve
+                                                </Button>
+                                              </>
+                                            )}
                                           {status !==
-                                                ProductBacklogItemStatus.WONTHAVE && (
-                                          <Dropdown className="ms-auto">
-                                            <Dropdown.Toggle
-                                              variant="link"
-                                              id="dropdown-custom-components"
-                                              bsPrefix="p-0"
-                                            >
-                                              <ThreeDots />
-
-                                            </Dropdown.Toggle>
-                                            <Dropdown.Menu>
-                                            {status !==
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() => {
-                                                    getDataReject(item, status, index)
-                                                    /*
+                                            ProductBacklogItemStatus.WONTHAVE && (
+                                            <Dropdown className="ms-auto">
+                                              <Dropdown.Toggle
+                                                variant="link"
+                                                id="dropdown-custom-components"
+                                                bsPrefix="p-0"
+                                              >
+                                                <ThreeDots />
+                                              </Dropdown.Toggle>
+                                              <Dropdown.Menu>
+                                                {status !==
+                                                  ProductBacklogItemStatus.UNALLOCATED && (
+                                                  <Dropdown.Item
+                                                    onClick={() => {
+                                                      getDataReject(
+                                                        item,
+                                                        status,
+                                                        index
+                                                      );
+                                                      /*
                                                     openRejectStoryModal(item.id!, status, index)
                                                     let handleRejectVar = {
                                                       status: status,
@@ -762,38 +740,41 @@ function ProductBacklog() {
                                                     };
                                                     handleReject(handleRejectVar);
                                                     */
+                                                    }}
+                                                  >
+                                                    <Eraser /> Reject
+                                                  </Dropdown.Item>
+                                                )}
+                                                {status ===
+                                                  ProductBacklogItemStatus.UNALLOCATED && (
+                                                  <Dropdown.Item
+                                                    onClick={() =>
+                                                      openEditStoryModal(item)
+                                                    }
+                                                  >
+                                                    <Pencil /> Edit
+                                                  </Dropdown.Item>
+                                                )}
+                                                {status ===
+                                                  ProductBacklogItemStatus.UNALLOCATED && (
+                                                  <Dropdown.Item
+                                                    onClick={() =>
+                                                      setShow(true)
+                                                    }
+                                                  >
+                                                    <Trash /> Delete
+                                                  </Dropdown.Item>
+                                                )}
+                                                <DeleteConfirmation
+                                                  item={item}
+                                                  status={status}
+                                                  onCancel={() =>
+                                                    setShow(false)
                                                   }
-                                                  }
-                                                >
-                                                  <Eraser /> Reject
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() =>
-                                                    openEditStoryModal(item)
-                                                  }
-                                                >
-                                                  <Pencil /> Edit
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() => setShow(true)}
-                                                >
-                                                  <Trash /> Delete
-                                                </Dropdown.Item>
-                                              )}
-                                              <DeleteConfirmation
-                                                item={item}
-                                                status={status}
-                                                onCancel={() => setShow(false)}
-                                                show={show}
-                                              />
-                                            </Dropdown.Menu>
-                                          </Dropdown>
+                                                  show={show}
+                                                />
+                                              </Dropdown.Menu>
+                                            </Dropdown>
                                           )}
                                         </Card.Header>
                                         <Card.Body>
@@ -859,7 +840,9 @@ function ProductBacklog() {
                                                         size="sm"
                                                         pattern="[0-9]*"
                                                         //value={itemTime[item.id!]}
-                                                        placeholder={itemTime[item.id!].toString()}
+                                                        placeholder={itemTime[
+                                                          item.id!
+                                                        ].toString()}
                                                         id={item.id}
                                                         onChange={handleKeyDown}
                                                         type="tel"
@@ -871,23 +854,26 @@ function ProductBacklog() {
                                                     </InputGroup>
                                                   </Form>
                                                 )}
-                                                {!itemVisibility[item.id!] && isUserScramMaster() &&   (
-                                                  <Button
-                                                    id={item.id}
-
-                                                    //isUserScramMaster
-                                                    onClick={() =>
-                                                      handleFormToggle(item.id!)
-                                                    }
-                                                    variant="link"
-                                                    className="m-0 p-0 float-end text-decoration-none"
-                                                  >
-                                                    {itemTime[item.id!]}
-                                                    
-                                                  </Button>
-                                                )}
+                                                {!itemVisibility[item.id!] &&
+                                                  isUserScramMaster() && (
+                                                    <Button
+                                                      id={item.id}
+                                                      //isUserScramMaster
+                                                      onClick={() =>
+                                                        handleFormToggle(
+                                                          item.id!
+                                                        )
+                                                      }
+                                                      variant="link"
+                                                      className="m-0 p-0 float-end text-decoration-none"
+                                                    >
+                                                      {itemTime[item.id!]}
+                                                    </Button>
+                                                  )}
                                                 {!isUserScramMaster() && (
-                                                <p className="m-0 p-0 float-end text-decoration-none">{itemTime[item.id!]}</p>
+                                                  <p className="m-0 p-0 float-end text-decoration-none">
+                                                    {itemTime[item.id!]}
+                                                  </p>
                                                 )}
                                               </Col>
                                             </Row>
@@ -916,7 +902,7 @@ function ProductBacklog() {
         <Modal show={showNewStoryModal} onHide={hideNewStoryModal}>
           <Modal.Body>
             <StoryForm
-              projectId={activeProject.id}
+              projectId={projectsState.activeProject.id}
               isEdit={false}
               sequenceNumberInit=""
               titleInit=""
@@ -955,7 +941,6 @@ function ProductBacklog() {
       )}
       {showRejectStoryModal && (
         <RejectStoryModal
-          handleReject={handleDragCustom}
           elements={tempDataReject!}
           onCancel={() => setShowRejectStoryModal(false)}
           show={showRejectStoryModal}
@@ -966,4 +951,3 @@ function ProductBacklog() {
 }
 
 export default ProductBacklog;
-

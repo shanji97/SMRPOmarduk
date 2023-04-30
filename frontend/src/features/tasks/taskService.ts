@@ -61,6 +61,21 @@ const createTask = async (taskData: any, token: string) => { // TODO change data
     return response.data;
 }
 
+const acceptTask = async (body: {taskId?: number, confirm?: boolean}, token: string) => { // TODO change data type from any to TaskData if possible
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const requestBody = {...body};
+    delete requestBody.taskId;
+    delete requestBody.confirm;
+
+
+    const response = await axios.post(`${TASK_API_URL}/${body.taskId}/accept/${body.confirm}`, requestBody, config);
+    return response.data;
+}
+
 const editTask = async (taskData: any, token: string) => { // TODO change data type from any to TaskData if possible
     const config = {
         headers: {
@@ -72,6 +87,17 @@ const editTask = async (taskData: any, token: string) => { // TODO change data t
     console.log(taskData)
 
     const response = await axios.patch(`${TASK_API_URL}/${taskId}`, taskData, config);
+
+    return response.data;
+}
+
+const releaseTask = async (taskId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.delete(`${TASK_API_URL}/${taskId}/release`, config);
 
     return response.data;
 }
@@ -158,7 +184,9 @@ const taskService = {
     getWorkLogs,
     logWork,
     startTime,
-    stopTime
+    stopTime,
+    acceptTask,
+    releaseTask
 }
 
 export default taskService;

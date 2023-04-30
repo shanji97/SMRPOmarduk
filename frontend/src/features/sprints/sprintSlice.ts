@@ -141,7 +141,7 @@ export const sprintSlice = createSlice({
             state.isLoading = false;
             state.isStoryInSprint = true;
             state.isNotStoryInSprint = false;
-            state.message = '';
+            state.message = 'Story successfully added to sprint';
             state.sprints.push(action.payload);
         })
         .addCase(addStoryToSprint.rejected, (state, action) => {

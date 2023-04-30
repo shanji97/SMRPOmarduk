@@ -9,7 +9,7 @@ import { getTaskForUser } from "../features/tasks/taskSlice";
 import classes from "./Dashboard.module.css";
 import Tasks from "../components/Tasks";
 
-function Dashboard() {
+function MyTasks() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.users);
@@ -26,25 +26,31 @@ function Dashboard() {
   }, [user]);
 
   if (tasksForUser.length === 0) {
-    return <h2>No stories</h2>
+    return <h2>No stories</h2>;
   }
-  const uniqueStoryIds = Array.from(new Set(tasksForUser.map((item) => item.storyId)));
+  const uniqueStoryIds = Array.from(
+    new Set(tasksForUser.map((item) => item.storyId))
+  );
 
-  console.log(tasksForUser)
-
-    //console.log(uniqueStorytitle)
-    return (
- <>
-    {uniqueStoryIds.map((storyidentity) => {
-      const StoryDesc = tasksForUser.filter((item) => item.story.id === storyidentity);
-
-      const taskWithStory = tasksForUser.find((item) => item.story.id === storyidentity);
-      const Storyid = taskWithStory ? taskWithStory.story.id : null;
-      const Storytitle = taskWithStory ? taskWithStory.story.title : null;
-      const StoryDescription = taskWithStory ?  taskWithStory.story.description: null;
+  //console.log(uniqueStorytitle)
   return (
-      <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
-        <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
+    <>
+      {uniqueStoryIds.map((storyidentity) => {
+        const StoryDesc = tasksForUser.filter(
+          (item) => item.story.id === storyidentity
+        );
+
+        const taskWithStory = tasksForUser.find(
+          (item) => item.story.id === storyidentity
+        );
+        const Storyid = taskWithStory ? taskWithStory.story.id : null;
+        const Storytitle = taskWithStory ? taskWithStory.story.title : null;
+        const StoryDescription = taskWithStory
+          ? taskWithStory.story.description
+          : null;
+        return (
+          <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
+            <div className="col-sm-10 col-md-8 col-xl-6 mt-3">
               <Card className="mt-3" key={Storyid}>
                 <Tab.Container id="left-tabs-example" defaultActiveKey="first">
                   <Card.Header className="d-flex align-items-center">
@@ -73,18 +79,20 @@ function Dashboard() {
                               <th></th>
                               <th>Title</th>
                               <th>Status</th>
-
                               <th>Work Done</th>
                               <th>Remaining time</th>
                             </tr>
                           </thead>
 
                           <tbody>
-                          {StoryDesc.map((storyidentity) => {
-                            return (
-                            <Tasks key={storyidentity.id} stories={storyidentity}></Tasks>
-                            )
-                          })}
+                            {StoryDesc.map((storyidentity) => {
+                              return (
+                                <Tasks
+                                  key={storyidentity.id}
+                                  stories={storyidentity}
+                                ></Tasks>
+                              );
+                            })}
                           </tbody>
                         </Table>
                       </Tab.Pane>
@@ -93,14 +101,12 @@ function Dashboard() {
                   </Card.Body>
                 </Tab.Container>
               </Card>
-            
-          
-        </div>
-      </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
-})}
-</>
-)
 }
 
-export default Dashboard;
+export default MyTasks;

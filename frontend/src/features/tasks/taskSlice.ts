@@ -18,6 +18,9 @@ interface TaskState {
     isTimerError: boolean
     message: any
     changed: boolean
+    isMyTaskLoading: boolean
+    isMyTaskSuccess: boolean
+    isMyTaskError: boolean
 }
 
 const initialState: TaskState = {
@@ -33,7 +36,10 @@ const initialState: TaskState = {
     isTimerSuccess: false,
     isTimerError: false,
     message: '',
-    changed: false
+    changed: false,
+    isMyTaskLoading: false,
+    isMyTaskSuccess: false,
+    isMyTaskError: false,
 }
 
 
@@ -76,11 +82,30 @@ export const createTask = createAsyncThunk('/task/createTask', async (taskData: 
         return thunkAPI.rejectWithValue(message)
     }
 });
+export const acceptTask = createAsyncThunk('/task/acceptTask', async (body: {taskId: number, confirm: boolean}, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.acceptTask(body, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
 
 export const deleteTask = createAsyncThunk('/task/deleteTask', async (taskId: string, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.deleteTask(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const releaseTask = createAsyncThunk('/task/releaseTask', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.releaseTask(taskId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -158,6 +183,9 @@ export const taskSlice = createSlice({
             state.isSuccess = false
             state.isTimerSuccess = false
             state.isTimerError = false
+            state.isMyTaskLoading = false
+            state.isMyTaskError = false
+            state.isMyTaskSuccess = false
             state.message = ''
         }
     },
@@ -334,6 +362,59 @@ export const taskSlice = createSlice({
             state.isLoading = false;
             state.isSuccess = false;
             state.isError = true;
+            state.message = action.payload;
+        })
+        .addCase(acceptTask.pending, (state) => {
+            state.isMyTaskLoading = true
+        })
+        .addCase(acceptTask.fulfilled, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
+            state.message = '';
+        })
+        .addCase(acceptTask.rejected, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true;
+            state.message = action.payload;
+        })
+        .addCase(releaseTask.pending, (state) => {
+            state.isMyTaskLoading = true
+        })
+        .addCase(releaseTask.fulfilled, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
+            state.message = '';
+            //debugger  
+/*
+            const payloadTask = action.payload;
+            const updatedTask: any = {
+                id: payloadTask.id,
+                name: payloadTask.name,
+                category: payloadTask.category,
+                remaining: payloadTask.remaining,
+                dateAssigned: payloadTask.dateAssigned,
+                dateAccepted: payloadTask.dateAccepted,
+                dateActive: payloadTask.dateActive,
+                dateEnded: payloadTask.dateEnded,
+                dateCreated: payloadTask.dateCreated,
+                dateUpdated: payloadTask.dateUpdated,
+                storyId: payloadTask.storyId,
+                assignedUserId: payloadTask.assignedUserId
+            }
+            const index = state.tasks.findIndex(tasks => tasks.id === action.meta.arg);
+            const newTasks: any[] = [...state.tasks];
+            newTasks[index] = updatedTask;
+            state.tasks = newTasks;
+            console.log(state.workLogs)
+              */
+        })
+        .addCase(releaseTask.rejected, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true;
             state.message = action.payload;
         })
     }
