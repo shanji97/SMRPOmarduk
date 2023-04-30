@@ -3,14 +3,13 @@ import * as Joi from 'joi';
 
 export class StoryNotificationDto {
     @ApiProperty({
-        example: 'Optional rejection description.',
+        example: 'Description.',
         minLength: 1,
-        nullable: true,
-        required: false,
+        required: true
     })
-    description?: string | null;
+    description: string;
 }
 
 export const StoryNotificationSchema = Joi.object().keys({
-    description: Joi.string().trim().min(1).allow(null),
+    description: Joi.string().trim().min(1).required().default('Zavrnitev storyja s strani product ownerja.'),
 });

@@ -42,7 +42,7 @@ export class TaskService {
 
     const catsum = result.reduce((acc, category) => acc + category.count, 0);
     const finished = result.reduce((acc, category) => (category.category === TaskCategory.ENDED) ? acc + category.count : acc, 0);
-    
+
     return {
       count: result,
       finished: catsum === finished,
@@ -82,7 +82,7 @@ export class TaskService {
     // Check if story already completed
     if (await this.storyService.isStoryFinished(storyId))
       throw new ValidationException('Story already finished');
-    
+
     // Check remaining value
     const taskMaxTimeFactor: number = this.configService.get<number>('TASK_MAX_TIME_FACTOR');
     const storyTimeMax = await this.storyService.getTimeComplexityInHoursForStoryById(storyId);
@@ -213,22 +213,61 @@ export class TaskService {
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
+    //12:46 comented out
+    // return taskData.flatMap(task => task.userTime);
     const userTime = taskData.flatMap(task => task.userTime);
-    
+
     return userTime.reduce((acc, cur) => {
-      const key = `${cur.date}-${cur.taskId}`;
+      const key = `${cur.date}`;
       if (!acc[key]) {
         acc[key] = {
-          date: cur.date,
-          taskId: cur.taskId,
+          taskId: [],
           spent: 0,
           remaining: 0
         };
       }
+      acc[key].taskId.push(cur.taskId),
       acc[key].spent += cur.spent;
       acc[key].remaining += cur.remaining;
       return acc;
     }, {});
+
+    // const data = userTime.reduce((acc, cur) => {
+    //   const key = `${cur.date}`;
+    //   if (!acc[key]) {
+    //     acc[key] = {
+    //       taskId: [],
+    //       spent: 0,
+    //       remaining: 0
+    //     };
+    //   }
+    //   acc[key].taskId.push(cur.taskId),
+    //   acc[key].spent += cur.spent;
+    //   acc[key].remaining += cur.remaining;
+    //   return acc;
+    // }, {});
+
+    // const startDate = new Date(Object.keys(data).sort()[1]);
+    // const keys = Object.keys(data).sort();
+    // const newValues = {
+    //   "taskId": [
+    //     1,
+    //     ...data[keys.indexOf(startDate.toISOString().slice(0, 10))]["taskId"].slice(1)
+    //   ],
+    //   "spent": data[keys.indexOf(startDate.toISOString().slice(0, 10))]["spent"] + 1,
+    //   "remaining": data[keys.indexOf(startDate.toISOString().slice(0, 10))]["remaining"] - 1
+    // };
+
+    // for (let i = keys.indexOf(startDate.toISOString().slice(0, 10)) - 1; i >= 0; i--) {
+    //   const currentDate = new Date(keys[i]);
+    //   data[currentDate.toISOString().slice(0, 10)] = {
+    //     "taskId": data[keys[i]]["taskId"],
+    //     "spent": data[keys[i]]["spent"],
+    //     "remaining": data[keys[i]]["remaining"] + 1
+    //   };
+    // }
+
+    // data[startDate.toISOString().slice(0, 10)] = newValues;
   }
 
   async startTaskTiming(taskId: number): Promise<void> {
@@ -242,7 +281,7 @@ export class TaskService {
     if (await this.storyService.isStoryFinished(task.storyId)) // Check if story is finished
       throw new ValidationException('Story already finished');
     if (task.category == TaskCategory.ACTIVE || task.dateActive)
-      throw new ValidationException('Task already active'); 
+      throw new ValidationException('Task already active');
     if (task.category !== TaskCategory.ACCEPTED)
       throw new ValidationException('Task not accepted');
 
@@ -310,7 +349,7 @@ export class TaskService {
   }
 
   async getWorkOnTaskForUser(taskId: number, userId: number): Promise<TaskUserTime[]> {
-    return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' }})
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' } })
   }
 
   async getWorkOnTaskForUserByDate(taskId: number, userId: number, date: string): Promise<TaskUserTime | null> {

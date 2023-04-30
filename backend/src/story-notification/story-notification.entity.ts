@@ -3,8 +3,8 @@ import { Story } from '../story/story.entity';
 import { User } from '../user/user.entity';
 
 export enum NotificationStatus {
-  Rejected = 0, //26 kartica
-  Info = 1, //10 kartica
+  Rejected = 0,
+  Info = 1,
 }
 
 @Entity()
