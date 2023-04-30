@@ -9,12 +9,23 @@ import {toast} from "react-toastify";
 interface PokerRoundProps {
   roundId: string,
   isUserScrumMaster: boolean,
-  numberOfPlayers: number
-  roundActive: boolean
+  numberOfPlayers: number,
+  activeRound: RoundWithVotes,
+  setShowVotingOptions: (acceptResult: boolean) => void,
+  shouldReload: boolean
 }
-const PokerRound: React.FC<PokerRoundProps> = ({roundId, isUserScrumMaster, numberOfPlayers, roundActive}) => {
+const PokerRound: React.FC<PokerRoundProps> = (
+  {
+    roundId,
+    isUserScrumMaster,
+    numberOfPlayers,
+    activeRound,
+    setShowVotingOptions,
+    shouldReload
+}) => {
   const dispatch = useAppDispatch();
   const {isError, message, isSuccess} = useAppSelector(state => state.poker);
+  const [resultSubmited, setResultSubmited] = useState(false);
   const [singleRound, setSingleRound] = useState<RoundWithVotes>({
     id: '',
     storyId: '',
@@ -37,7 +48,7 @@ const PokerRound: React.FC<PokerRoundProps> = ({roundId, isUserScrumMaster, numb
       setSingleRound(json);
     };
     fetchData();
-  }, []);
+  }, [shouldReload]);
 
   const roundEndedAndScrumMaster = useMemo(() => {
     return isUserScrumMaster && singleRound.votes.length === numberOfPlayers;
@@ -50,14 +61,16 @@ const PokerRound: React.FC<PokerRoundProps> = ({roundId, isUserScrumMaster, numb
     }
     if (roundEndedAndScrumMaster) {
       return singleRound.votes.map(vote => {
-        return <td key={Math.random()}>{vote.value}</td>;
+        return <td key={Math.random()}>{vote.value}h</td>;
       });
     } else if (numberOfVotes !== numberOfPlayers) {
-      return [];
+      return <td className='text-primary' colSpan={numberOfPlayers} style={{ textAlign: "center" }}>
+        In progress
+      </td>;
     }
 
     return singleRound.votes.map(vote => {
-      return <td key={Math.random()}>{vote.value}</td>;
+      return <td key={Math.random()}>{vote.value}h</td>;
     });
   }, [singleRound]);
 
@@ -67,6 +80,8 @@ const PokerRound: React.FC<PokerRoundProps> = ({roundId, isUserScrumMaster, numb
       acceptResult: true
     }
     dispatch(endPlanningPoker(body));
+    setResultSubmited(true);
+    setShowVotingOptions(false);
     toast.success('Result accepted!');
   }
 
@@ -76,6 +91,8 @@ const PokerRound: React.FC<PokerRoundProps> = ({roundId, isUserScrumMaster, numb
       acceptResult: false
     }
     dispatch(endPlanningPoker(body));
+    setResultSubmited(true);
+    setShowVotingOptions(false);
     toast.success('Result rejected!');
   }
 
@@ -83,7 +100,7 @@ const PokerRound: React.FC<PokerRoundProps> = ({roundId, isUserScrumMaster, numb
     <tr>
       <td>{singleRound.id}</td>
       {rowCells}
-      {roundEndedAndScrumMaster && roundActive && (
+      {roundEndedAndScrumMaster && activeRound.id === roundId && !resultSubmited && (
         <td>
           <Button onClick={acceptRoundHandler} style={{marginRight: '.5rem'}} variant='success'><Check size={20} /></Button>
           <Button onClick={rejectRoundHandler} variant='danger'><X size={20}/></Button>

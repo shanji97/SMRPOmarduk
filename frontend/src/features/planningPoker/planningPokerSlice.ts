@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import planningPokerService from "./planningPokerService";
 import {PokerRound, RoundWithVotes} from "../../classes/pokerRound";
+import {debug} from "util";
 
 export interface PlanningPokerState {
   pokerRounds: PokerRound[]
   singleRound: RoundWithVotes
   activeRound: RoundWithVotes
+  roundStarted: boolean
   isLoading: boolean
   isSuccess: boolean
   isError: boolean
@@ -28,10 +30,12 @@ const initialState: PlanningPokerState = {
     dateStarted: '',
     votes: [],
   },
+  roundStarted: false,
   isLoading: false,
   isSuccess: false,
   isError: false,
   message: '',
+
 }
 
 export const getAllPokerRounds = createAsyncThunk('poker/getAllRounds', async (storyId: string, thunkAPI: any) => {
@@ -170,9 +174,25 @@ export const planningPokerSlice = createSlice({
         state.isSuccess = true;
         state.isError = false;
         state.message = '';
-        // TODO maybe
+        state.roundStarted = true;
       })
       .addCase(newPokerRound.rejected, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = false;
+        state.isError = true
+        state.message = action.payload
+      })
+      .addCase(endPlanningPoker.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(endPlanningPoker.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = '';
+        state.roundStarted = false;
+      })
+      .addCase(endPlanningPoker.rejected, (state, action) => {
         state.isLoading = false
         state.isSuccess = false;
         state.isError = true
