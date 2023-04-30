@@ -36,7 +36,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
     dispatch(getProjectUserRoles(projectId));
     dispatch(getAllPokerRounds(storyIdForPoker));
     dispatch(getActivePokerRound(storyIdForPoker));
-  }, []);
+  }, [storyIdForPoker]);
 
   useEffect(() => {
     dispatch(getActivePokerRound(storyIdForPoker));
