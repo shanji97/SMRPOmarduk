@@ -42,7 +42,15 @@ export class SprintService {
     return await this.entityManager.createQueryBuilder(Story, 's')
       .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
       .where('ss.sprintId = :sprintId', { sprintId: sprintId })
-      .andWhere('s.category != :category',{category: Category.Finished})
+      .andWhere('s.category != :category', { category: Category.Finished })
+      .getMany();
+  }
+
+  async getUnrealizedStoriesForSprintById(sprintId: number): Promise<Story[]> {
+    return await this.entityManager.createQueryBuilder(Story, 's')
+      .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
+      .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .andWhere('s.isRealized = :realized', { realized: 0 })
       .getMany();
   }
 
@@ -66,7 +74,7 @@ export class SprintService {
     // Sprint can't start on the weekend
     if ([0, 6].includes(moment(sprint.startDate).weekday()))
       throw new ValidationException('Sprint can\'t start on weekend');
-    
+
     // Check if velocity to high for the sprint
     let sprintDurationDays: number = moment(sprint.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate, 'YYYY-MM-DD'), 'd') + 1;
     if (sprintDurationDays > 6) {

@@ -67,6 +67,20 @@ export class SprintController {
     return await this.sprintService.getUnfinishedStoriesForSprintById(sprintId);
   }
 
+  @ApiOperation({ summary: 'List unrealized stories for sprint.' })
+  @ApiOkResponse()
+  @Get(':sprintId/story/unrealized-stories')
+  async listUnrealizedStoriesForSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<Story[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    return await this.sprintService.getUnrealizedStoriesForSprintById(sprintId);
+  }
+
   @ApiOperation({ summary: 'Get active sprint for project.' })
   @ApiOkResponse()
   @Get('project/:projectId/active')
