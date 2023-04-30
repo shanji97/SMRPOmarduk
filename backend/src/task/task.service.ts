@@ -213,6 +213,7 @@ export class TaskService {
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
+    //12:46 comented out
     // return taskData.flatMap(task => task.userTime);
     const userTime = taskData.flatMap(task => task.userTime);
 
@@ -230,6 +231,43 @@ export class TaskService {
       acc[key].remaining += cur.remaining;
       return acc;
     }, {});
+
+    // const data = userTime.reduce((acc, cur) => {
+    //   const key = `${cur.date}`;
+    //   if (!acc[key]) {
+    //     acc[key] = {
+    //       taskId: [],
+    //       spent: 0,
+    //       remaining: 0
+    //     };
+    //   }
+    //   acc[key].taskId.push(cur.taskId),
+    //   acc[key].spent += cur.spent;
+    //   acc[key].remaining += cur.remaining;
+    //   return acc;
+    // }, {});
+
+    // const startDate = new Date(Object.keys(data).sort()[1]);
+    // const keys = Object.keys(data).sort();
+    // const newValues = {
+    //   "taskId": [
+    //     1,
+    //     ...data[keys.indexOf(startDate.toISOString().slice(0, 10))]["taskId"].slice(1)
+    //   ],
+    //   "spent": data[keys.indexOf(startDate.toISOString().slice(0, 10))]["spent"] + 1,
+    //   "remaining": data[keys.indexOf(startDate.toISOString().slice(0, 10))]["remaining"] - 1
+    // };
+
+    // for (let i = keys.indexOf(startDate.toISOString().slice(0, 10)) - 1; i >= 0; i--) {
+    //   const currentDate = new Date(keys[i]);
+    //   data[currentDate.toISOString().slice(0, 10)] = {
+    //     "taskId": data[keys[i]]["taskId"],
+    //     "spent": data[keys[i]]["spent"],
+    //     "remaining": data[keys[i]]["remaining"] + 1
+    //   };
+    // }
+
+    // data[startDate.toISOString().slice(0, 10)] = newValues;
   }
 
   async startTaskTiming(taskId: number): Promise<void> {
