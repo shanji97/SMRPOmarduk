@@ -12,8 +12,6 @@ interface TasksProps {
 
 const Tasks: React.FC<TasksProps> = ({ tasks }) => {
   const dispatch = useAppDispatch();
-
-  //const [tasks, setTasks] = useState<any[]>([]);
   
   const {
     currentlyWorkingOnTaskId,

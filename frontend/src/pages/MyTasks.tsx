@@ -28,9 +28,7 @@ function MyTasks() {
   if (tasksForUser.length === 0) {
     return <h2>No stories</h2>;
   }
-  const uniqueStoryIds = Array.from(
-    new Set(tasksForUser.map((item) => item.storyId))
-  );
+  const uniqueStoryIds = Array.from(new Set(tasksForUser.map((item) => item.storyId)));
 
     //console.log(uniqueStorytitle)
     return (
