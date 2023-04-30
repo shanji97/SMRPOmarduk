@@ -3,11 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import * as moment from 'moment';
-
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
 import { SprintStory } from './sprint-story.entity';
-import { Story } from '../story/story.entity';
+import { Category, Story } from '../story/story.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
@@ -36,6 +35,14 @@ export class SprintService {
     return await this.entityManager.createQueryBuilder(Story, 's')
       .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
       .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .getMany();
+  }
+
+  async getUnfinishedStoriesForSprintById(sprintId: number): Promise<Story[]> {
+    return await this.entityManager.createQueryBuilder(Story, 's')
+      .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
+      .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .andWhere('s.category != :category',{category: Category.Finished})
       .getMany();
   }
 
