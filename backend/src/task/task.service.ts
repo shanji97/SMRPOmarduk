@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
+import { DeepPartial, In, Repository, QueryFailedError, CustomRepositoryCannotInheritRepositoryError } from 'typeorm';
 import * as moment from 'moment';
-
 import { ProjectService } from '../project/project.service';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
@@ -11,6 +10,20 @@ import { TaskUserTime } from './task-user-time.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
+interface TaskData {
+  date: string;
+  taskId: number;
+  userId: number;
+  spent: number;
+  remaining: number;
+  description: string;
+  dateCreated: string;
+  dateUpdated: string;
+}
+
+interface DateData {
+  [date: string]: TaskData[];
+}
 @Injectable()
 export class TaskService {
   private readonly logger: Logger = new Logger(TaskService.name);
@@ -42,7 +55,7 @@ export class TaskService {
 
     const catsum = result.reduce((acc, category) => acc + category.count, 0);
     const finished = result.reduce((acc, category) => (category.category === TaskCategory.ENDED) ? acc + category.count : acc, 0);
-    
+
     return {
       count: result,
       finished: catsum === finished,
@@ -86,7 +99,7 @@ export class TaskService {
     // Check if story already completed
     if (await this.storyService.isStoryFinished(storyId))
       throw new ValidationException('Story already finished');
-    
+
     // Check remaining value
     const taskMaxTimeFactor: number = this.configService.get<number>('TASK_MAX_TIME_FACTOR');
     const storyTimeMax = await this.storyService.getTimeComplexityInHoursForStoryById(storyId);
@@ -111,7 +124,7 @@ export class TaskService {
     const storyTimeMax = await this.storyService.getTimeComplexityInHoursForStoryById(taskRecord.storyId);
     const maxTime = storyTimeMax * taskMaxTimeFactor;
     if (task.remaining > maxTime)
-      throw new ValidationException('Timeremaining too big');
+      throw new ValidationException('Time remaining too big');
 
     await this.taskRepository.update({ id: taskId, deleted: false }, task);
   }
@@ -218,25 +231,42 @@ export class TaskService {
   async getTaskDataForBD(projectId: number): Promise<any> {
     const taskData = await this.taskRepository
       .createQueryBuilder("task")
-      .leftJoin("task.story", "story")
+      .leftJoinAndSelect("task.story", "story")
+      .leftJoinAndSelect("story.sprintStories", "sprint_story")
+      .leftJoinAndSelect("sprint_story.sprint", "sprint")
       .leftJoinAndSelect("task.userTime", "userTime")
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
-    const userTime = taskData.flatMap(task => task.userTime);
-    
-    return userTime.reduce((acc, cur) => {
-      const key = `${cur.date}-${cur.taskId}`;
+    //Handle the userTime======================================
+    const userTimeData = taskData.flatMap(task => task.userTime).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    //================================================================================
+
+    const result = taskData.flatMap(task => {
+      const sprintStories = task.story.sprintStories.filter(ss => ss.storyId === task.storyId);
+      return task.userTime.map(userTime => ({
+        ...userTime,
+        sprint: sprintStories.length > 0 ? sprintStories[0].sprint : null,
+      }));
+    });
+
+    return result.reduce((acc, cur) => {
+      const key = `${cur.date}`;
       if (!acc[key]) {
         acc[key] = {
-          date: cur.date,
-          taskId: cur.taskId,
+          taskId: [],
           spent: 0,
           remaining: 0
+
         };
       }
-      acc[key].spent += cur.spent;
+      acc[key].taskId.push(cur.taskId),
+        acc[key].spent += cur.spent;
       acc[key].remaining += cur.remaining;
+      acc[key].sprintStart = cur.sprint.startDate;
+      acc[key].sprintEnd = cur.sprint.endDate;
+      acc[key].sprintId = cur.sprint.id;
+      acc[key].velocity = cur.sprint.velocity;
       return acc;
     }, {});
   }
@@ -252,7 +282,7 @@ export class TaskService {
     if (await this.storyService.isStoryFinished(task.storyId)) // Check if story is finished
       throw new ValidationException('Story already finished');
     if (task.category == TaskCategory.ACTIVE || task.dateActive)
-      throw new ValidationException('Task already active'); 
+      throw new ValidationException('Task already active');
     if (task.category !== TaskCategory.ACCEPTED)
       throw new ValidationException('Task not accepted');
 
