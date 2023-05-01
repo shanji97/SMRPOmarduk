@@ -52,7 +52,6 @@ const createTask = async (taskData: any, token: string) => { // TODO change data
         delete taskData.assignedUserId;
     }
 
-    console.log(taskData)
     let storyId = taskData.storyId;
     delete taskData.storyId;
 
