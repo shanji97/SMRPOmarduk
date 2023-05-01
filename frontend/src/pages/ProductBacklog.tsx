@@ -33,7 +33,7 @@ import {
   ConeStriped,
   X,
   Eraser,
-  Stickies,
+  Stickies, SuitSpadeFill,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
@@ -71,6 +71,7 @@ import { parseJwt } from "../helpers/helpers";
 
 import { toast } from "react-toastify";
 import RejectStoryModal from "./RejectStoryModal";
+import PlanningPokerModal from "../components/PlanningPokerModal";
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -100,6 +101,13 @@ function ProductBacklog() {
       dispatch(getProject(projectID));
     }
   }, [projectID]);
+  const { activeProject, userRoles } = useAppSelector((state) => state.projects);
+  const [showPlanningPokerModal, setShowPlanningPokerModal] = useState(false);
+  const [storyIdForPoker, setStoryIdForPoker] = useState('');
+  const projectVar = useAppSelector((state) => state.projects);
+  //dispatch(getActiveProject());
+  //helper funkcija za updatat useState
+  const [sgs, setSgs] = useState("undefined");
 
   let projectsState = useAppSelector((state) => state.projects);
 
@@ -132,7 +140,7 @@ function ProductBacklog() {
     SprintSelector.isLoading,
   ]);
 
-  //console.log(SprintSelector)
+
   useEffect(() => {
     if (isSuccess && !isLoading && message !== '') {
       toast.success(message)
@@ -162,11 +170,12 @@ function ProductBacklog() {
 
 
   useEffect(() => {
-    if (isCategorySuccess && !isCategoryLoading) {
-      dispatch(getAllStoryById(projectsState.activeProject.id!));
-    }
-    if (isCategoryError && !isCategoryLoading) {
-      toast.error(message);
+    
+    if (activeProject.id) {
+      dispatch(getAllStoryById(activeProject.id!));
+      dispatch(getAllSprints(activeProject.id!));
+      dispatch(getProjectUserRoles(activeProject.id!))
+      console.log(activeProject)
     }
   }, [isCategoryError, isCategorySuccess, isCategoryLoading]);
 
@@ -198,10 +207,10 @@ function ProductBacklog() {
   }, [projectsState.userRoles]);
 
 
-  
-  
 
-  
+
+
+
 
   //console.log(projectroles.userRoles)
 
@@ -242,7 +251,7 @@ function ProductBacklog() {
     else return false;
   };
 
- 
+
   //console.log(stories)
   const navigate = useNavigate();
 
@@ -382,7 +391,7 @@ function ProductBacklog() {
     );
   };
 
-  
+
 
 
   //za beleženje časa
@@ -441,7 +450,7 @@ function ProductBacklog() {
 
       resetState();
       if (isStoriesSuccess && !isStoriesLoading) {
-      
+
 
         //dispatch(reset());
         //dispatch(getAllStoryById(projectsState.activeProject.id!));
@@ -455,8 +464,6 @@ function ProductBacklog() {
           const isEmpty = Object.values(current).every(
             (value) => value.length === 0
           );
-          console.log("zgodbice")
-          console.log(stories)
           // Adding new item as "to do"
           //console.log("zgodbice ob updatu")
           //console.log(stories)
@@ -505,7 +512,7 @@ function ProductBacklog() {
       if (isStoriesError && !isStoriesLoading) {
         toast.error(message);
       }
-    
+
   }, [isStoriesSuccess, isStoriesLoading, isStoriesError]);
 
   //{Object.values.map(([columnId, column], index) => {
@@ -540,7 +547,13 @@ function ProductBacklog() {
   const hideEditStoryModal = () => {
     setShowEditStoryModal(false);
   };
-  
+  const openRejectStoryModal = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({item, status, index});
+    setShowRejectStoryModal(true);
+  };
+  const hideRejectStoryModal = () => {
+    setShowRejectStoryModal(false);
+  };
   const initvalue: StoryData = {
     id: "",
     title: "",
@@ -570,7 +583,7 @@ function ProductBacklog() {
     //console.log(item);
     return setShowRejectStoryModal(true);
   };
- 
+
   const getDataApproved = (item: StoryData, status: string, index: number) => {
     //setTempDataApproved({ item, status, index });
     //console.log(item);
@@ -589,7 +602,14 @@ function ProductBacklog() {
     return items.map((item: any) => item.description);
   }
 
-  //{if Object.keys(defaultItems).includes(status)}
+  function handleShowPlanningPokerModal(story: StoryData) {
+    setStoryIdForPoker(story.id!)
+    setShowPlanningPokerModal(true);
+  }
+
+  function closePlanningPokerModal() {
+    setShowPlanningPokerModal(false);
+  }
 
   return (
     <>
@@ -732,45 +752,42 @@ function ProductBacklog() {
                                                     let handleRejectVar = {
                                                       status: status,
                                                       index: index,
-                                                      
+
                                                     };
                                                     handleReject(handleRejectVar);
                                                     */
-                                                    }}
-                                                  >
-                                                    <Eraser /> Reject
-                                                  </Dropdown.Item>
-                                                )}
-                                                {status ===
-                                                  ProductBacklogItemStatus.UNALLOCATED && (
-                                                  <Dropdown.Item
-                                                    onClick={() =>
-                                                      openEditStoryModal(item)
-                                                    }
-                                                  >
-                                                    <Pencil /> Edit
-                                                  </Dropdown.Item>
-                                                )}
-                                                {status ===
-                                                  ProductBacklogItemStatus.UNALLOCATED && (
-                                                  <Dropdown.Item
-                                                    onClick={() =>
-                                                      setShow(true)
-                                                    }
-                                                  >
-                                                    <Trash /> Delete
-                                                  </Dropdown.Item>
-                                                )}
-                                                <DeleteConfirmation
-                                                  item={item}
-                                                  status={status}
-                                                  onCancel={() =>
-                                                    setShow(false)
                                                   }
-                                                  show={show}
-                                                />
-                                              </Dropdown.Menu>
-                                            </Dropdown>
+                                                  }
+                                                >
+                                                  <Eraser /> Reject
+                                                </Dropdown.Item>
+                                              )}
+                                              {status ===
+                                                ProductBacklogItemStatus.UNALLOCATED && (
+                                                <Dropdown.Item
+                                                  onClick={() =>
+                                                    openEditStoryModal(item)
+                                                  }
+                                                >
+                                                  <Pencil /> Edit
+                                                </Dropdown.Item>
+                                              )}
+                                              {status ===
+                                                ProductBacklogItemStatus.UNALLOCATED && (
+                                                <Dropdown.Item
+                                                  onClick={() => setShow(true)}
+                                                >
+                                                  <Trash /> Delete
+                                                </Dropdown.Item>
+                                              )}
+                                              <DeleteConfirmation
+                                                item={item}
+                                                status={status}
+                                                onCancel={() => setShow(false)}
+                                                show={show}
+                                              />
+                                            </Dropdown.Menu>
+                                          </Dropdown>
                                           )}
                                         </Card.Header>
                                         <Card.Body>
@@ -942,6 +959,7 @@ function ProductBacklog() {
           show={showRejectStoryModal}
         />
       )}
+      {showPlanningPokerModal && <PlanningPokerModal projectId={activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
     </>
   );
 }
