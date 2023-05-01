@@ -78,12 +78,12 @@ export const docSlice = createSlice({
             .addCase(upload.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isUploadSuccess = true;
-                state.isUploadSuccess = false;
+                state.isUploadError = false;
                 state.message = '';
             })
             .addCase(upload.rejected, (state, action) => {
-                state.isLoading = false
-                state.isUploadError = true
+                state.isLoading = false;
+                state.isUploadError = true;
                 state.isUploadSuccess = false;
                 state.message = action.payload
             })
@@ -98,10 +98,11 @@ export const docSlice = createSlice({
                 state.downloadedFile = action.payload;
             })
             .addCase(download.rejected, (state, action) => {
-                state.isLoading = false
-                state.isDownloadError = true
+                state.isLoading = false;
+                state.isDownloadError = true;
                 state.isDownloadSuccess = false;
                 state.message = action.payload
+                state.downloadedFile = ""
             })
             
     }

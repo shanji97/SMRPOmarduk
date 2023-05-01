@@ -12,10 +12,6 @@ const uploadFile = async ({ file, projectId }: { file: FormData, projectId: stri
         }
     }
 
-    // TODO
-    projectId = "3"
-    console.log(file);
-
     const response = await axios.post(`${PROJECT_API_URL}/${projectId}/documentation/upload`, file, config);
 
     return response.data;
@@ -28,11 +24,7 @@ const download = async ({fileName, projectId}: {fileName: string, projectId: str
         }
     }
 
-    // TODO
-    projectId = "3"
-
     const response = await axios.get(`${PROJECT_API_URL}/${projectId}/documentation/file/${fileName}`, config);
-    console.log(response);
     return response.data;
 }
 
