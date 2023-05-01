@@ -29,6 +29,7 @@ import EditTaskForm from "./components/EditTaskForm";
 import AssignUserForm from "./components/AssignUserForm";
 import DeleteTaskModal from "./components/DeleteTaskModal";
 import Burndown from "./pages/Burndown";
+import Docs from "./pages/Docs";
 
 function App() {
   return (
@@ -83,6 +84,7 @@ function App() {
           <Route path="/my-tasks" element={<MyTasks />} />
           <Route path="/projects/:projectID/wall" element={<ProjectWall />} />
           <Route path="/:projectId/stats" element={<Burndown />} />
+          <Route path="/:projectId/docs" element={<Docs />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />
