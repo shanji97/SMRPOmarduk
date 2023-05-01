@@ -12,6 +12,7 @@ interface LogTimeModalProps {
   taskId: string,
   showModal: boolean,
   hideModal: () => void
+  updateTimeValues: (logs: any) => void
 }
 
 export interface TimeLog {
@@ -25,7 +26,7 @@ export interface TimeLog {
   dateUpdated?: string,
 }
 
-const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal}) => {
+const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal, updateTimeValues}) => {
   const dispatch = useAppDispatch();
   const {user} = useAppSelector(state => state.users);
   const [userId, setUserId] = useState('');
@@ -66,7 +67,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
 
   useEffect(() => {
     const timelogs = workLogs.map((log, i) => {
-      return <TimeInputs 
+      return <TimeInputs
                 taskId={taskId}
                 userId={userId}
                 key={i} 
@@ -81,6 +82,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
   }, [workLogs]);
 
   const closeModal = () => {
+    updateTimeValues(logs);
     hideModal();
   };
 

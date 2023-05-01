@@ -64,7 +64,6 @@ const createTask = async (taskData: any, token: string) => { // TODO change data
         delete taskData.assignedUserId;
     }
 
-    console.log(taskData)
     let storyId = taskData.storyId;
     delete taskData.storyId;
 
@@ -197,6 +196,28 @@ const deleteWork = async (body: {taskId: string, userId: string, date: string}, 
     return response.data;
 }
 
+const getBurndownData = async (projectId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${TASK_API_URL}/burdown-diagramm-data/${projectId}`, config);
+
+    return response.data;
+}
+
+const getProjectStatistics = async (projectId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.get(`${TASK_API_URL}/project/${projectId}/user/statistics`, config);
+
+    return response.data;
+}
+
 const taskService = {
     getTaskForSprint,
     createTask,
@@ -212,7 +233,9 @@ const taskService = {
     acceptTask,
     releaseTask,
     deleteWork,
-    getTaskCategorys
+    getTaskCategorys,
+    getBurndownData,
+    getProjectStatistics
 }
 
 export default taskService;

@@ -22,6 +22,8 @@ interface TaskState {
     isMyTaskLoading: boolean
     isMyTaskSuccess: boolean
     isMyTaskError: boolean
+    burndownData: any
+    stats: any
 }
 
 const initialState: TaskState = {
@@ -42,6 +44,8 @@ const initialState: TaskState = {
     isMyTaskLoading: false,
     isMyTaskSuccess: false,
     isMyTaskError: false,
+    burndownData: {},
+    stats: {}
 }
 
 
@@ -188,6 +192,26 @@ export const stopTime = createAsyncThunk('/task/stopTime', async (taskId: string
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.stopTime(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getBurndownData = createAsyncThunk('/task/burndown', async (projectId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.getBurndownData(projectId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getProjectStatistics = createAsyncThunk('/task/stats', async (projectId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.getProjectStatistics(projectId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -480,6 +504,36 @@ export const taskSlice = createSlice({
             state.isMyTaskLoading = false;
             state.isMyTaskSuccess = false;
             state.isMyTaskError = true;
+            state.message = action.payload;
+        })
+        .addCase(getBurndownData.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getBurndownData.fulfilled, (state, action) => {
+            state.isLoading = false;
+              state.isSuccess = true;
+              state.isError = false;
+              state.burndownData = action.payload;
+        })
+        .addCase(getBurndownData.rejected, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = true;
+            state.message = action.payload;
+        })
+        .addCase(getProjectStatistics.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getProjectStatistics.fulfilled, (state, action) => {
+            state.isLoading = false;
+              state.isSuccess = true;
+              state.isError = false;
+              state.stats = action.payload;
+        })
+        .addCase(getProjectStatistics.rejected, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = true;
             state.message = action.payload;
         })
     }

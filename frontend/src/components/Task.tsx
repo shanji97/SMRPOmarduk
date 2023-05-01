@@ -12,6 +12,7 @@ import {
   getTaskForUser,
 } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
+import {getBaseUrl} from "../helpers/helpers";
 
 interface TaskProps {
   task: any;
@@ -20,7 +21,7 @@ interface TaskProps {
 const Task: React.FC<TaskProps> = ({ task }) => {
   const dispatch = useAppDispatch();
   const {
-    workLogs,
+    // workLogs,
     currentlyWorkingOnTaskId,
     isError,
     isSuccess,
@@ -31,25 +32,26 @@ const Task: React.FC<TaskProps> = ({ task }) => {
     isMyTaskLoading
   } = useAppSelector((state) => state.tasks);
   const [showModal, setShowModal] = useState(false);
+  const [workLogs, setWorkLogs] = useState<any[]>([]);
 
   useEffect(() => {
     if (isSuccess && !isLoading) {
       if (currentlyWorkingOnTaskId !== "") {
-        toast.success("Started timer!");
+        //toast.success("Started timer!");
       } else {
-        toast.success("Stopped timer!");
+        //toast.success("Stopped timer!");
       }
-      toast.error(message);
-
-      dispatch(reset());
-
     }
-    if (isSuccess && !isLoading) {
-      toast.error(message);
+
+    return () => {
       dispatch(reset());
     }
   }, [isSuccess, isError, isLoading]);
 
+  useEffect(() => {
+    console.log(workLogs);
+    console.log(task)
+  }, [workLogs])
 
   useEffect(() => {
     if (isMyTaskSuccess && !isMyTaskLoading) {
@@ -61,8 +63,24 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   }, [isMyTaskSuccess, isMyTaskError, isMyTaskLoading]);
 
   useEffect(() => {
-    dispatch(getWorkLogs(task.id!));
+    const fetchData = async () => {
+      const token = JSON.parse(localStorage.getItem('user')!).token;
+      const response = await fetch(`${getBaseUrl()}/api/task/${task.id}/time`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `JWT ${token}`
+        }
+      })
+
+      const json = await response.json();
+      setWorkLogs(json);
+    };
+    fetchData();
   }, []);
+
+  const updateTimeValue = (logs: any) => {
+    setWorkLogs(logs);
+  }
 
   const openLogTimeModal = () => {
     setShowModal(true);
@@ -94,7 +112,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   const hoursSpentInTotal = useMemo(() => {
     let sum = 0;
     workLogs.forEach((log) => {
-      sum += log.spent;
+      sum += Number(log.spent);
     });
     return sum;
   }, [workLogs]);
@@ -147,7 +165,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
         <td>{getStatusFromCategory(task.category)}</td>
 
         <td>{hoursSpentInTotal}h</td>
-        <td>{`${workLogs?.[workLogs.length - 1]?.remaining}h` ?? "/"}</td>
+        <td>{workLogs.length > 0 ? `${workLogs?.[workLogs.length - 1]?.remaining}h` ?? "/" : `${task.remaining}h`}</td>
         <td>
           <Button
             variant="outline-primary"
@@ -175,6 +193,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
           taskId={task.id}
           showModal={showModal}
           hideModal={hideModal}
+          updateTimeValues={updateTimeValue}
         />
       )}
     </Fragment>

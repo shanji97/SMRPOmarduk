@@ -28,6 +28,7 @@ import "./App.css";
 import EditTaskForm from "./components/EditTaskForm";
 import AssignUserForm from "./components/AssignUserForm";
 import DeleteTaskModal from "./components/DeleteTaskModal";
+import Burndown from "./pages/Burndown";
 
 function App() {
   return (
@@ -81,9 +82,7 @@ function App() {
           <Route path="/sprint-backlog" element={<SprintBacklog />} />
           <Route path="/my-tasks" element={<MyTasks />} />
           <Route path="/projects/:projectID/wall" element={<ProjectWall />} />
-          <Route path="/product-backlog" element={<ProductBacklog />} />
-          <Route path="/sprint-backlog" element={<SprintBacklog />} />
-          <Route path="/my-tasks" element={<MyTasks />} />
+          <Route path="/:projectId/stats" element={<Burndown />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />
