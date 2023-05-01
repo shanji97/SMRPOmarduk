@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { DeepPartial, EntityManager, In, Repository, QueryFailedError } from 'typeorm';
 import * as moment from 'moment';
 
 import { ProjectService } from '../project/project.service';
@@ -9,6 +9,7 @@ import { Sprint } from '../sprint/sprint.entity';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
 import { TaskUserTime } from './task-user-time.entity';
+import { User } from '../user/user.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 import { SprintService } from '../sprint/sprint.service';
@@ -33,6 +34,19 @@ class TaskDate extends Task {
   }[];
 }
 
+interface UserTaskStatistics {
+  id: number;
+  firstName: string;
+  lastName: string;
+  taskCount: number;
+  spent: number;
+  byPriority: {
+    priority: number;
+    taskCount: number;
+    spent: number;
+  }[];
+}
+
 @Injectable()
 export class TaskService {
   private readonly logger: Logger = new Logger(TaskService.name);
@@ -42,6 +56,8 @@ export class TaskService {
     private readonly projectService: ProjectService,
     private readonly sprintService: SprintService,
     private readonly storyService: StoryService,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(TaskUserTime)
@@ -485,6 +501,56 @@ export class TaskService {
         spent: spent,
       });
     }
+    return data;
+  }
+
+  async getUserStatisticsForProject(projectId: number): Promise<UserTaskStatistics[]> {
+    const result = (await this.entityManager.createQueryBuilder(User, 'user')
+      .leftJoin('user.taskTime', 'time', 'time.userId = user.id')
+      .innerJoin('time.task', 'task', 'time.taskId = task.id')
+      .innerJoin('task.story', 'story', 'task.storyId = story.id')
+      .select(['user.id AS id', 'user.firstName AS firstName', 'user.lastName AS lastName', 'story.priority AS priority', 'COUNT(DISTINCT time.taskId) AS taskCount', 'SUM(time.spent) AS spent'])
+      .where('story.projectId = :projectId', { projectId: projectId })
+      .orderBy({ 'user.lastName': 'ASC', 'user.firstName': 'ASC' })
+      .groupBy('id,firstName,lastName,priority')
+      .getRawMany()).map((user) => {
+        user.taskCount = +user.taskCount;
+        return user;
+      });
+    const data: UserTaskStatistics[] = [];
+    let found: boolean = false;
+    for (const record of result) {
+      found = false;
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].id === record.id) {
+          found = true;
+          data[i].taskCount += record.taskCount;
+          data[i].spent += record.spent;
+          data[i].byPriority.push({
+            priority: record.priority,
+            taskCount: record.taskCount,
+            spent: record.spent,
+          });
+          break;
+        }
+      }
+      if (!found) {
+        data.push({
+          id: record.id,
+          firstName: record.firstName,
+          lastName: record.lastName,
+          taskCount: record.taskCount,
+          spent: record.spent,
+          byPriority: [
+            {
+              priority: record.priority,
+              taskCount: record.taskCount,
+              spent: record.spent,
+            }
+          ]
+        });
+      }
+    } 
     return data;
   }
 }

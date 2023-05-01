@@ -70,6 +70,19 @@ export class TaskController {
     return this.taskService.getTasksForSprint(sprintId);
   }
 
+  @ApiOperation({ summary: 'Statistics for project'})
+  @ApiOkResponse()
+  @Get('project/:projectId/user/statistics')
+  async getUserStatisticsForProject(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<any[]> {
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    return this.taskService.getUserStatisticsForProject(projectId);
+  }
+
   @ApiOperation({ summary: 'List tasks for user'})
   @ApiOkResponse()
   @Get('user')
