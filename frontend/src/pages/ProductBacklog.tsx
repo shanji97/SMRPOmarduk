@@ -62,6 +62,7 @@ import {
   addStoryToSprint,
   getActiveSprint,
   getAllSprints,
+  getUnrealizedStoriesForSprint,
   updateSprint,
 } from "../features/sprints/sprintSlice";
 import { StorySprint } from "../classes/sprintData";
@@ -93,13 +94,7 @@ type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
-  const { projectID } = useParams();
 
-  useEffect(() => {
-    if (projectID !== undefined) {
-      dispatch(getProject(projectID));
-    }
-  }, [projectID]);
 
   let projectsState = useAppSelector((state) => state.projects);
 
@@ -132,12 +127,29 @@ function ProductBacklog() {
     SprintSelector.isLoading,
   ]);
 
+  useEffect(() => {
+    if (SprintSelector.isSuccessActive && !SprintSelector.isLoadingActive) {
+      toast.success(SprintSelector.message);
+      if (SprintSelector.activeSprint !== undefined) {
+        dispatch(getUnrealizedStoriesForSprint(SprintSelector.activeSprint.id!))
+      } 
+      //dispatch(reset());
+    }
+    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive) {
+      toast.error(SprintSelector.message);
+    }
+  }, [
+    SprintSelector.isSuccessActive,
+    SprintSelector.isErrorActive,
+    SprintSelector.isLoadingActive,
+  ]);
+
   //console.log(SprintSelector)
   useEffect(() => {
-    if (isSuccess && !isLoading && message !== '') {
+    if (isSuccess && !isLoading) {
       toast.success(message)
     }
-    if (isError && !isLoading && message !== '') {
+    if (isError && !isLoading) {
       toast.error(message);
     }
   }, [isSuccess, isError, isLoading]);
@@ -153,6 +165,8 @@ function ProductBacklog() {
       dispatch(getAllStoryById(projectsState.activeProject.id!));
       dispatch(getAllSprints(projectsState.activeProject.id!));
       dispatch(getProjectUserRoles(projectsState.activeProject.id!));
+      dispatch(getActiveSprint(projectsState.activeProject.id!));
+      
     }
     if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading) {
       toast.error(projectsState.message);
@@ -172,12 +186,6 @@ function ProductBacklog() {
 
 
 
-  useEffect(() => {
-    if (SprintSelector.isSuccessActive) {
-      console.log("active");
-      dispatch(getActiveSprint(projectsState.activeProject.id!));
-    }
-  }, [SprintSelector.isSuccessActive]);
 
   useEffect(() => {
     if (projectsState.activeProject.id) {
@@ -440,7 +448,7 @@ function ProductBacklog() {
       //dispatch(getAllStoryById(projectsState.activeProject.id!));
 
       resetState();
-      if (isStoriesSuccess && !isStoriesLoading) {
+      if (SprintSelector.isUnrealizedSuccess && !SprintSelector.isUnrealizedLoading) {
       
 
         //dispatch(reset());
@@ -462,10 +470,23 @@ function ProductBacklog() {
           //console.log(stories)
           const visibilityObject: { [itemId: string]: boolean } = {};
           const insertTimeObject: { [itemId: string]: number } = {};
+
+          //sprint zgodbice
+          //  const uniquePrintStoryIds = Array.from(new Set(SprintSelector.unrealizedStories.map((item) => item.id)));
           if (stories) {
             stories.forEach((story: StoryData) => {
+              
+              if (story.category === 2) {
+                if (SprintSelector.activeSprint === undefined) { return; }
+                const storyInSprint = SprintSelector.unrealizedStories.find((item) => item.id === story.id);
+                if (storyInSprint === undefined) {
+                  return;
+                }
+      
+              }
+              
+              
               //za beleženje časa init values
-
               visibilityObject[story.id!] = false;
               //za beleženje vnosa časa
               insertTimeObject[story.id!] = story.timeComplexity;
@@ -477,7 +498,7 @@ function ProductBacklog() {
               } else {
                 cat = category(story.category);
               }
-
+              //ce je category 2 potem dodaj elemnte iz sprint trenutnega oz lahko bi primerjal
               draft[
                 ProductBacklogItemStatus[
                   cat as keyof typeof ProductBacklogItemStatus
@@ -502,11 +523,11 @@ function ProductBacklog() {
         })
       );
       }
-      if (isStoriesError && !isStoriesLoading) {
+      if (SprintSelector.isUnrealizedError && !SprintSelector.isUnrealizedLoading) {
         toast.error(message);
       }
     
-  }, [isStoriesSuccess, isStoriesLoading, isStoriesError]);
+  }, [SprintSelector.isUnrealizedSuccess, SprintSelector.isUnrealizedLoading, SprintSelector.isUnrealizedError]);
 
   //{Object.values.map(([columnId, column], index) => {
 
@@ -591,6 +612,10 @@ function ProductBacklog() {
 
   //{if Object.keys(defaultItems).includes(status)}
 
+  console.log(SprintSelector.activeSprint)
+  console.log(SprintSelector.unrealizedStories)
+
+  //console.log(SprintSelector.activeSprint)
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3">
@@ -637,6 +662,7 @@ function ProductBacklog() {
                         >
                           {itemsByStatus[status].map((item, index) => {
                             return (
+                              //{if (item.category !== 2) { } }
                               <Draggable
                                 key={item.id}
                                 draggableId={item.id!}
@@ -881,6 +907,8 @@ function ProductBacklog() {
                                 }}
                               </Draggable>
                             );
+
+
                           })}
 
                           {provided.placeholder}

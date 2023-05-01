@@ -343,7 +343,7 @@ function SprintBacklog() {
           <div className="d-flex flex-row-reverse">
        
       <ButtonToolbar>
-      <ToggleButtonGroup type="radio" name="options" defaultValue={1} onChange={handleChangeBar}>
+      <ToggleButtonGroup type="radio" name="options" defaultValue={0} onChange={handleChangeBar}>
       <ToggleButton id="tbg-radio-0" value={0}>
         All
         </ToggleButton>
