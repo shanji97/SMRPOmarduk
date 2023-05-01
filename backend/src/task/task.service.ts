@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, In, Repository, QueryFailedError, CustomRepositoryCannotInheritRepositoryError } from 'typeorm';
 import * as moment from 'moment';
-
 import { ProjectService } from '../project/project.service';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
@@ -11,6 +10,20 @@ import { TaskUserTime } from './task-user-time.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
+interface TaskData {
+  date: string;
+  taskId: number;
+  userId: number;
+  spent: number;
+  remaining: number;
+  description: string;
+  dateCreated: string;
+  dateUpdated: string;
+}
+
+interface DateData {
+  [date: string]: TaskData[];
+}
 @Injectable()
 export class TaskService {
   private readonly logger: Logger = new Logger(TaskService.name);
@@ -107,7 +120,7 @@ export class TaskService {
     const storyTimeMax = await this.storyService.getTimeComplexityInHoursForStoryById(taskRecord.storyId);
     const maxTime = storyTimeMax * taskMaxTimeFactor;
     if (task.remaining > maxTime)
-      throw new ValidationException('Timeremaining too big');
+      throw new ValidationException('Time remaining too big');
 
     await this.taskRepository.update({ id: taskId }, task);
   }
@@ -215,6 +228,10 @@ export class TaskService {
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
+    //Handle the userTime======================================
+    const userTimeData = taskData.flatMap(task => task.userTime).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    //================================================================================
+
     const result = taskData.flatMap(task => {
       const sprintStories = task.story.sprintStories.filter(ss => ss.storyId === task.storyId);
       return task.userTime.map(userTime => ({
@@ -230,10 +247,11 @@ export class TaskService {
           taskId: [],
           spent: 0,
           remaining: 0
+
         };
       }
       acc[key].taskId.push(cur.taskId),
-      acc[key].spent += cur.spent;
+        acc[key].spent += cur.spent;
       acc[key].remaining += cur.remaining;
       acc[key].sprintStart = cur.sprint.startDate;
       acc[key].sprintEnd = cur.sprint.endDate;
@@ -241,8 +259,7 @@ export class TaskService {
       acc[key].velocity = cur.sprint.velocity;
       return acc;
     }, {});
-
-   }
+  }
 
   async startTaskTiming(taskId: number): Promise<void> {
     // Check if task is part of active sprint
