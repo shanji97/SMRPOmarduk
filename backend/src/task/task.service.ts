@@ -1,29 +1,38 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, In, Repository, QueryFailedError, CustomRepositoryCannotInheritRepositoryError } from 'typeorm';
+import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
 import * as moment from 'moment';
+
 import { ProjectService } from '../project/project.service';
+import { Sprint } from '../sprint/sprint.entity';
 import { StoryService } from '../story/story.service';
 import { Task, TaskCategory } from './task.entity';
 import { TaskUserTime } from './task-user-time.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
+import { SprintService } from '../sprint/sprint.service';
 
-interface TaskData {
-  date: string;
-  taskId: number;
-  userId: number;
-  spent: number;
+interface BurndownChartData {
   remaining: number;
-  description: string;
-  dateCreated: string;
-  dateUpdated: string;
+  days: {
+    date: string;
+    spent: number;
+    remaining: number;
+  }[];
 }
 
-interface DateData {
-  [date: string]: TaskData[];
+class TaskDate extends Task {
+  dateWorkStart: string | null;
+  dateWorkEnd: string | null;
+
+  time: {
+    date: string;
+    remaining: number;
+    spent: number;
+  }[];
 }
+
 @Injectable()
 export class TaskService {
   private readonly logger: Logger = new Logger(TaskService.name);
@@ -31,6 +40,7 @@ export class TaskService {
   constructor(
     private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
+    private readonly sprintService: SprintService,
     private readonly storyService: StoryService,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
@@ -60,6 +70,57 @@ export class TaskService {
       count: result,
       finished: catsum === finished,
     };
+  }
+
+  async getDetailedTasksForProject(projectId: number): Promise<TaskDate[]> {
+    return (await this.taskRepository.createQueryBuilder('task')
+      .innerJoinAndSelect('task.story', 'story', 'task.storyId = story.id')
+      .leftJoinAndSelect('story.sprintStories', 'ss', 'ss.storyId = story.id')
+      .leftJoinAndSelect('ss.sprint', 'sprint', 'ss.sprintId = sprint.id')
+      .leftJoinAndSelect('task.userTime', 'time', 'time.taskId = task.id')
+      .where('story.projectId = :projectId', { projectId: projectId })
+      .orderBy({ 'task.id': 'ASC', 'sprint.startDate': 'ASC', 'time.date': 'ASC' })
+      .distinct(true)
+      .getMany()).map((task: Task) => {
+        const t = <TaskDate>task;
+        t.dateWorkStart = null;
+        t.dateWorkEnd = null;
+        t.time = [];
+
+        // Get start & end work date for task
+        const sprints: Sprint[] = []; // Already ordered by date
+        for (const ss of task.story.sprintStories) {
+          if (sprints.findIndex((sprint) => sprint.id === ss.sprintId) === -1)
+            sprints.push(ss.sprint);
+        }
+        if (sprints.length > 0) {
+          t.dateWorkStart = sprints[0].startDate;
+          t.dateWorkEnd = sprints[sprints.length - 1].endDate;
+        }
+
+        // Merge user work times by date
+        let found: boolean;
+        for (const timeRecord of task.userTime) {
+          found = false;
+          for (let i = 0; i < t.time.length; i++) {
+            if (t.time[i].date === timeRecord.date) {
+              found = true;
+              t.time[i].remaining += timeRecord.remaining;
+              t.time[i].spent += timeRecord.spent;
+              break;
+            }
+          }
+          if (!found) {
+            t.time.push({
+              date: timeRecord.date,
+              remaining: timeRecord.remaining,
+              spent: timeRecord.spent,
+            });
+          }
+        }
+
+        return t;
+      });
   }
 
   async getTasksForSprint(sprintId: number): Promise<Task[]> {
@@ -228,49 +289,6 @@ export class TaskService {
     });
   }
 
-  async getTaskDataForBD(projectId: number): Promise<any> {
-    const taskData = await this.taskRepository
-      .createQueryBuilder("task")
-      .leftJoinAndSelect("task.story", "story")
-      .leftJoinAndSelect("story.sprintStories", "sprint_story")
-      .leftJoinAndSelect("sprint_story.sprint", "sprint")
-      .leftJoinAndSelect("task.userTime", "userTime")
-      .where("story.projectId = :projectId", { projectId: projectId })
-      .getMany();
-
-    //Handle the userTime======================================
-    const userTimeData = taskData.flatMap(task => task.userTime).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    //================================================================================
-
-    const result = taskData.flatMap(task => {
-      const sprintStories = task.story.sprintStories.filter(ss => ss.storyId === task.storyId);
-      return task.userTime.map(userTime => ({
-        ...userTime,
-        sprint: sprintStories.length > 0 ? sprintStories[0].sprint : null,
-      }));
-    });
-
-    return result.reduce((acc, cur) => {
-      const key = `${cur.date}`;
-      if (!acc[key]) {
-        acc[key] = {
-          taskId: [],
-          spent: 0,
-          remaining: 0
-
-        };
-      }
-      acc[key].taskId.push(cur.taskId),
-        acc[key].spent += cur.spent;
-      acc[key].remaining += cur.remaining;
-      acc[key].sprintStart = cur.sprint.startDate;
-      acc[key].sprintEnd = cur.sprint.endDate;
-      acc[key].sprintId = cur.sprint.id;
-      acc[key].velocity = cur.sprint.velocity;
-      return acc;
-    }, {});
-  }
-
   async startTaskTiming(taskId: number): Promise<void> {
     // Check if task is part of active sprint
     if (!await this.isTaskInActiveSprint(taskId))
@@ -401,5 +419,72 @@ export class TaskService {
     if (!await this.taskExists(taskId))
       throw new ValidationException('Task does not exist');
     await this.taskUserTimeRepository.delete({ date: date, taskId: taskId, userId: userId });
+  }
+
+  async getBurndownChartDataForProjectByProjectId(projectId: number): Promise<BurndownChartData> {
+    const sprints: Sprint[] = await this.sprintService.listSprintsForProject(projectId);
+    if (sprints.length < 1)
+      throw new ValidationException('Project hasn\'t got any sprint');
+
+    const projectStartDate: string = sprints[0].startDate;
+    const projectEndDate: string = sprints[sprints.length - 1].endDate;
+
+    const data = {
+      remaining: 0,
+      days: [],
+    };
+
+    const tasks: TaskDate[] = await this.getDetailedTasksForProject(projectId);
+
+    // Calculate sum of initial estimate for all tasks
+    for (const task of tasks)
+      data.remaining += task.remaining;
+
+    // Calculate for each day
+    let remaining: number, spent: number;
+    let workStart: moment.Moment, workEnd: moment.Moment;
+    for (let d = moment(projectStartDate, 'YYYY-MM-DD'); d.isSameOrBefore(moment(projectEndDate, 'YYYY-MM-DD')); d.add(1, 'd')) {
+      // Reset count values
+      remaining = 0;
+      spent = 0;
+
+      // Go over each task
+      for (const task of tasks) {
+        if (task.dateWorkStart === null || task.dateWorkEnd === null || task.userTime.length < 1) {
+          // Always count in remaining, because it could never be done
+          remaining += task.remaining; // Add inicial estimate
+        } else {
+          workStart = moment(task.dateWorkStart, 'YYYY-MM-DD');
+          workEnd = moment(task.dateWorkEnd, 'YYYY-MM-DD');
+          if (d.isBetween(workStart, workEnd, 'd', '[]')) {
+            let lastBeforeSame: { date: string; remaining: number; spent: number; } | null = null;
+            for (const userTime of task.time) {
+              if (!moment(userTime.date, 'YYYY-MM-DD').isSameOrBefore(d, 'd'))
+                break;
+              lastBeforeSame = userTime; 
+            }
+            if (!lastBeforeSame) { // No work done before or on same day that we are calculating for
+              remaining += task.remaining; // Add inicial estimate
+            } else {
+              remaining += lastBeforeSame.remaining; // Add last estimation
+
+              if (moment(lastBeforeSame.date, 'YYYY-MM-DD').isSame(d, 'd')) // If working on the day
+                spent += lastBeforeSame.spent; // Increase spent time
+            }
+          } else if (d.isBefore(workStart, 'd')) { // Before task is in any sprint
+            remaining += task.remaining;
+          } else if (d.isAfter(workEnd, 'd')) { // After task is over all sprints
+            remaining += task.time[task.time.length - 1].remaining; // Add last task remaining estimation
+          }
+        }
+      }
+
+      data.days.push({
+        date: d.format('YYYY-MM-DD'),
+        remaining: remaining,
+        spent: spent,
+      });
+    }
+    return data;
   }
 }

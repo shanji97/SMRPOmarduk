@@ -260,9 +260,20 @@ export class TaskController {
   @ApiOperation({summary: 'Get task for burndown diagramm.'})
   @ApiOkResponse()
   @Get('/burdown-diagramm-data/:projectId')
-  async getDataForProjectBurnDown(@Token() token: TokenDto,
-  @Param('projectId', ParseIntPipe) projectId: number,): Promise<any>{
-    return this.taskService.getTaskDataForBD(projectId);
+  async getDataForProjectBurnDown(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<any>{
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, null))
+      throw new ForbiddenException();
+
+    try {
+      return await this.taskService.getBurndownChartDataForProjectByProjectId(projectId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
   }
 
   @ApiOperation({ summary: 'Accept task' })
