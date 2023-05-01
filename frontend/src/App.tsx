@@ -24,6 +24,7 @@ import TaskForm from "./components/TaskForm"; // temporary
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+import Burndown from "./pages/Burndown";
 
 function App() {
   return (
@@ -88,6 +89,8 @@ function App() {
               />
             }
           />
+
+          <Route path="/burndown" element={<Burndown />} />
         </Routes>
       </Router>
       <ToastContainer position="top-center" autoClose={1000} />
