@@ -10,6 +10,7 @@ interface TaskState {
     tasksForStory: any[]
     workLogs: any[]
     tasksForUser: any[]
+    categories: any[]
     currentlyWorkingOnTaskId: string;
     isLoading: boolean
     isSuccess: boolean
@@ -29,6 +30,7 @@ const initialState: TaskState = {
     tasksForStory: [],
     workLogs: [],
     tasksForUser: [],
+    categories: [],
     currentlyWorkingOnTaskId: "",
     isLoading: false,
     isSuccess: false,
@@ -67,6 +69,16 @@ export const getTasksForStory = createAsyncThunk('/task/getTask2ForSprint', asyn
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.getTaskForStory(storyId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+
+export const getTaskCategorys = createAsyncThunk('/task/getTaskCategorys', async (storyId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.getTaskCategorys(storyId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message)  || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -228,6 +240,22 @@ export const taskSlice = createSlice({
             state.tasksForStory = action.payload;
         })
         .addCase(getTasksForStory.rejected, (state, action) => {
+            state.isLoading = false
+            state.isSuccess = false;
+            state.isError = true
+            state.message = action.payload
+        })
+        .addCase(getTaskCategorys.pending, (state) => {
+            state.isLoading = true
+        })
+        .addCase(getTaskCategorys.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.isSuccess = true;
+            state.isError = false;
+            state.message = '';
+            state.categories = action.payload;
+        })
+        .addCase(getTaskCategorys.rejected, (state, action) => {
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true

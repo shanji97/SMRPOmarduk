@@ -73,6 +73,7 @@ import { parseJwt } from "../helpers/helpers";
 import { toast } from "react-toastify";
 import RejectStoryModal from "./RejectStoryModal";
 import PlanningPokerModal from "../components/PlanningPokerModal";
+import DropdownStory from "../components/dropdownStory";
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -333,9 +334,8 @@ function ProductBacklog() {
         }
 
         if (destination.droppableId === "Allocated") {
-          if (
-            SprintSelector.activeSprint?.velocity ==
-            itemsByStatus["Allocated"].length
+          if (SprintSelector.activeSprint?.velocity !== undefined &&
+            SprintSelector.activeSprint?.velocity < totalComplexity
           ) {
             toast.error("Sprint Velocity is full");
 
@@ -487,7 +487,7 @@ function ProductBacklog() {
                 if (storyInSprint === undefined) {
                   return;
                 }
-      
+                
               }
               
               
@@ -632,8 +632,11 @@ function ProductBacklog() {
 
   console.log(SprintSelector.activeSprint)
   console.log(SprintSelector.unrealizedStories)
-
+  
   //console.log(SprintSelector.activeSprint)
+  const allocatedItems = itemsByStatus["Allocated"];
+  const totalComplexity = allocatedItems.map((item) => item.timeComplexity).reduce((acc, curr) => acc + curr, 0);
+  //console.log(totalComplexity)
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3">
@@ -658,9 +661,10 @@ function ProductBacklog() {
                       </Button>
                     )}
                     {status === ProductBacklogItemStatus.ALLOCATED && (
-                      <p className="fs-6 my-0">
-                        / {SprintSelector.activeSprint?.velocity}
+                      <p className="fs-6 my-0 ms-auto">
+                    Velocity: {totalComplexity}  / {SprintSelector.activeSprint?.velocity}
                       </p>
+                     
                     )}
                   </div>
                   <hr className="hr mx-3" />
@@ -753,65 +757,7 @@ function ProductBacklog() {
                                             )}
                                           {status !==
                                             ProductBacklogItemStatus.WONTHAVE && (
-                                            <Dropdown className="ms-auto">
-                                              <Dropdown.Toggle
-                                                variant="link"
-                                                id="dropdown-custom-components"
-                                                bsPrefix="p-0"
-                                              >
-                                                <ThreeDots />
-                                              </Dropdown.Toggle>
-                                              <Dropdown.Menu>
-                                                {status !==
-                                                  ProductBacklogItemStatus.UNALLOCATED && (
-                                                  <Dropdown.Item
-                                                    onClick={() => {
-                                                      getDataReject(
-                                                        item,
-                                                        status,
-                                                        index
-                                                      );
-                                                      /*
-                                                    openRejectStoryModal(item.id!, status, index)
-                                                    let handleRejectVar = {
-                                                      status: status,
-                                                      index: index,
-
-                                                    };
-                                                    handleReject(handleRejectVar);
-                                                    */
-                                                  }
-                                                  }
-                                                >
-                                                  <Eraser /> Reject
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() =>
-                                                    openEditStoryModal(item)
-                                                  }
-                                                >
-                                                  <Pencil /> Edit
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() => setShow(true)}
-                                                >
-                                                  <Trash /> Delete
-                                                </Dropdown.Item>
-                                              )}
-                                              <DeleteConfirmation
-                                                item={item}
-                                                status={status}
-                                                onCancel={() => setShow(false)}
-                                                show={show}
-                                              />
-                                            </Dropdown.Menu>
-                                          </Dropdown>
+                                            <DropdownStory item={item} status={status} index={index} openEditStoryModal={({item}) => openEditStoryModal(item)} setShow={setShow} getDataReject={({ item, status, index }) => getDataReject(item, status, index)} show={show}></DropdownStory>
                                           )}
                                         </Card.Header>
                                         <Card.Body>
@@ -985,7 +931,7 @@ function ProductBacklog() {
           show={showRejectStoryModal}
         />
       )}
-      {showPlanningPokerModal && <PlanningPokerModal projectId={activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
+      {showPlanningPokerModal && <PlanningPokerModal projectId={projectsState.activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
     </>
   );
 }

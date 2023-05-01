@@ -17,6 +17,18 @@ const getTaskForSprint = async (sprintId: string, token: string) => {
     return response.data;
 }
 
+const getTaskCategorys = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${TASK_API_URL}/story/${storyId}/categories`, config);
+
+    return response.data;
+}
+
 const getTaskForStory = async (storyId: string, token: string) => {
     const config = {
         headers: {
@@ -199,7 +211,8 @@ const taskService = {
     stopTime,
     acceptTask,
     releaseTask,
-    deleteWork
+    deleteWork,
+    getTaskCategorys
 }
 
 export default taskService;

@@ -14,14 +14,12 @@ export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
   show: boolean;
   item: StoryData;
-  status: ProductBacklogItemStatus;
 }
 
 function DeleteConfirmation({
   onCancel,
   show,
   item,
-  status,
 }: DeleteConfirmationProps) {
   const dispatch = useAppDispatch();
   let { isDeleteSuccess, isLoading, isDeleteError, message } = useAppSelector(
