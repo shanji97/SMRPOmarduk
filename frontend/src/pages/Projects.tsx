@@ -78,6 +78,10 @@ const Projects = () => {
     navigate(`/${projectID}/stats`);
   };
 
+  const redirectToDocs = (projectID: any) => {
+    navigate(`/${projectID}/docs`);
+  };
+
   useEffect(() => {
     dispatch(getAllUsers());
   }, []);
@@ -173,6 +177,11 @@ const Projects = () => {
                           onClick={() => redirectToStats(project.id)}
                         >
                           Statistics
+                        </Dropdown.Item>
+                        <Dropdown.Item
+                          onClick={() => redirectToDocs(project.id)}
+                        >
+                          Documentation
                         </Dropdown.Item>
                       </DropdownButton>
                     </div>
