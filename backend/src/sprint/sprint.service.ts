@@ -3,11 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import * as moment from 'moment';
-
 import { ProjectService } from '../project/project.service';
 import { Sprint } from './sprint.entity';
 import { SprintStory } from './sprint-story.entity';
-import { Story } from '../story/story.entity';
+import { Category, Story } from '../story/story.entity';
 import { UserRole } from '../project/project-user-role.entity';
 import { ValidationException } from '../common/exception/validation.exception';
 
@@ -39,6 +38,22 @@ export class SprintService {
       .getMany();
   }
 
+  async getUnfinishedStoriesForSprintById(sprintId: number): Promise<Story[]> {
+    return await this.entityManager.createQueryBuilder(Story, 's')
+      .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
+      .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .andWhere('s.category != :category', { category: Category.Finished })
+      .getMany();
+  }
+
+  async getUnrealizedStoriesForSprintById(sprintId: number): Promise<Story[]> {
+    return await this.entityManager.createQueryBuilder(Story, 's')
+      .innerJoin('s.sprintStories', 'ss', 's.id = ss.storyId')
+      .where('ss.sprintId = :sprintId', { sprintId: sprintId })
+      .andWhere('s.isRealized = :realized', { realized: 0 })
+      .getMany();
+  }
+
   async getActiveSprintForProject(projectId: number): Promise<Sprint> {
     return await this.sprintRepository.createQueryBuilder('s')
       .where('s.projectId = :projectId AND s.startDate <= NOW() AND s.endDate >= NOW()', { projectId: projectId })
@@ -59,7 +74,7 @@ export class SprintService {
     // Sprint can't start on the weekend
     if ([0, 6].includes(moment(sprint.startDate).weekday()))
       throw new ValidationException('Sprint can\'t start on weekend');
-    
+
     // Check if velocity to high for the sprint
     let sprintDurationDays: number = moment(sprint.endDate, 'YYYY-MM-DD').diff(moment(sprint.startDate, 'YYYY-MM-DD'), 'd') + 1;
     if (sprintDurationDays > 6) {

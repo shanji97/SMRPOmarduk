@@ -70,6 +70,19 @@ export class TaskController {
     return this.taskService.getTasksForSprint(sprintId);
   }
 
+  @ApiOperation({ summary: 'Statistics for project'})
+  @ApiOkResponse()
+  @Get('project/:projectId/user/statistics')
+  async getUserStatisticsForProject(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<any[]> {
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    return this.taskService.getUserStatisticsForProject(projectId);
+  }
+
   @ApiOperation({ summary: 'List tasks for user'})
   @ApiOkResponse()
   @Get('user')
@@ -260,9 +273,20 @@ export class TaskController {
   @ApiOperation({summary: 'Get task for burndown diagramm.'})
   @ApiOkResponse()
   @Get('/burdown-diagramm-data/:projectId')
-  async getDataForProjectBurnDown(@Token() token: TokenDto,
-  @Param('projectId', ParseIntPipe) projectId: number,): Promise<any>{
-    return this.taskService.getTaskDataForBD(projectId);
+  async getDataForProjectBurnDown(
+    @Token() token: TokenDto,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ): Promise<any>{
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, null))
+      throw new ForbiddenException();
+
+    try {
+      return await this.taskService.getBurndownChartDataForProjectByProjectId(projectId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
   }
 
   @ApiOperation({ summary: 'Accept task' })

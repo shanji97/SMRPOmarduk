@@ -46,7 +46,7 @@ export class StoryService {
   }
 
   async getStoriesByProjectId(projectId: number): Promise<Story[]> {
-    return await this.storyRepository.find({ where: { projectId: projectId }, relations: ['assignedUser'] })
+    return await this.storyRepository.find({ where: { projectId: projectId }, relations: ['assignedUser', 'tasks'] })
   }
 
   async createStory(story: CreateStoryDto, projectId: number, userId : number): Promise<object> {
