@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, In, Repository, QueryFailedError } from 'typeorm';
+import { DeepPartial, In, Repository, QueryFailedError, CustomRepositoryCannotInheritRepositoryError } from 'typeorm';
 import * as moment from 'moment';
 
 import { ProjectService } from '../project/project.service';
@@ -208,16 +208,22 @@ export class TaskService {
   async getTaskDataForBD(projectId: number): Promise<any> {
     const taskData = await this.taskRepository
       .createQueryBuilder("task")
-      .leftJoin("task.story", "story")
+      .leftJoinAndSelect("task.story", "story")
+      .leftJoinAndSelect("story.sprintStories", "sprint_story")
+      .leftJoinAndSelect("sprint_story.sprint", "sprint")
       .leftJoinAndSelect("task.userTime", "userTime")
       .where("story.projectId = :projectId", { projectId: projectId })
       .getMany();
 
-    //12:46 comented out
-    // return taskData.flatMap(task => task.userTime);
-    const userTime = taskData.flatMap(task => task.userTime);
+    const result = taskData.flatMap(task => {
+      const sprintStories = task.story.sprintStories.filter(ss => ss.storyId === task.storyId);
+      return task.userTime.map(userTime => ({
+        ...userTime,
+        sprint: sprintStories.length > 0 ? sprintStories[0].sprint : null,
+      }));
+    });
 
-    return userTime.reduce((acc, cur) => {
+    return result.reduce((acc, cur) => {
       const key = `${cur.date}`;
       if (!acc[key]) {
         acc[key] = {
@@ -229,46 +235,14 @@ export class TaskService {
       acc[key].taskId.push(cur.taskId),
       acc[key].spent += cur.spent;
       acc[key].remaining += cur.remaining;
+      acc[key].sprintStart = cur.sprint.startDate;
+      acc[key].sprintEnd = cur.sprint.endDate;
+      acc[key].sprintId = cur.sprint.id;
+      acc[key].velocity = cur.sprint.velocity;
       return acc;
     }, {});
 
-    // const data = userTime.reduce((acc, cur) => {
-    //   const key = `${cur.date}`;
-    //   if (!acc[key]) {
-    //     acc[key] = {
-    //       taskId: [],
-    //       spent: 0,
-    //       remaining: 0
-    //     };
-    //   }
-    //   acc[key].taskId.push(cur.taskId),
-    //   acc[key].spent += cur.spent;
-    //   acc[key].remaining += cur.remaining;
-    //   return acc;
-    // }, {});
-
-    // const startDate = new Date(Object.keys(data).sort()[1]);
-    // const keys = Object.keys(data).sort();
-    // const newValues = {
-    //   "taskId": [
-    //     1,
-    //     ...data[keys.indexOf(startDate.toISOString().slice(0, 10))]["taskId"].slice(1)
-    //   ],
-    //   "spent": data[keys.indexOf(startDate.toISOString().slice(0, 10))]["spent"] + 1,
-    //   "remaining": data[keys.indexOf(startDate.toISOString().slice(0, 10))]["remaining"] - 1
-    // };
-
-    // for (let i = keys.indexOf(startDate.toISOString().slice(0, 10)) - 1; i >= 0; i--) {
-    //   const currentDate = new Date(keys[i]);
-    //   data[currentDate.toISOString().slice(0, 10)] = {
-    //     "taskId": data[keys[i]]["taskId"],
-    //     "spent": data[keys[i]]["spent"],
-    //     "remaining": data[keys[i]]["remaining"] + 1
-    //   };
-    // }
-
-    // data[startDate.toISOString().slice(0, 10)] = newValues;
-  }
+   }
 
   async startTaskTiming(taskId: number): Promise<void> {
     // Check if task is part of active sprint
