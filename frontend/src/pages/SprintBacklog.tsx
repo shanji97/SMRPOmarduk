@@ -128,7 +128,7 @@ function SprintBacklog() {
 
   useEffect(() => {
     if (projectsState.isActiveProjectSuccess && !projectsState.isActiveProjectLoading) {
-            // get developer list
+      // get developer list
       dispatch(getProjectUserRoles(projectsState.activeProject.id!));
       // get active sprint id
       if (activeSprint === undefined && projectsState.activeProject !== undefined) {
@@ -144,17 +144,17 @@ function SprintBacklog() {
 
   useEffect(() => {
     if (projectRolesState.isSuccess && !projectRolesState.isLoading) {
-    setDevelopersOnProject([]);
-    projectRolesState.userRoles.forEach((user: any) => {
-      if (user.role === 0) {
-        setDevelopersOnProject((prevDevelopers) => {
-          const newDevelopers = [...prevDevelopers];
-          newDevelopers.push(user.userId.toString());
-          return newDevelopers;
-        });
-      }
-    });
-  }
+      setDevelopersOnProject([]);
+      projectRolesState.userRoles.forEach((user: any) => {
+        if (user.role === 0) {
+          setDevelopersOnProject((prevDevelopers) => {
+            const newDevelopers = [...prevDevelopers];
+            newDevelopers.push(user.userId.toString());
+            return newDevelopers;
+          });
+        }
+      });
+    }
   }, [projectRolesState.isSuccess, projectRolesState.isLoading]);
 
   useEffect(() => {
@@ -188,7 +188,6 @@ function SprintBacklog() {
 
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -341,27 +340,27 @@ function SprintBacklog() {
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
         <div className="col-sm-8">
           <div className="d-flex flex-row-reverse">
-       
-      <ButtonToolbar>
-      <ToggleButtonGroup type="radio" name="options" defaultValue={0} onChange={handleChangeBar}>
-      <ToggleButton id="tbg-radio-0" value={0}>
-        All
-        </ToggleButton>
-        <ToggleButton id="tbg-radio-1" value={1}>
-        Unallocated
-        </ToggleButton>
-        <ToggleButton id="tbg-radio-2" value={2}>
-        Allocated
-        </ToggleButton>
-        <ToggleButton id="tbg-radio-3" value={3}>
-        In progress
-        </ToggleButton>
-        <ToggleButton id="tbg-radio-4" value={4}>
-        Finished
-        </ToggleButton>
-      </ToggleButtonGroup>
-  </ButtonToolbar>
-      </div>
+
+            <ButtonToolbar>
+              <ToggleButtonGroup type="radio" name="options" defaultValue={0} onChange={handleChangeBar}>
+                <ToggleButton id="tbg-radio-0" value={0}>
+                  All
+                </ToggleButton>
+                <ToggleButton id="tbg-radio-1" value={1}>
+                  Unassigned
+                </ToggleButton>
+                <ToggleButton id="tbg-radio-2" value={2}>
+                  Assigned
+                </ToggleButton>
+                <ToggleButton id="tbg-radio-3" value={3}>
+                  In progress
+                </ToggleButton>
+                <ToggleButton id="tbg-radio-4" value={250}>
+                  Finished
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </ButtonToolbar>
+          </div>
           {storiesForSprint.map((story) => {
             // console.log(item);
             return (
@@ -388,71 +387,71 @@ function SprintBacklog() {
                           className={` ${classes["gfg"]} small`}
                         >
                           <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Description</th>
-                              <th>Estimated time (hrs)</th>
-                              <th>Status</th>
-                              <th>Options</th>
-                            </tr>
+                          <tr>
+                            <th>#</th>
+                            <th>Description</th>
+                            <th>Estimated time (hrs)</th>
+                            <th>Status</th>
+                            <th>Options</th>
+                          </tr>
                           </thead>
 
                           <tbody>
-                            {taskState.tasksForSprint
-                              .filter((task) => task.storyId === story.id)
-                              .map((task) => (
-                                <>
-                                {task.category === 0 && task.category === valueBar && (
-                                <tr key={task.id}>
-                                  <td>{task.id}</td>
-                                  <td>{task.name}</td>
-                                  <td className="">{task.remaining}</td>
-                                  <td>{renderStatus(task)}</td>
+                          {taskState.tasksForSprint
+                            .filter((task) => task.storyId === story.id)
+                            .map((task) => (
+                              <>
+                                {(valueBar === 0 ||  task.category === valueBar) && (
+                                  <tr key={task.id}>
+                                    <td>{task.id}</td>
+                                    <td>{task.name}</td>
+                                    <td className="">{task.remaining}</td>
+                                    <td>{renderStatus(task)}</td>
 
-                                  <td className="text-center">
-                                    {!isTaskFinished(task) && (
-                                      <Dropdown className="ms-auto">
-                                        <Dropdown.Toggle
-                                          variant="link"
-                                          id="dropdown-custom-components"
-                                          bsPrefix="p-0"
-                                        >
-                                          <ThreeDots />
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu>
-                                          <Dropdown.Item
-                                            onClick={() =>
-                                              openEditTaskModal(task)
-                                            }
+                                    <td className="text-center">
+                                      {!isTaskFinished(task) && (
+                                        <Dropdown className="ms-auto">
+                                          <Dropdown.Toggle
+                                            variant="link"
+                                            id="dropdown-custom-components"
+                                            bsPrefix="p-0"
                                           >
-                                            <Pencil /> Edit
-                                          </Dropdown.Item>
-                                          {(isTaskUnassigned(task) ||
-                                            (isUserScrumMaster(projectRolesState.userRoles) &&
-                                              isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
+                                            <ThreeDots />
+                                          </Dropdown.Toggle>
+                                          <Dropdown.Menu>
                                             <Dropdown.Item
                                               onClick={() =>
-                                                openAssignUserModal(task)
+                                                openEditTaskModal(task)
                                               }
                                             >
-                                              <Person /> Assign User
+                                              <Pencil /> Edit
                                             </Dropdown.Item>
-                                          )}
-                                          {(isTaskUnassigned(task) ||
-                                            isTaskAssigned(task)) && (
-                                            <Dropdown.Item
-                                              onClick={() =>
-                                                openDeleteTaskModal(task)
-                                              }
-                                            >
-                                              <Trash /> Delete
-                                            </Dropdown.Item>
-                                          )}
-                                        </Dropdown.Menu>
-                                      </Dropdown>
-                                    )}
-                                  </td>
-                                </tr>
+                                            {(isTaskUnassigned(task) ||
+                                              (isUserScrumMaster(projectRolesState.userRoles) &&
+                                                isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
+                                              <Dropdown.Item
+                                                onClick={() =>
+                                                  openAssignUserModal(task)
+                                                }
+                                              >
+                                                <Person /> Assign User
+                                              </Dropdown.Item>
+                                            )}
+                                            {(isTaskUnassigned(task) ||
+                                              isTaskAssigned(task)) && (
+                                              <Dropdown.Item
+                                                onClick={() =>
+                                                  openDeleteTaskModal(task)
+                                                }
+                                              >
+                                                <Trash /> Delete
+                                              </Dropdown.Item>
+                                            )}
+                                          </Dropdown.Menu>
+                                        </Dropdown>
+                                      )}
+                                    </td>
+                                  </tr>
                                 )} </>))}
                           </tbody>
                         </Table>

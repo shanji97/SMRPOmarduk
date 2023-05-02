@@ -12,7 +12,6 @@ import PokerRound from "./PokerRound";
 import VotesContainer from "./VotesContainer";
 import {ArrowClockwise} from "react-bootstrap-icons";
 
-
 interface PlanningPokerModalProps {
   isUserScrumMaster: boolean
   storyIdForPoker: string
@@ -72,25 +71,27 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
 
         <Table striped bordered hover>
           <thead>
-            <tr>
-              <th>id</th>
-              {userRolesWithoutOwner.map(role => (
-                <th key={Math.random()}>{role.user.username}</th>
-              ))}
-            </tr>
+          <tr>
+            <th>id</th>
+            {userRolesWithoutOwner.map(role => (
+              <th key={Math.random()}>{role.user.username}</th>
+            ))}
+          </tr>
           </thead>
           <tbody>
-            {pokerRounds.map((round, i) => (
-              <PokerRound
-                key={i}
-                roundId={round.id!}
-                activeRound={activeRound}
-                isUserScrumMaster={isUserScrumMaster}
-                numberOfPlayers={userRoles.length-1}
-                setShowVotingOptions={setShowVotingOptions}
-                shouldReload={shouldReload}
-              />
-            ))}
+          {pokerRounds.length > 0 ? pokerRounds.map((round, i) => (
+            <PokerRound
+              key={i}
+              roundId={round.id!}
+              activeRound={activeRound}
+              isUserScrumMaster={isUserScrumMaster}
+              numberOfPlayers={userRoles.length-1}
+              setShowVotingOptions={setShowVotingOptions}
+              shouldReload={shouldReload}
+            />
+          )) : <td className='text-secondary' colSpan={userRoles.length} style={{ textAlign: "center" }}>
+            No rounds yet
+          </td>}
           </tbody>
         </Table>
         <Fragment>
