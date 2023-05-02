@@ -9,7 +9,7 @@ import CustomTimeLog from "./CustomTimeLog";
 import {parseJwt} from "../helpers/helpers";
 
 interface LogTimeModalProps {
-  taskId: string,
+  task: any,
   showModal: boolean,
   hideModal: () => void
   updateTimeValues: (logs: any) => void
@@ -26,7 +26,7 @@ export interface TimeLog {
   dateUpdated?: string,
 }
 
-const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal, updateTimeValues}) => {
+const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, updateTimeValues}) => {
   const dispatch = useAppDispatch();
   const {user} = useAppSelector(state => state.users);
   const [userId, setUserId] = useState('');
@@ -58,7 +58,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(getWorkLogs(taskId));
+    dispatch(getWorkLogs(task.id!));
   }, []);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
   useEffect(() => {
     const timelogs = workLogs.map((log, i) => {
       return <TimeInputs
-                taskId={taskId}
+                taskId={task.id!}
                 userId={userId}
                 key={i} 
                 index={i} 
@@ -79,6 +79,20 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
              />
     })
     setInitialLogs(timelogs);
+  }, [workLogs]);
+
+  const lastRemaining = useMemo(() => {
+    if (workLogs.length === 0) {
+      return task.remaining;
+    }
+
+    const latestIndex = workLogs.reduce((latestIndex, log, currentIndex) => {
+      const latestDate = new Date(workLogs[latestIndex].date);
+      const currentDate = new Date(log.date);
+      return currentDate > latestDate ? currentIndex : latestIndex;
+    }, 0);
+
+    return workLogs[latestIndex].remaining;
   }, [workLogs]);
 
   const closeModal = () => {
@@ -123,7 +137,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({taskId, showModal, hideModal
       </Modal.Header>
 
       <Modal.Body>
-          {showTodayLog && <CustomTimeLog userId={userId} taskId={taskId} hide={handleHideTodayLog} />}
+          {showTodayLog && <CustomTimeLog lastRemaining={lastRemaining} userId={userId} taskId={task.id!} hide={handleHideTodayLog} />}
           {initialLogs}
       </Modal.Body>
     </Modal>

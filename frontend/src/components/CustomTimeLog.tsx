@@ -9,14 +9,15 @@ interface CustomTimeLogProps {
   taskId: string
   userId: string
   hide: () => void
+  lastRemaining: number
 }
 
-const CustomTimeLog: React.FC<CustomTimeLogProps> = ({hide, taskId, userId}) => {
+const CustomTimeLog: React.FC<CustomTimeLogProps> = ({hide, taskId, userId, lastRemaining}) => {
   const dispatch = useAppDispatch();
   const [newTimeLogData, setNewTimeLogData] = useState({
     date: '',
     spent: 0,
-    remaining: 0
+    remaining: lastRemaining
   });
 
   const {date, spent, remaining} = newTimeLogData;

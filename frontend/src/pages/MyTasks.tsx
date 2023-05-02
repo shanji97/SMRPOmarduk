@@ -8,15 +8,18 @@ import { useNavigate } from "react-router-dom";
 import { getTaskForUser } from "../features/tasks/taskSlice";
 import classes from "./Dashboard.module.css";
 import Tasks from "../components/Tasks";
+import {activateProject, getActiveProject} from "../features/projects/projectSlice";
 
 function MyTasks() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.users);
   let { tasksForUser, isSuccess } = useAppSelector((state) => state.tasks);
+  const { activeProject } = useAppSelector((state) => state.projects);
 
   useEffect(() => {
     dispatch(getTaskForUser());
+    dispatch(getActiveProject());
   }, []);
 
   useEffect(() => {

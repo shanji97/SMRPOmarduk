@@ -49,8 +49,6 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   }, [isSuccess, isError, isLoading]);
 
   useEffect(() => {
-    console.log(workLogs);
-    console.log(task)
   }, [workLogs])
 
   useEffect(() => {
@@ -190,7 +188,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
       </tr>
       {showModal && (
         <LogTimeModal
-          taskId={task.id}
+          task={task}
           showModal={showModal}
           hideModal={hideModal}
           updateTimeValues={updateTimeValue}
