@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from "react";
+import React, {Component, Fragment, useEffect, useState} from "react";
 import {
   DragDropContext,
   Draggable,
@@ -539,6 +539,8 @@ function ProductBacklog() {
   //modal za delete
   const [show, setShow] = useState(false);
 
+  const [showContextMenu, setShowContextMenu] = useState(false);
+
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
 
@@ -589,6 +591,7 @@ function ProductBacklog() {
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
   const getDataStory = (item: StoryData) => {
     setTempDataStory(item);
+    console.log('call');
     //console.log(item);
     return setShowStory(true);
   };
@@ -629,9 +632,6 @@ function ProductBacklog() {
   function closePlanningPokerModal() {
     setShowPlanningPokerModal(false);
   }
-
-  console.log(SprintSelector.activeSprint)
-  console.log(SprintSelector.unrealizedStories)
   
   //console.log(SprintSelector.activeSprint)
   const allocatedItems = itemsByStatus["Allocated"];
@@ -757,7 +757,18 @@ function ProductBacklog() {
                                             )}
                                           {status !==
                                             ProductBacklogItemStatus.WONTHAVE && (
-                                            <DropdownStory item={item} status={status} index={index} openEditStoryModal={({item}) => openEditStoryModal(item)} setShow={setShow} getDataReject={({ item, status, index }) => getDataReject(item, status, index)} show={show}></DropdownStory>
+                                              <Fragment>
+                                                <DropdownStory
+                                                  item={item}
+                                                  status={status}
+                                                  index={index}
+                                                  openEditStoryModal={({item}) => openEditStoryModal(item)}
+                                                  setShow={setShow}
+                                                  getDataReject={({ item, status, index }) => getDataReject(item, status, index)}
+                                                  show={show}
+                                                />
+                                                <SuitSpadeFill onClick={() => {handleShowPlanningPokerModal(item)}} />
+                                              </Fragment>
                                           )}
                                         </Card.Header>
                                         <Card.Body>

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, {memo, useEffect} from "react";
 import {
     Button,
     Card,
@@ -49,17 +49,9 @@ import { Link } from "react-router-dom";
       }) => void;
     show: boolean;
   }
-  
-
-
-  
-
 
 const DropdownStory = memo(
   ({ status, item, index, getDataReject, openEditStoryModal, setShow, show }: DropdownProps) => {
-
-
-    
     return (
         <>
       <Dropdown   className="ms-auto">
