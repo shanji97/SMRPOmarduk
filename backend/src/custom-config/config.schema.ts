@@ -44,7 +44,7 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
 	JWT_SECRET: Joi.string(),
 	JWT_PUBLIC_KEY_PATH: Joi.string(),
 	JWT_PRIVATE_KEY_PATH: Joi.string(),
-	JWT_ACCESS_TOKEN_EXPIRE: Joi.allow(Joi.string(), Joi.number()).default('1h'),
+	JWT_ACCESS_TOKEN_EXPIRE: Joi.allow(Joi.string(), Joi.number()).default('6h'),
 
   /**
    * Bussines logic validation parameters

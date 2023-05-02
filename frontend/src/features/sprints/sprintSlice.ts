@@ -4,6 +4,7 @@ import {SprintBody, StorySprint} from "../../classes/sprintData";
 
 interface SprintState {
     sprints: SprintBody[]
+    unrealizedStories: any []
     activeSprint: SprintBody | undefined
     isUpdated: boolean
     isLoading: boolean
@@ -16,10 +17,14 @@ interface SprintState {
     isLoadingActive: boolean
     isSuccessActive: boolean
     isErrorActive: boolean
+    isUnrealizedError: boolean
+    isUnrealizedLoading: boolean
+    isUnrealizedSuccess: boolean
 }
 
 const initialState: SprintState = {
     sprints: [],
+    unrealizedStories: [],
     activeSprint: undefined,
     isUpdated: false,
     isLoading: false,
@@ -32,6 +37,9 @@ const initialState: SprintState = {
     isLoadingActive: false,
     isSuccessActive: false,
     isErrorActive: false,
+    isUnrealizedLoading: false,
+    isUnrealizedSuccess: false,
+    isUnrealizedError: false,
 }
 
 export const createSprint = createAsyncThunk('sprint/create', async (sprintBody: SprintBody, thunkAPI: any) => {
@@ -68,6 +76,15 @@ export const getAllSprints = createAsyncThunk('sprint/getAll', async (projectId:
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await sprintService.getAllSprints(projectId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+export const getUnrealizedStoriesForSprint = createAsyncThunk('sprint/getUnrealizedStoriesForSprint', async (sprintId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await sprintService.getUnrealizedStoriesForSprint(sprintId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -111,6 +128,9 @@ export const sprintSlice = createSlice({
             state.isLoadingActive = false
             state.isErrorActive = false
             state.isSuccessActive = false
+            state.isUnrealizedLoading = false
+            state.isUnrealizedError = false
+            state.isUnrealizedSuccess = false
         },
         setActiveSprint: (state, action) => {
             state.activeSprint = action.payload;
@@ -141,7 +161,7 @@ export const sprintSlice = createSlice({
             state.isLoading = false;
             state.isStoryInSprint = true;
             state.isNotStoryInSprint = false;
-            state.message = '';
+            state.message = 'Story successfully added to sprint';
             state.sprints.push(action.payload);
         })
         .addCase(addStoryToSprint.rejected, (state, action) => {
@@ -184,7 +204,7 @@ export const sprintSlice = createSlice({
         })
         .addCase(getAllSprints.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = false;
+            state.isSuccess = true;
             state.isError = false;
             state.message = '';
             state.sprints = action.payload;
@@ -195,12 +215,28 @@ export const sprintSlice = createSlice({
             state.isError = true
             state.message = action.payload
         })
+        .addCase(getUnrealizedStoriesForSprint.pending, (state) => {
+            state.isUnrealizedLoading = true;
+        })
+        .addCase(getUnrealizedStoriesForSprint.fulfilled, (state, action) => {
+            state.isUnrealizedLoading = false;
+            state.isUnrealizedSuccess = true;
+            state.isUnrealizedError = false;
+            state.message = '';
+            state.unrealizedStories = action.payload;
+        })
+        .addCase(getUnrealizedStoriesForSprint.rejected, (state, action) => {
+            state.isUnrealizedLoading = false;
+            state.isUnrealizedSuccess = false;
+            state.isUnrealizedError = true;
+            state.message = action.payload
+        })
         .addCase(deleteSprint.pending, (state) => {
             state.isLoading = true
         })
         .addCase(deleteSprint.fulfilled, (state, action) => {
             state.isLoading = false;
-            state.isSuccess = false;
+            state.isSuccess = true;
             state.isError = false;
             state.message = '';
             state.sprints = state.sprints.filter(sprint => sprint.id !== action.meta.arg);
@@ -216,7 +252,7 @@ export const sprintSlice = createSlice({
         })
         .addCase(getActiveSprint.fulfilled, (state, action) => {
             state.isLoadingActive = false;
-            state.isSuccessActive = false;
+            state.isSuccessActive = true;
             state.isErrorActive = false;
             state.message = '';
             state.activeSprint = action.payload;

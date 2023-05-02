@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from "react";
+import React, {Component, Fragment, useEffect, useState} from "react";
 import {
   DragDropContext,
   Draggable,
@@ -33,11 +33,11 @@ import {
   ConeStriped,
   X,
   Eraser,
-  Stickies,
+  Stickies, SuitSpadeFill,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 
 import produce from "immer";
@@ -54,21 +54,26 @@ import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
-import { getActiveProject } from "../features/projects/projectSlice";
+import {
+  getActiveProject,
+  getProject,
+} from "../features/projects/projectSlice";
 import {
   addStoryToSprint,
   getActiveSprint,
   getAllSprints,
+  getUnrealizedStoriesForSprint,
   updateSprint,
 } from "../features/sprints/sprintSlice";
 import { StorySprint } from "../classes/sprintData";
 import Projects from "./Projects";
-import { getProjectUserRoles } from  "../features/projects/projectSlice";
+import { getProjectUserRoles } from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
 
 import { toast } from "react-toastify";
 import RejectStoryModal from "./RejectStoryModal";
-
+import PlanningPokerModal from "../components/PlanningPokerModal";
+import DropdownStory from "../components/dropdownStory";
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -80,9 +85,6 @@ import RejectStoryModal from "./RejectStoryModal";
 //npm install --save react-bootstrap
 //npm install bootstrap --save
 
-  
-
-
 const defaultItems = {
   [ProductBacklogItemStatus.WONTHAVE]: [],
   [ProductBacklogItemStatus.UNALLOCATED]: [],
@@ -90,111 +92,134 @@ const defaultItems = {
   [ProductBacklogItemStatus.DONE]: [],
 };
 
-
-
 type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
-  const { activeProject, userRoles } = useAppSelector((state) => state.projects);
+
   
+  const { userRoles } = useAppSelector((state) => state.projects);
+  const [showPlanningPokerModal, setShowPlanningPokerModal] = useState(false);
+  const [storyIdForPoker, setStoryIdForPoker] = useState('');
   //dispatch(getActiveProject());
   //helper funkcija za updatat useState
-  const [sgs, setSgs] = useState("undefined");
-
-  let { stories, isSuccess, isLoading, isError, message, isSuccessConfirm, isSuccessLoading } = useAppSelector(
-    (state) => state.stories
-  );
-  let projectroles = useAppSelector((state) => state.projects);
-  let SprintSelector = useAppSelector((state) => state.sprints);
   
+
+  let {
+    stories,
+    isSuccess,
+    isLoading,
+    isError,
+    message,
+    isStoriesSuccess,
+    isStoriesLoading,
+    isStoriesError,
+    isCategoryError,
+    isCategorySuccess,
+    isCategoryLoading
+  } = useAppSelector((state) => state.stories);
+  let SprintSelector = useAppSelector((state) => state.sprints);
+  let projectsState = useAppSelector((state) => state.projects);
   useEffect(() => {
     if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
-      toast.success("Story successfully Added to sprint!");
-      dispatch(reset());
+      toast.success(SprintSelector.message);
+      //dispatch(reset());
     }
     if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
       toast.error(SprintSelector.message);
     }
   }, [
     SprintSelector.isStoryInSprint,
-    SprintSelector.isNotStoryInSprint ,
+    SprintSelector.isNotStoryInSprint,
     SprintSelector.isLoading,
   ]);
 
-
-
- 
+  useEffect(() => {
+    if (SprintSelector.isSuccessActive && !SprintSelector.isLoadingActive) {
+      toast.success(SprintSelector.message);
+      if (SprintSelector.activeSprint !== undefined) {
+        dispatch(getUnrealizedStoriesForSprint(SprintSelector.activeSprint.id!))
+      } 
+      //dispatch(reset());
+    }
+    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive) {
+      toast.error(SprintSelector.message);
+    }
+  }, [
+    SprintSelector.isSuccessActive,
+    SprintSelector.isErrorActive,
+    SprintSelector.isLoadingActive,
+  ]);
 
   //console.log(SprintSelector)
   useEffect(() => {
     if (isSuccess && !isLoading) {
-      dispatch(reset);
       toast.success(message)
-      console.log("kul");
     }
     if (isError && !isLoading) {
-      dispatch(reset);
       toast.error(message);
-      console.log("error");
     }
   }, [isSuccess, isError, isLoading]);
 
-  useEffect(() => {
-    if (isSuccessConfirm && !isSuccessLoading) {
-      dispatch(reset);
-      if (tempDataApproved) {
-        handleDragCustom({status: tempDataApproved.status!, index: tempDataApproved.index!,destination: 'Done'})  
-      }
-    }
-  }, [isSuccessConfirm, isSuccessLoading]);
 
-  
- 
+
   useEffect(() => {
-    
     dispatch(getActiveProject());
-    
-    
   }, []);
 
   useEffect(() => {
-    
-    if (activeProject.id) {
-      dispatch(getAllStoryById(activeProject.id!));
-      dispatch(getAllSprints(activeProject.id!));
-      dispatch(getProjectUserRoles(activeProject.id!))
-      console.log(activeProject)
-    }
-  }, [activeProject]);
-
-  useEffect(() => {
-    
-    if (SprintSelector.isSuccessActive) {
-      console.log("active")
-      dispatch(getActiveSprint(activeProject.id!))
-    }
-  }, [SprintSelector.isSuccessActive]);
-
-
-  useEffect(() => {
-    
-    if (activeProject.id) {
-      const dataArray = Object.values(userRoles);
-      const filteredDataScramMaster = dataArray.filter(item => item.role === 1);
-      const filteredDataProductOwner = dataArray.filter(item => item.role === 2);
-      if (filteredDataScramMaster) {
-        setScrumMasterId(filteredDataScramMaster[0].userId)
-      }
-      if (filteredDataProductOwner) {
-        setScrumProductOwnerId(filteredDataProductOwner[0].userId)
-      }
+    if (projectsState.isActiveProjectSuccess && !projectsState.isActiveProjectLoading) {
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+      dispatch(getAllSprints(projectsState.activeProject.id!));
+      dispatch(getProjectUserRoles(projectsState.activeProject.id!));
+      dispatch(getActiveSprint(projectsState.activeProject.id!));
       
     }
-  }, [userRoles]);
+    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading) {
+      toast.error(projectsState.message);
+    }
+  }, [projectsState.isActiveProjectSuccess, projectsState.isActiveProjectLoading, projectsState.isActiveProjectError]);
 
-//console.log(projectroles.userRoles)
 
+
+  useEffect(() => {
+    
+    if (projectsState.activeProject.id) {
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+      dispatch(getAllSprints(projectsState.activeProject.id!));
+      dispatch(getProjectUserRoles(projectsState.activeProject.id!))
+      console.log(projectsState.activeProject)
+    }
+  }, [isCategoryError, isCategorySuccess, isCategoryLoading]);
+
+
+
+
+  useEffect(() => {
+    if (projectsState.activeProject.id) {
+      const dataArray = Object.values(projectsState.userRoles);
+      const filteredDataScramMaster = dataArray.filter(
+        (item) => item.role === 1
+      );
+      const filteredDataProductOwner = dataArray.filter(
+        (item) => item.role === 2
+      );
+      if (filteredDataScramMaster) {
+        setScrumMasterId(filteredDataScramMaster[0].userId);
+      }
+      if (filteredDataProductOwner) {
+        setScrumProductOwnerId(filteredDataProductOwner[0].userId);
+      }
+    }
+  }, [projectsState.userRoles]);
+
+
+
+
+
+
+
+  //console.log(projectroles.userRoles)
 
   //uporabniki
   let { users, user } = useAppSelector((state) => state.users);
@@ -221,49 +246,24 @@ function ProductBacklog() {
     const userData = parseJwt(token);
     setIsAdmin(userData.isAdmin);
     setUserName(userData.sub);
-    setUserId(userData.sid)
+    setUserId(userData.sid);
   }, [user]);
 
   const isUserScramMaster = () => {
-    if (scrumMasterId === userId && userId && scrumMasterId)
-    return true;
+    if (scrumMasterId === userId && userId && scrumMasterId) return true;
     else return false;
-    
   };
   const isUserProductOwn = () => {
-    if (productOwnerId === userId && userId && productOwnerId)
-    return true;
+    if (productOwnerId === userId && userId && productOwnerId) return true;
     else return false;
-    
   };
 
 
-  
-//console.log(isUserScramMaster())
-
-
-
-  // NOTE: temporary fix, change this if needed
-  /*
-  useEffect(() => {
-    if (isSuccess && !isLoading) {
-      dispatch(reset());
-    }
-    if (isError && !isLoading) {
-      dispatch(reset());
-    }
-  }, [isSuccess, isError, isLoading]);
-
-  */
-  //let stories = useAppSelector((state) => state.stories);
   //console.log(stories)
   const navigate = useNavigate();
 
-  
-
   useEffect(() => {
     if (user === null) {
-      console.log("redirect");
       navigate("/login");
     }
   }, [user]);
@@ -321,36 +321,7 @@ function ProductBacklog() {
     destination: string;
   }) => void;
 
-  
-  const handleDragCustom: HandrejectFunc = ({ status, index, destination }) =>
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        //item, damo na unasigned
-        const dest = destination;
-       /*
-        const niki = draft[
-                  status as ProductBacklogItemStatus
-                ][index];
-              */  
-        const [removed] = draft[
-          status as ProductBacklogItemStatus
-        ].splice(index, 1);
 
-        draft[dest as ProductBacklogItemStatus].splice(
-          0,
-          0,
-          removed
-        );
-        let projectRoleData = {
-          projectId: parseInt(activeProject?.id || ""),
-          category: categoryChange(dest),
-          storyId: removed.id || "",
-        };
-        dispatch(updateStoryCategory(projectRoleData));
-      })
-    );
-
-    
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
     destination,
@@ -359,24 +330,28 @@ function ProductBacklog() {
       produce(current, (draft) => {
         // dropped outside the list
         if (!destination || destination.droppableId === source.droppableId) {
-          console.log("istu")
           return;
         }
 
-        
         if (destination.droppableId === "Allocated") {
-          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+          if (SprintSelector.activeSprint?.velocity !== undefined &&
+            SprintSelector.activeSprint?.velocity < totalComplexity
+          ) {
             toast.error("Sprint Velocity is full");
-      
+
             return;
-           
           }
         }
-        if (source.droppableId === "Unallocated" && destination.droppableId === "Done") {
-          if (SprintSelector.activeSprint?.velocity == itemsByStatus["Allocated"].length) {
+        if (
+          source.droppableId === "Unallocated" &&
+          destination.droppableId === "Done"
+        ) {
+          if (
+            SprintSelector.activeSprint?.velocity ==
+            itemsByStatus["Allocated"].length
+          ) {
             toast.error("Story is not in active Sprint and is not realised");
             return;
-
           }
         }
 
@@ -384,7 +359,7 @@ function ProductBacklog() {
         const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
                 ][source.index];
-           */    
+           */
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -395,45 +370,35 @@ function ProductBacklog() {
           removed
         );
         let projectRoleData = {
-          projectId: parseInt(activeProject?.id || ""),
+          projectId: parseInt(projectsState.activeProject?.id || ""),
           category: categoryChange(destination.droppableId),
           storyId: removed.id || "",
         };
         dispatch(updateStoryCategory(projectRoleData));
 
-        if (destination.droppableId === "Allocated" && destination.droppableId != source.droppableId) {
+        if (
+          destination.droppableId === "Allocated" &&
+          destination.droppableId != source.droppableId
+        ) {
           const storySprint: StorySprint = {
             sprintId: parseInt(SprintSelector.activeSprint?.id || ""),
-            storyId: parseInt(removed.id || "")
-          
-        };
-        dispatch(addStoryToSprint(storySprint)); 
-        } 
+            storyId: parseInt(removed.id || ""),
+          };
+          dispatch(addStoryToSprint(storySprint));
+        }
         //itemsByStatus[destination.droppableId].length
-        
-        if (source.droppableId === "Allocated" && destination.droppableId != "Done") {
-          
-        };
+
+        if (
+          source.droppableId === "Allocated" &&
+          destination.droppableId != "Done"
+        ) {
+        }
       })
     );
   };
 
-  type HandleDeleteFunc = (args: {
-    status: ProductBacklogItemStatus;
-    itemToDelete: StoryData;
-  }) => void;
 
-  const handleDelete: HandleDeleteFunc = ({ status, itemToDelete }) =>
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        draft[status] = draft[status].filter(
-          (item) => item.id !== itemToDelete.id
-        );
-        setShow(false);
-        dispatch(deleteStory(itemToDelete.id!));
-        dispatch(getAllStoryById(activeProject.id!));
-      })
-    );
+
 
   //za beleženje časa
   const [itemVisibility, setItemVisibility] = useState<{
@@ -456,31 +421,26 @@ function ProductBacklog() {
       e.preventDefault();
       handleFormToggle(itemId);
 
-      
-
       let projectRoleData = {
         timeComplexity: itemTime[itemId],
         storyId: itemId,
       };
       dispatch(updateTimeComplexity(projectRoleData));
-
     };
   const handleKeyDown = (e: any) => {
     e.preventDefault();
 
     const val = e.target.value;
-    const targetId = e.target.id
-    
+    const targetId = e.target.id;
+
     if (val.length > 0 && /^\d+$/.test(val)) {
       setItemTime((prev) => {
         const newState = { ...prev };
         newState[targetId] = val;
         return newState;
       });
-  }
+    }
 
-    
-    
     //else if (e.target.value == '') dispatch(updateTimeComplexity(projectRoleData2));
     //dispatch(getAllStory());
   };
@@ -492,8 +452,15 @@ function ProductBacklog() {
     //console.log(itemsByStatus)
 
     //console.log("doblejni podatki1")
-    if (isSuccess) {
+      //dispatch(getAllStoryById(projectsState.activeProject.id!));
+
       resetState();
+      if (SprintSelector.isUnrealizedSuccess && !SprintSelector.isUnrealizedLoading) {
+      
+
+        //dispatch(reset());
+        //dispatch(getAllStoryById(projectsState.activeProject.id!));
+
       setItemsByStatus((current) =>
         produce(current, (draft) => {
           //for (const status of Object.values(ProductBacklogItemStatus)) {
@@ -503,64 +470,79 @@ function ProductBacklog() {
           const isEmpty = Object.values(current).every(
             (value) => value.length === 0
           );
-
           // Adding new item as "to do"
           //console.log("zgodbice ob updatu")
           //console.log(stories)
           const visibilityObject: { [itemId: string]: boolean } = {};
           const insertTimeObject: { [itemId: string]: number } = {};
+
+          //sprint zgodbice
+          //  const uniquePrintStoryIds = Array.from(new Set(SprintSelector.unrealizedStories.map((item) => item.id)));
           if (stories) {
-          stories.forEach((story: StoryData) => {
-            //za beleženje časa init values
+            stories.forEach((story: StoryData) => {
+              
+              if (story.category === 2) {
+                if (SprintSelector.activeSprint === undefined) { return; }
+                const storyInSprint = SprintSelector.unrealizedStories.find((item) => item.id === story.id);
+                if (storyInSprint === undefined) {
+                  return;
+                }
+                
+              }
+              
+              
+              //za beleženje časa init values
+              visibilityObject[story.id!] = false;
+              //za beleženje vnosa časa
+              insertTimeObject[story.id!] = story.timeComplexity;
 
-            visibilityObject[story.id!] = false;
-            //za beleženje vnosa časa
-            insertTimeObject[story.id!] = story.timeComplexity;
-           
-            
-            //storyi
-            let cat;
-            if (story.priority === 0) {
-              cat = category(0);
-            } else {
-              cat = category(story.category);
-            }
-
-            draft[
-              ProductBacklogItemStatus[
-                cat as keyof typeof ProductBacklogItemStatus
-              ]
-            ].push({
-              id: story.id?.toString(),
-              title: story.title,
-              description: story.description,
-              tests: story.tests,
-              priority: story.priority,
-              businessValue: story.businessValue,
-              sequenceNumber: story.sequenceNumber,
-              category: story.category,
-              timeComplexity: story.timeComplexity,
-              isRealized: story.isRealized,
+              //storyi
+              let cat;
+              if (story.priority === 0) {
+                cat = category(0);
+              } else {
+                cat = category(story.category);
+              }
+              //ce je category 2 potem dodaj elemnte iz sprint trenutnega oz lahko bi primerjal
+              draft[
+                ProductBacklogItemStatus[
+                  cat as keyof typeof ProductBacklogItemStatus
+                ]
+              ].push({
+                id: story.id?.toString(),
+                title: story.title,
+                description: story.description,
+                tests: story.tests,
+                priority: story.priority,
+                businessValue: story.businessValue,
+                sequenceNumber: story.sequenceNumber,
+                category: story.category,
+                timeComplexity: story.timeComplexity,
+                isRealized: story.isRealized,
+              });
             });
-          });
 
-          setItemVisibility(visibilityObject);
-          setItemTime(insertTimeObject);
-        }
+            setItemVisibility(visibilityObject);
+            setItemTime(insertTimeObject);
+          }
         })
       );
-    }
-  }, [isSuccess]);
+      }
+      if (SprintSelector.isUnrealizedError && !SprintSelector.isUnrealizedLoading) {
+        toast.error(message);
+      }
+    
+  }, [SprintSelector.isUnrealizedSuccess, SprintSelector.isUnrealizedLoading, SprintSelector.isUnrealizedError]);
 
   //{Object.values.map(([columnId, column], index) => {
 
   //modal za delete
   const [show, setShow] = useState(false);
 
+  const [showContextMenu, setShowContextMenu] = useState(false);
+
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
-
-  
 
   const [showNewStoryModal, setShowNewStoryModal] = useState(false);
 
@@ -609,30 +591,52 @@ function ProductBacklog() {
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
   const getDataStory = (item: StoryData) => {
     setTempDataStory(item);
+    console.log('call');
     //console.log(item);
     return setShowStory(true);
   };
-  const [tempDataReject, setTempDataReject] = useState<{item: StoryData, status: string, index: number}>();
+  const [tempDataReject, setTempDataReject] = useState<{
+    item: StoryData;
+    status: string;
+    index: number;
+  }>();
   const getDataReject = (item: StoryData, status: string, index: number) => {
-    setTempDataReject({item, status, index});
+    setTempDataReject({ item, status, index });
     //console.log(item);
     return setShowRejectStoryModal(true);
   };
-  const [tempDataApproved, setTempDataApproved] = useState<{item: StoryData, status: string, index: number}>();
+
   const getDataApproved = (item: StoryData, status: string, index: number) => {
-    setTempDataApproved({item, status, index});
+    //setTempDataApproved({ item, status, index });
     //console.log(item);
     dispatch(confirmStory(item.id!));
+    let projectRoleData = {
+      projectId: parseInt(projectsState.activeProject?.id || ""),
+      category: categoryChange("Done"),
+      storyId: item.id || "",
+    };
+    dispatch(updateStoryCategory(projectRoleData));
+    dispatch(reset());
   };
- 
 
   // utility function for edit story
   function getTestsForEdit(items: any): string[] {
     return items.map((item: any) => item.description);
   }
 
-  //{if Object.keys(defaultItems).includes(status)}
+  function handleShowPlanningPokerModal(story: StoryData) {
+    setStoryIdForPoker(story.id!)
+    setShowPlanningPokerModal(true);
+  }
 
+  function closePlanningPokerModal() {
+    setShowPlanningPokerModal(false);
+  }
+  
+  //console.log(SprintSelector.activeSprint)
+  const allocatedItems = itemsByStatus["Allocated"];
+  const totalComplexity = allocatedItems.map((item) => item.timeComplexity).reduce((acc, curr) => acc + curr, 0);
+  //console.log(totalComplexity)
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3">
@@ -642,7 +646,9 @@ function ProductBacklog() {
               <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
                 <Card className="bg-light border-0 ">
                   <div className="pt-3 hstack gap-2 mx-3">
-                    <Card.Title className="fs-6 my-0  text-truncate">{status}</Card.Title>
+                    <Card.Title className="fs-6 my-0  text-truncate">
+                      {status}
+                    </Card.Title>
                     <div className="vr my-0"></div>
                     <p className="fs-6 my-0">{itemsByStatus[status].length}</p>
                     {status === ProductBacklogItemStatus.UNALLOCATED && (
@@ -655,7 +661,10 @@ function ProductBacklog() {
                       </Button>
                     )}
                     {status === ProductBacklogItemStatus.ALLOCATED && (
-                      <p className="fs-6 my-0">/   {SprintSelector.activeSprint?.velocity}</p>
+                      <p className="fs-6 my-0 ms-auto">
+                    Velocity: {totalComplexity}  / {SprintSelector.activeSprint?.velocity}
+                      </p>
+                     
                     )}
                   </div>
                   <hr className="hr mx-3" />
@@ -675,20 +684,23 @@ function ProductBacklog() {
                         >
                           {itemsByStatus[status].map((item, index) => {
                             return (
+                              //{if (item.category !== 2) { } }
                               <Draggable
                                 key={item.id}
                                 draggableId={item.id!}
                                 index={index}
                                 isDragDisabled={
-
-                                  status === ProductBacklogItemStatus.WONTHAVE ||
-                                  !Boolean(itemTime[item.id!]) || !isUserScramMaster()
-                                  ? true
-                                  : status === ProductBacklogItemStatus.DONE
-                                  ? true
-                                  : status === ProductBacklogItemStatus.ALLOCATED
-                                  ? true
-                                  : undefined
+                                  status ===
+                                    ProductBacklogItemStatus.WONTHAVE ||
+                                  !Boolean(itemTime[item.id!]) ||
+                                  !isUserScramMaster()
+                                    ? true
+                                    : status === ProductBacklogItemStatus.DONE
+                                    ? true
+                                    : status ===
+                                      ProductBacklogItemStatus.ALLOCATED
+                                    ? true
+                                    : undefined
                                 }
                               >
                                 {(provided, snapshot) => {
@@ -708,81 +720,55 @@ function ProductBacklog() {
                                           <p className="fs-6 text-muted m-1">
                                             TSK-{item.sequenceNumber}
                                           </p>
-                                          {status === ProductBacklogItemStatus.ALLOCATED && isUserProductOwn() && (
-                                          <><p className="fs-6 text-muted m-1 mx-auto">Task Finished: </p>
-                                          <Button
-                                              className="m-0 p-0 px-2"
-                                              variant="danger"
-                                              onClick={() => getDataReject(item, status, index)}
-                                            >
-                                              Reject
-                                            </Button>
-                                            <Button
-                                              className="m-0 p-0 px-2"
-                                              variant="primary"
-                                              onClick={() => getDataApproved(item, status, index)}
-                                            >
-                                                Approve
-                                              </Button></>
-                                                )}
-                                          {status !==
-                                                ProductBacklogItemStatus.WONTHAVE && (
-                                          <Dropdown className="ms-auto">
-                                            <Dropdown.Toggle
-                                              variant="link"
-                                              id="dropdown-custom-components"
-                                              bsPrefix="p-0"
-                                            >
-                                              <ThreeDots />
-
-                                            </Dropdown.Toggle>
-                                            <Dropdown.Menu>
-                                            {status !==
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() => {
-                                                    getDataReject(item, status, index)
-                                                    /*
-                                                    openRejectStoryModal(item.id!, status, index)
-                                                    let handleRejectVar = {
-                                                      status: status,
-                                                      index: index,
-                                                      
-                                                    };
-                                                    handleReject(handleRejectVar);
-                                                    */
-                                                  }
-                                                  }
-                                                >
-                                                  <Eraser /> Reject
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
+                                          {status ===
+                                            ProductBacklogItemStatus.ALLOCATED &&
+                                            isUserProductOwn() && (
+                                              <>
+                                                <p className="fs-6 text-muted m-1 mx-auto">
+                                                  Task Finished:{" "}
+                                                </p>
+                                                <Button
+                                                  className="m-0 p-0 px-2"
+                                                  variant="danger"
                                                   onClick={() =>
-                                                    openEditStoryModal(item)
+                                                    getDataReject(
+                                                      item,
+                                                      status,
+                                                      index
+                                                    )
                                                   }
                                                 >
-                                                  <Pencil /> Edit
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() => setShow(true)}
+                                                  Reject
+                                                </Button>
+                                                <Button
+                                                  className="m-0 p-0 px-2"
+                                                  variant="primary"
+                                                  onClick={() =>
+                                                    getDataApproved(
+                                                      item,
+                                                      status,
+                                                      index
+                                                    )
+                                                  }
                                                 >
-                                                  <Trash /> Delete
-                                                </Dropdown.Item>
-                                              )}
-                                              <DeleteConfirmation
-                                                item={item}
-                                                status={status}
-                                                onCancel={() => setShow(false)}
-                                                show={show}
-                                              />
-                                            </Dropdown.Menu>
-                                          </Dropdown>
+                                                  Approve
+                                                </Button>
+                                              </>
+                                            )}
+                                          {status !==
+                                            ProductBacklogItemStatus.WONTHAVE && (
+                                              <Fragment>
+                                                <DropdownStory
+                                                  item={item}
+                                                  status={status}
+                                                  index={index}
+                                                  openEditStoryModal={({item}) => openEditStoryModal(item)}
+                                                  setShow={setShow}
+                                                  getDataReject={({ item, status, index }) => getDataReject(item, status, index)}
+                                                  show={show}
+                                                />
+                                                <SuitSpadeFill onClick={() => {handleShowPlanningPokerModal(item)}} />
+                                              </Fragment>
                                           )}
                                         </Card.Header>
                                         <Card.Body>
@@ -848,7 +834,9 @@ function ProductBacklog() {
                                                         size="sm"
                                                         pattern="[0-9]*"
                                                         //value={itemTime[item.id!]}
-                                                        placeholder={itemTime[item.id!].toString()}
+                                                        placeholder={itemTime[
+                                                          item.id!
+                                                        ].toString()}
                                                         id={item.id}
                                                         onChange={handleKeyDown}
                                                         type="tel"
@@ -860,23 +848,26 @@ function ProductBacklog() {
                                                     </InputGroup>
                                                   </Form>
                                                 )}
-                                                {!itemVisibility[item.id!] && isUserScramMaster() &&   (
-                                                  <Button
-                                                    id={item.id}
-
-                                                    //isUserScramMaster
-                                                    onClick={() =>
-                                                      handleFormToggle(item.id!)
-                                                    }
-                                                    variant="link"
-                                                    className="m-0 p-0 float-end text-decoration-none"
-                                                  >
-                                                    {itemTime[item.id!]}
-                                                    
-                                                  </Button>
-                                                )}
+                                                {!itemVisibility[item.id!] &&
+                                                  isUserScramMaster() && (
+                                                    <Button
+                                                      id={item.id}
+                                                      //isUserScramMaster
+                                                      onClick={() =>
+                                                        handleFormToggle(
+                                                          item.id!
+                                                        )
+                                                      }
+                                                      variant="link"
+                                                      className="m-0 p-0 float-end text-decoration-none"
+                                                    >
+                                                      {itemTime[item.id!]}
+                                                    </Button>
+                                                  )}
                                                 {!isUserScramMaster() && (
-                                                <p className="m-0 p-0 float-end text-decoration-none">{itemTime[item.id!]}</p>
+                                                  <p className="m-0 p-0 float-end text-decoration-none">
+                                                    {itemTime[item.id!]}
+                                                  </p>
                                                 )}
                                               </Col>
                                             </Row>
@@ -888,6 +879,8 @@ function ProductBacklog() {
                                 }}
                               </Draggable>
                             );
+
+
                           })}
 
                           {provided.placeholder}
@@ -905,7 +898,7 @@ function ProductBacklog() {
         <Modal show={showNewStoryModal} onHide={hideNewStoryModal}>
           <Modal.Body>
             <StoryForm
-              projectId={activeProject.id}
+              projectId={projectsState.activeProject.id}
               isEdit={false}
               sequenceNumberInit=""
               titleInit=""
@@ -944,15 +937,14 @@ function ProductBacklog() {
       )}
       {showRejectStoryModal && (
         <RejectStoryModal
-          handleReject={handleDragCustom}
           elements={tempDataReject!}
           onCancel={() => setShowRejectStoryModal(false)}
           show={showRejectStoryModal}
         />
       )}
+      {showPlanningPokerModal && <PlanningPokerModal projectId={projectsState.activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
     </>
   );
 }
 
 export default ProductBacklog;
-

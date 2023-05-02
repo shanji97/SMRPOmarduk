@@ -14,14 +14,12 @@ export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
   show: boolean;
   item: StoryData;
-  status: ProductBacklogItemStatus;
 }
 
 function DeleteConfirmation({
   onCancel,
   show,
   item,
-  status,
 }: DeleteConfirmationProps) {
   const dispatch = useAppDispatch();
   let { isDeleteSuccess, isLoading, isDeleteError, message } = useAppSelector(
@@ -36,7 +34,6 @@ function DeleteConfirmation({
     
     if (activeProject.id) {
       dispatch(getAllStoryById(activeProject.id!));
-      console.log(activeProject)
     }
   }, [activeProject]);
 
@@ -55,7 +52,6 @@ function DeleteConfirmation({
   }, [isDeleteSuccess, isDeleteError, isLoading]);
 
   const handleDelete = () => {
-    console.log("Delete: ", item.id);
     dispatch(deleteStory(item.id!)); // NOTE CHECK THIS !!!!
   };
 

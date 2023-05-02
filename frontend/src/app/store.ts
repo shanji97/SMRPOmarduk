@@ -8,6 +8,8 @@ import projectRoleSlice from '../features/projects/projectRoleSlice';
 import projectWall from "../features/projects/projectWallSlice";
 import taskSlice from '../features/tasks/taskSlice';
 import storyNotificationSlice from '../features/stories/storyNotificationSlice';
+import planningPokerSlice from "../features/planningPoker/planningPokerSlice";
+import docSlice from '../features/doc/DocSlice';
 
 export const store = configureStore({
     reducer: {
@@ -18,7 +20,9 @@ export const store = configureStore({
         stories: storySlice,
         sprints: sprintSlice,
         tasks: taskSlice,
-        storyNotifications: storyNotificationSlice
+        storyNotifications: storyNotificationSlice,
+        poker: planningPokerSlice,
+        docs: docSlice
     },
 });
 

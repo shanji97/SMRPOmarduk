@@ -12,6 +12,9 @@ export interface ProjectRoleState {
     isSuccessAdd: boolean
     isError: boolean
     message: any
+    isUserRolesLoading: boolean
+    isUserRolesSuccess: boolean
+    isUserRolesError: boolean
 }
 
 const initialState: ProjectRoleState = {
@@ -22,6 +25,9 @@ const initialState: ProjectRoleState = {
     isSuccessAdd: false,
     isError: false,
     message: '',
+    isUserRolesSuccess: false,
+    isUserRolesLoading: false,
+    isUserRolesError: false,
 }
 
 // this is for updating product owner and scrum master roles
@@ -77,24 +83,34 @@ export const projectRoleSlice = createSlice({
             state.isSuccess = false
             state.isSuccessAdd = false
             state.message = ''
+            state.isUserRolesLoading = false;
+            state.isUserRolesSuccess = false;
+            state.isUserRolesError = false;
         }
     },
     extraReducers: builder => {
         builder
         .addCase(getProjectUserRoles.pending, (state) => {
-            state.isLoading = true
+            state.isLoading = true;
+            state.isUserRolesLoading = true
         })
         .addCase(getProjectUserRoles.fulfilled, (state, action) => {
             state.isLoading = false;
             state.isSuccess = true;
             state.isError = false;
+            state.isUserRolesLoading = false;
+            state.isUserRolesSuccess = true;
+            state.isUserRolesError = false;
             state.message = '';
             state.userRoles = action.payload;
         })
         .addCase(getProjectUserRoles.rejected, (state, action) => {
-            state.isLoading = false
+            state.isLoading = false;
             state.isSuccess = false;
-            state.isError = true
+            state.isError = true;
+            state.isUserRolesLoading = false;
+            state.isUserRolesSuccess = false;
+            state.isUserRolesError = true;
             state.message = action.payload
         })
         .addCase(updateProjectRoles.pending, (state) => {
