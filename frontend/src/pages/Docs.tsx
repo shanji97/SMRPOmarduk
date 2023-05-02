@@ -28,7 +28,6 @@ function Docs() {
 
   const fileInputValid = file != null && file.name.endsWith(".md");
   const fileInputIsInvalid = fileInputTouched && !fileInputValid;
-  console.log(file ? file.name : "");
 
   // editor text
   const [markdownTextInit, setMarkdownTextInit] = useState(downloadedFile); // for comparing changes
@@ -57,8 +56,10 @@ function Docs() {
 
   // select file input
   const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFileInputTouched(true);
+
     const selectedFile = event.target.files && event.target.files[0];
-    if (selectedFile && selectedFile.name.endsWith(".md")) {
+    if (selectedFile) {
       setFile(selectedFile);
     } else {
       toast.error("Make sure to choose a markdown (.md) file!");
@@ -148,6 +149,9 @@ function Docs() {
                 isInvalid={fileInputIsInvalid}
               />
             </Form.Group>
+            <div className="mt-1 text-muted small">
+              Please select a Markdown (.md) file.
+            </div>
           </Col>
           <Col className="ms-3">
             <Button
@@ -155,6 +159,7 @@ function Docs() {
               type="submit"
               size="sm"
               className="d-inline"
+              disabled={file != null && !file.name.endsWith(".md")}
             >
               Upload
             </Button>

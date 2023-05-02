@@ -26,16 +26,7 @@ function DeleteConfirmation({
     (state) => state.stories
   );
   const { activeProject } = useAppSelector((state) => state.projects);
-  useEffect(() => {
-    dispatch(getActiveProject());
-  }, []);
-
-  useEffect(() => {
-    
-    if (activeProject.id) {
-      dispatch(getAllStoryById(activeProject.id!));
-    }
-  }, [activeProject]);
+  
 
 
   useEffect(() => {
