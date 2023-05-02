@@ -329,7 +329,7 @@ function SprintBacklog() {
     }
   };
 
-  const [valueBar, setValueBar] = useState(1);
+  const [valueBar, setValueBar] = useState(0);
 
   const handleChangeBar = (val: number) => {
     setValueBar(val);
