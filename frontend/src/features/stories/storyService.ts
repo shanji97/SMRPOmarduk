@@ -156,6 +156,16 @@ const rejectStory = async (rejectStory: RejectStory, token: string) => {
     const response = await axios.patch(`${STORY_API_URL}/${rejectStory.storyId}/reject`, updatedRejectStory, config);
     return response.data;
 }
+const getNotificationReject = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${STORY_API_URL}/${storyId}/notifications/rejection`, config);
+    return response.data;
+}
 
 const storyService = {
     create,
@@ -167,7 +177,8 @@ const storyService = {
     updateTimeComplexity,
     rejectStory,
     getStoriesForUser,
-    confirmStory
+    confirmStory,
+    getNotificationReject
 }
 
 export default storyService;

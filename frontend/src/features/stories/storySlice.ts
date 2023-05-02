@@ -8,6 +8,7 @@ interface StoryState {
     stories: StoryData[]
     storiesForSprint: StoryData[]
     storiesForUser: StoryData[]
+    notificationReject: any [],
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
@@ -33,6 +34,7 @@ const initialState: StoryState = {
     stories: [],
     storiesForSprint: [],
     storiesForUser: [],
+    notificationReject: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -148,6 +150,15 @@ export const rejectStory = createAsyncThunk('/story/rejectStory', async (rejectS
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.rejectStory(rejectStory, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+export const getNotificationReject = createAsyncThunk('/story/getNotificationReject', async (storyId: string, thunkAPI: any) => { 
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.getNotificationReject(storyId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -355,6 +366,22 @@ export const storySlice = createSlice({
                 state.message = action.payload;
                 state.isSuccessLoading = false
                 state.isSuccessConfirm = false;
+            })
+            .addCase(getNotificationReject.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(getNotificationReject.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getNotificationReject.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.notificationReject = action.payload;
             })
     }
 })
