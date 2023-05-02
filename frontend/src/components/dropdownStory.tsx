@@ -83,6 +83,7 @@ const DropdownStory = memo(
               <Trash /> Delete
             </Dropdown.Item>
           )}
+          
           <DeleteConfirmation
             item={item}
             onCancel={() => setShow(false)}

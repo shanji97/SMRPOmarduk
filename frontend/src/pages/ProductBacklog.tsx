@@ -321,6 +321,9 @@ function ProductBacklog() {
     destination: string;
   }) => void;
 
+  //console.log(SprintSelector.activeSprint)
+  const allocatedItems = itemsByStatus["Allocated"];
+  const totalComplexity = allocatedItems.map((item) => item.timeComplexity).reduce((acc, curr) => acc + curr, 0);
 
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
@@ -329,6 +332,7 @@ function ProductBacklog() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
+        dispatch(getActiveProject());
         if (!destination || destination.droppableId === source.droppableId) {
           return;
         }
@@ -633,9 +637,7 @@ function ProductBacklog() {
     setShowPlanningPokerModal(false);
   }
   
-  //console.log(SprintSelector.activeSprint)
-  const allocatedItems = itemsByStatus["Allocated"];
-  const totalComplexity = allocatedItems.map((item) => item.timeComplexity).reduce((acc, curr) => acc + curr, 0);
+  
   //console.log(totalComplexity)
   return (
     <>
@@ -699,6 +701,8 @@ function ProductBacklog() {
                                     ? true
                                     : status ===
                                       ProductBacklogItemStatus.ALLOCATED
+                                    ? true
+                                    : SprintSelector.activeSprint?.velocity! < totalComplexity
                                     ? true
                                     : undefined
                                 }
