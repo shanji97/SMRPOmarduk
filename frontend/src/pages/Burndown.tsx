@@ -47,7 +47,7 @@ const calculateIdeal = (arr: SprintData[]) => {
     const current = arr[i];
     result.push({
       ...current,
-      ideal: idealRemaining,
+      ideal: Number(idealRemaining.toFixed(1)), // round to 1 decimal spot
     });
     idealRemaining -= step;
   }
@@ -73,8 +73,8 @@ const Burndown = () => {
   const renderDiagram = () => {
     const newData = burndownData.days;
     const newDataCumulative = calculateCumulativeSpent(newData);
-    // const newDataIdeal = calculateIdeal(newDataCumulative);
-    const data = newDataCumulative;
+    const newDataIdeal = calculateIdeal(newDataCumulative);
+    const data = newDataIdeal;
     return (
       <Row className="mb-4">
         <Col className="d-flex flex-column align-items-center">
@@ -82,12 +82,42 @@ const Burndown = () => {
           <LineChart width={800} height={400} data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
-            <YAxis />
+            <YAxis
+              label={{
+                value: `Hours`,
+                style: {
+                  textAnchor: "middle",
+                  fontWeight: "bold",
+                  fontFamily: "Arial",
+                },
+                angle: -90,
+                position: "left",
+                offset: -10,
+              }}
+            />
             <Tooltip />
-            <Legend />
-            <Line dataKey="spent" stroke="#f44336" />
-            <Line dataKey="remaining" stroke="#82ca9d" />
-            <Line dataKey="ideal" stroke="#000" />
+            <Legend wrapperStyle={{ fontFamily: "Arial" }} />
+            <Line
+              dataKey="spent"
+              name="Workload"
+              stroke="#E91E63"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              dataKey="remaining"
+              name="Remaining work"
+              stroke="#00E676"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              dataKey="ideal"
+              name="Ideal progress"
+              stroke="#03A9F4"
+              strokeWidth={2}
+              dot={false}
+            />
           </LineChart>
         </Col>
       </Row>
