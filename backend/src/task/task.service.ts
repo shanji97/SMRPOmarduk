@@ -429,12 +429,18 @@ export class TaskService {
   async getLastWorkOnTask(taskId: number): Promise<TaskUserTime | null> {
     if (!await this.taskExists(taskId))
       return null;
-    const result = await this.taskUserTimeRepository.findOne({ where: { taskId: taskId }, order: { date: 'DESC', remaining: 'DESC' } });
+    const result = await this.taskUserTimeRepository.findOne({ where: { taskId: taskId }, order: { date: 'DESC', dateUpdated: 'DESC' } });
     return result || null;
   }
 
+  async getLatestWorkDateOnTask(taskId: number): Promise<string | null> {
+    const result = await this.taskUserTimeRepository.findOne({ where: { taskId: taskId }, order: { date: 'DESC', dateUpdated: 'DESC' } });
+    return result?.date || null;
+  }
+
   async setWorkOnTask(date: string, taskId: number, userId: number, work: DeepPartial<TaskUserTime>): Promise<void> {
-    if (!await this.taskExists(taskId))
+    const task: Task = await this.getTaskById(taskId);
+    if (!task)
       throw new ValidationException('Task does not exist');
 
     // We can't enter work for future
@@ -445,6 +451,32 @@ export class TaskService {
     work.taskId = taskId;
     work.userId = userId;
     await this.taskUserTimeRepository.upsert(work, ['date', 'taskId', 'userId']);
+
+    // Auto close & reopen
+    const taskAutoClose: boolean = this.configService.get<boolean>('TASK_AUTO_CLOSE');
+    const taskAutoReopen: boolean = this.configService.get<boolean>('TASK_AUTO_REOPEN');
+
+    // Only auto close/reopen if latest record by date is updated
+    const latestDate: string | null = await this.getLatestWorkDateOnTask(taskId);
+    if (!latestDate || moment(date, 'YYYY-MM-DD').isSameOrAfter(moment(latestDate, 'YYYY-MM-DD'), 'd')) {
+      // Auto close task
+      if (work.remaining === 0 && [TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED].includes(task.category) && taskAutoClose) {
+        try {
+          await this.closeTask(taskId);
+        } catch (ex) {
+          this.logger.warn(ex);
+        }
+      }
+      
+      // Auto reopen task
+      if (work.remaining !== 0 && task.category === TaskCategory.ENDED && taskAutoReopen) {
+        try {
+          await this.reopenTask(taskId, task.assignedUserId === userId);
+        } catch (ex) {
+          this.logger.warn(ex);
+        }
+      }
+    }
   }
 
   async removeWorkOnTask(date: string, taskId: number, userId: number): Promise<void> {

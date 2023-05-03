@@ -53,4 +53,6 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   PERSON_MAX_LOAD_FACTOR: Joi.number().min(0).default(1.5),
   HOURS_PER_POINT: Joi.number().default(6),
   TASK_MAX_TIME_FACTOR: Joi.number().min(0).default(5),
+  TASK_AUTO_CLOSE: Joi.boolean().default(true),
+  TASK_AUTO_REOPEN: Joi.boolean().default(true),
 });
