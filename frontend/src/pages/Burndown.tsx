@@ -40,16 +40,24 @@ const calculateCumulativeSpent = (arr: SprintData[]) => {
 
 const calculateIdeal = (arr: SprintData[]) => {
   const result: SprintData[] = [];
-  let idealRemaining = arr[0].remaining;
+  let idealRemaining = arr[0].spent;
   let step = idealRemaining / (arr.length - 1);
 
   for (let i = 0; i < arr.length; i++) {
     const current = arr[i];
-    result.push({
-      ...current,
-      ideal: Number(idealRemaining.toFixed(1)), // round to 1 decimal spot
-    });
-    idealRemaining -= step;
+    if (i === arr.length - 1) {
+      // if this is the last point
+      result.push({
+        ...current,
+        ideal: 0, // set ideal value to 0
+      });
+    } else {
+      result.push({
+        ...current,
+        ideal: Number(idealRemaining.toFixed(1)), // round to 1 decimal spot
+      });
+      idealRemaining -= step;
+    }
   }
 
   return result;
@@ -75,6 +83,7 @@ const Burndown = () => {
     const newDataCumulative = calculateCumulativeSpent(newData);
     const newDataIdeal = calculateIdeal(newDataCumulative);
     const data = newDataIdeal;
+    // debugger;
     return (
       <Row className="mb-4">
         <Col className="d-flex flex-column align-items-center">

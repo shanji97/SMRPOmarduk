@@ -11,6 +11,9 @@ interface StoryState {
     isSuccess: boolean
     isError: boolean
     message: any
+    isNotificationLoading: boolean
+    isNotificationSuccess: boolean
+    isNotificationError: boolean
  
     
 }
@@ -20,6 +23,9 @@ const initialState: StoryState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
+    isNotificationLoading: false,
+    isNotificationSuccess: false,
+    isNotificationError: false,
     message: '',
     rejectMessage: ''
   
@@ -85,6 +91,9 @@ export const storySlice = createSlice({
             state.isError = false
             state.isSuccess = false
             state.message = ''
+            state.isNotificationLoading = false
+            state.isNotificationError = false
+            state.isNotificationSuccess = false
            
         }
     },
@@ -106,12 +115,12 @@ export const storySlice = createSlice({
                 state.message = action.payload
             })
             .addCase(getNotifications.pending, (state) => {
-                state.isLoading = true
+                state.isNotificationLoading = true
             })
             .addCase(getNotifications.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isNotificationLoading = false;
+                state.isNotificationSuccess = true;
+                state.isNotificationError = false;
                 state.message = '';
                 state.storiesNotification = action.payload
 
@@ -130,9 +139,9 @@ export const storySlice = createSlice({
             })
 
             .addCase(getNotifications.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
+                state.isNotificationLoading = false
+                state.isNotificationSuccess = false;
+                state.isNotificationError = true
                 state.message = action.payload
             })
             .addCase(getrejectionNotification.pending, (state) => {
