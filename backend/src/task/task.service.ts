@@ -357,7 +357,7 @@ export class TaskService {
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if ([TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED].includes(task.category))
+    if (![TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED].includes(task.category))
       throw new ValidationException('Task can\'t be closed');
 
     await this.taskRepository.update({ id: taskId }, {
