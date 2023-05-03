@@ -41,8 +41,8 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
     dispatch(getActivePokerRound(storyIdForPoker));
   }, [roundStarted]);
 
-  const userRolesWithoutOwner = useMemo(() => {
-    return userRoles.filter(user => user.role !== 2);
+  const developers = useMemo(() => {
+    return userRoles.filter(user => user.role !== 2 && user.role !== 1);
   }, [userRoles]);
 
   const startNewRoundHandler = () => {
@@ -73,29 +73,34 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
           <thead>
           <tr>
             <th>id</th>
-            {userRolesWithoutOwner.map(role => (
+            {developers.map(role => (
               <th key={Math.random()}>{role.user.username}</th>
             ))}
           </tr>
           </thead>
           <tbody>
           {pokerRounds.length > 0 ? pokerRounds.map((round, i) => (
-            <PokerRound
-              key={i}
-              roundId={round.id!}
-              activeRound={activeRound}
-              isUserScrumMaster={isUserScrumMaster}
-              numberOfPlayers={userRoles.length-1}
-              setShowVotingOptions={setShowVotingOptions}
-              shouldReload={shouldReload}
-            />
+            <Fragment>
+              <PokerRound
+                key={i}
+                index={i}
+                round={round}
+                numberOfRounds={pokerRounds.length}
+                activeRound={activeRound}
+                isUserScrumMaster={isUserScrumMaster}
+                numberOfPlayers={developers.length}
+                setShowVotingOptions={setShowVotingOptions}
+                shouldReload={shouldReload}
+              />
+            </Fragment>
+
           )) : <td className='text-secondary' colSpan={userRoles.length} style={{ textAlign: "center" }}>
             No rounds yet
           </td>}
           </tbody>
         </Table>
         <Fragment>
-          {activeRound.id !== '' && <VotesContainer storyId={storyIdForPoker} activeRoundId={activeRound.id!} />}
+        {activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={activeRound.id!} />}
         </Fragment>
 
       </Modal.Body>

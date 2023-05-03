@@ -1,4 +1,4 @@
-export interface PokerRound {
+export interface Round {
   id?: string,
   storyId: string,
   dateStarted: string,
