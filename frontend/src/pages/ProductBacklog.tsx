@@ -757,18 +757,16 @@ function ProductBacklog() {
                                             )}
                                           {status !==
                                             ProductBacklogItemStatus.WONTHAVE && (
-                                              <Fragment>
-                                                <DropdownStory
-                                                  item={item}
-                                                  status={status}
-                                                  index={index}
-                                                  openEditStoryModal={({item}) => openEditStoryModal(item)}
-                                                  setShow={setShow}
-                                                  getDataReject={({ item, status, index }) => getDataReject(item, status, index)}
-                                                  show={show}
-                                                />
-                                                <SuitSpadeFill onClick={() => {handleShowPlanningPokerModal(item)}} />
-                                              </Fragment>
+                                              <DropdownStory
+                                                item={item}
+                                                status={status}
+                                                index={index}
+                                                openEditStoryModal={({item}) => openEditStoryModal(item)}
+                                                setShow={setShow}
+                                                getDataReject={({ item, status, index }) => getDataReject(item, status, index)}
+                                                show={show}
+                                                handleShowPlanningPokerModal={handleShowPlanningPokerModal}
+                                              />
                                           )}
                                         </Card.Header>
                                         <Card.Body>

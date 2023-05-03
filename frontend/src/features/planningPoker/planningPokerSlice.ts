@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import planningPokerService from "./planningPokerService";
-import {PokerRound, RoundWithVotes} from "../../classes/pokerRound";
-import {debug} from "util";
+import {Round, RoundWithVotes} from "../../classes/round";
+import app from "../../App";
 
 export interface PlanningPokerState {
-  pokerRounds: PokerRound[]
+  pokerRounds: Round[]
   singleRound: RoundWithVotes
   activeRound: RoundWithVotes
   roundStarted: boolean
@@ -88,10 +88,20 @@ export const voteForRound = createAsyncThunk('poker/voteForRound', async (body: 
   }
 });
 
-export const endPlanningPoker = createAsyncThunk('poker/endPlanningPoker', async (body: {roundId: string, acceptResult: boolean}, thunkAPI: any) => {
+export const endPlanningPoker = createAsyncThunk('poker/endPlanningPoker', async (roundId: string, thunkAPI: any) => {
   try {
     const token = JSON.parse(localStorage.getItem('user')!).token;
-    return await planningPokerService.endPlanningPoker(body, token);
+    return await planningPokerService.endPlanningPoker(roundId, token);
+  } catch (error: any) {
+    const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+    return thunkAPI.rejectWithValue(message)
+  }
+});
+
+export const applyResult = createAsyncThunk('poker/applyResult', async (roundId: string, thunkAPI: any) => {
+  try {
+    const token = JSON.parse(localStorage.getItem('user')!).token;
+    return await planningPokerService.applyResult(roundId, token);
   } catch (error: any) {
     const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
     return thunkAPI.rejectWithValue(message)
@@ -193,6 +203,22 @@ export const planningPokerSlice = createSlice({
         state.roundStarted = false;
       })
       .addCase(endPlanningPoker.rejected, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = false;
+        state.isError = true
+        state.message = action.payload
+      })
+      .addCase(applyResult.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(applyResult.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = '';
+        // TODO maybe
+      })
+      .addCase(applyResult.rejected, (state, action) => {
         state.isLoading = false
         state.isSuccess = false;
         state.isError = true

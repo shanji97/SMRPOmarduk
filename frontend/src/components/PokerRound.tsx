@@ -1,13 +1,15 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {Fragment, useEffect, useMemo, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {getBaseUrl} from "../helpers/helpers";
-import {RoundWithVotes} from "../classes/pokerRound";
+import {Round, RoundWithVotes} from "../classes/round";
 import {Button} from "react-bootstrap";
 import {Check, X} from "react-bootstrap-icons";
 import {endPlanningPoker, reset} from "../features/planningPoker/planningPokerSlice";
 import {toast} from "react-toastify";
 interface PokerRoundProps {
-  roundId: string,
+  round: Round,
+  numberOfRounds: number,
+  index: number,
   isUserScrumMaster: boolean,
   numberOfPlayers: number,
   activeRound: RoundWithVotes,
@@ -16,12 +18,14 @@ interface PokerRoundProps {
 }
 const PokerRound: React.FC<PokerRoundProps> = (
   {
-    roundId,
+    round,
     isUserScrumMaster,
     numberOfPlayers,
     activeRound,
     setShowVotingOptions,
-    shouldReload
+    shouldReload,
+    index,
+    numberOfRounds,
 }) => {
   const dispatch = useAppDispatch();
   const {isError, message, isSuccess} = useAppSelector(state => state.poker);
@@ -37,7 +41,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
   useEffect(() => {
     const fetchData = async () => {
       const token = JSON.parse(localStorage.getItem('user')!).token;
-      const response = await fetch(`${getBaseUrl()}/api/planning-pocker/${roundId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/planning-pocker/${round.id!}`, {
         method: 'GET',
         headers: {
           'Authorization': `JWT ${token}`
@@ -55,6 +59,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
   }, [singleRound]);
 
   const rowCells = useMemo(() => {
+    console.log(singleRound);
     let numberOfVotes = -1;
     if (singleRound.votes) {
       numberOfVotes = singleRound.votes.length;
@@ -63,8 +68,12 @@ const PokerRound: React.FC<PokerRoundProps> = (
       return singleRound.votes.map(vote => {
         return <td key={Math.random()}>{vote.value}h</td>;
       });
-    } else if (numberOfVotes !== numberOfPlayers) {
+    } else if (numberOfVotes < numberOfPlayers && singleRound.dateEnded !== null) {
       return <td className='text-primary' colSpan={numberOfPlayers} style={{ textAlign: "center" }}>
+        Ended
+      </td>;
+    } else if (numberOfVotes !== numberOfPlayers && singleRound.dateEnded == null) {
+      return <td className='text-primary' colSpan={numberOfPlayers} style={{textAlign: "center"}}>
         In progress
       </td>;
     }
@@ -74,39 +83,25 @@ const PokerRound: React.FC<PokerRoundProps> = (
     });
   }, [singleRound]);
 
-  const acceptRoundHandler = () => {
-    const body = {
-      roundId,
-      acceptResult: true
-    }
-    dispatch(endPlanningPoker(body));
+  const endRoundHandler = () => {
+    dispatch(endPlanningPoker(round.id!));
     setResultSubmited(true);
     setShowVotingOptions(false);
-    toast.success('Result accepted!');
-  }
-
-  const rejectRoundHandler = () => {
-    const body = {
-      roundId,
-      acceptResult: false
-    }
-    dispatch(endPlanningPoker(body));
-    setResultSubmited(true);
-    setShowVotingOptions(false);
-    toast.success('Result rejected!');
+    toast.success('Round ended!');
   }
 
   return (
-    <tr>
-      <td>{singleRound.id}</td>
-      {rowCells}
-      {roundEndedAndScrumMaster && activeRound.id === roundId && !resultSubmited && (
+    <Fragment>
+      <tr>
+        <td>{singleRound.id}</td>
+        {rowCells}
         <td>
-          <Button onClick={acceptRoundHandler} style={{marginRight: '.5rem'}} variant='success'><Check size={20} /></Button>
-          <Button onClick={rejectRoundHandler} variant='danger'><X size={20}/></Button>
+          {round.dateEnded === null && isUserScrumMaster && <Button onClick={endRoundHandler} style={{marginRight: '.5rem'}} variant='success'>End round</Button>}
         </td>
-      )}
-    </tr>
+      </tr>
+      {isUserScrumMaster && round.dateEnded !== null && index === numberOfRounds-1 && <Button>Apply estimate</Button>}
+    </Fragment>
+
   );
 }
 

@@ -32,26 +32,25 @@ import DeleteConfirmation from "../pages/DeleteConfirmation";
 import { ProductBacklogItemStatus, StoryData } from "../classes/storyData";
 import { Link } from "react-router-dom";
 
-
-
-  export interface DropdownProps {
-    item: StoryData;
-    status: string;
-    index: number;
-    openEditStoryModal: (args: {
-        item: StoryData;
-      }) => void;
-    setShow: (arg0: boolean) => void;
-    getDataReject: (args: {
-        item: StoryData;
-        status: string;
-        index: number;
-      }) => void;
-    show: boolean;
-  }
+export interface DropdownProps {
+  item: StoryData;
+  status: string;
+  index: number;
+  openEditStoryModal: (args: {
+      item: StoryData;
+    }) => void;
+  setShow: (arg0: boolean) => void;
+  getDataReject: (args: {
+      item: StoryData;
+      status: string;
+      index: number;
+    }) => void;
+  show: boolean;
+  handleShowPlanningPokerModal: (story: any) => void;
+}
 
 const DropdownStory = memo(
-  ({ status, item, index, getDataReject, openEditStoryModal, setShow, show }: DropdownProps) => {
+  ({ status, item, index, getDataReject, openEditStoryModal, setShow, show, handleShowPlanningPokerModal }: DropdownProps) => {
     return (
         <>
       <Dropdown   className="ms-auto">
@@ -81,6 +80,11 @@ const DropdownStory = memo(
           {status === ProductBacklogItemStatus.UNALLOCATED && (
             <Dropdown.Item onClick={() => setShow(true)}>
               <Trash /> Delete
+            </Dropdown.Item>
+          )}
+          {status === ProductBacklogItemStatus.UNALLOCATED && (
+            <Dropdown.Item onClick={() => {handleShowPlanningPokerModal(item)}}>
+              <SuitSpadeFill /> Planning poker
             </Dropdown.Item>
           )}
           <DeleteConfirmation
