@@ -116,7 +116,10 @@ function ProductBacklog() {
     isStoriesError,
     isCategoryError,
     isCategorySuccess,
-    isCategoryLoading
+    isCategoryLoading,
+    isTimeComplexityError,
+    isTimeComplexityLoading,
+    isTimeComplexitySuccess
   } = useAppSelector((state) => state.stories);
   let SprintSelector = useAppSelector((state) => state.sprints);
   let projectsState = useAppSelector((state) => state.projects);
@@ -161,7 +164,18 @@ function ProductBacklog() {
     }
   }, [isSuccess, isError, isLoading]);
 
-
+  useEffect(() => {
+    if (isTimeComplexitySuccess && !isTimeComplexityLoading) {
+      dispatch(reset());
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+   
+      dispatch(getActiveSprint(projectsState.activeProject.id!));
+      toast.success(message)
+    }
+    if (isTimeComplexityError && !isTimeComplexityLoading) {
+      toast.error(message);
+    }
+  }, [isTimeComplexityError, isTimeComplexityLoading, isTimeComplexitySuccess]);
 
   useEffect(() => {
     dispatch(getActiveProject());
@@ -333,6 +347,7 @@ function ProductBacklog() {
       produce(current, (draft) => {
         // dropped outside the list
         dispatch(getActiveProject());
+        dispatch(getAllStoryById(projectsState.activeProject.id!));
         if (!destination || destination.droppableId === source.droppableId) {
           return;
         }
@@ -430,6 +445,7 @@ function ProductBacklog() {
         storyId: itemId,
       };
       dispatch(updateTimeComplexity(projectRoleData));
+
     };
   const handleKeyDown = (e: any) => {
     e.preventDefault();
@@ -702,7 +718,7 @@ function ProductBacklog() {
                                     : status ===
                                       ProductBacklogItemStatus.ALLOCATED
                                     ? true
-                                    : SprintSelector.activeSprint?.velocity! < totalComplexity
+                                    : SprintSelector.activeSprint?.velocity! < (totalComplexity + item.timeComplexity)
                                     ? true
                                     : undefined
                                 }

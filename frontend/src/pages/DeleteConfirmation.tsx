@@ -8,7 +8,8 @@ import {
   reset,
 } from "../features/stories/storySlice";
 import { toast } from "react-toastify";
-import { getActiveProject } from "../features/projects/projectSlice";
+import { getActiveProject, getProjectUserRoles } from "../features/projects/projectSlice";
+import { getActiveSprint, getAllSprints } from "../features/sprints/sprintSlice";
 
 export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
@@ -34,6 +35,11 @@ function DeleteConfirmation({
       toast.success("Story successfully deleted");
       dispatch(reset());
       dispatch(getAllStoryById(activeProject.id!));
+      //
+      //dispatch(getAllSprints(activeProject.id!));
+      //dispatch(getProjectUserRoles(activeProject.id!));
+      dispatch(getActiveSprint(activeProject.id!));
+      //
       onCancel();
     }
     if (isDeleteError && !isLoading) {

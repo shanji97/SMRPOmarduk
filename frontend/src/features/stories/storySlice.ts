@@ -28,6 +28,9 @@ interface StoryState {
     isCategoryLoading: boolean
     isCategorySuccess: boolean
     isCategoryError: boolean
+    isTimeComplexityLoading: boolean
+    isTimeComplexitySuccess: boolean
+    isTimeComplexityError: boolean
 }
 
 const initialState: StoryState = {
@@ -54,6 +57,9 @@ const initialState: StoryState = {
     isCategoryLoading: false,
     isCategorySuccess: false,
     isCategoryError: false,
+    isTimeComplexityLoading: false,
+    isTimeComplexitySuccess: false,
+    isTimeComplexityError: false,
 }
 
 
@@ -189,6 +195,9 @@ export const storySlice = createSlice({
             state.isCategoryLoading = false
             state.isCategoryError = false
             state.isCategorySuccess = false
+            state.isTimeComplexityLoading = false
+            state.isTimeComplexityError = false
+            state.isTimeComplexitySuccess = false
         }
     },
     extraReducers: builder => {
@@ -301,12 +310,12 @@ export const storySlice = createSlice({
                 state.message = action.payload;
             })
             .addCase(updateTimeComplexity.pending, (state) => {
-                state.isLoading = true;
+                state.isTimeComplexityLoading = true;
             })
             .addCase(updateTimeComplexity.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isTimeComplexityLoading = false;
+                state.isTimeComplexitySuccess = true;
+                state.isTimeComplexityError = false;
                 state.message = '';
                 state.stories = action.payload;
                 
@@ -324,9 +333,9 @@ export const storySlice = createSlice({
                 // 
             })
             .addCase(updateTimeComplexity.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
+                state.isTimeComplexityLoading = false
+                state.isTimeComplexitySuccess = false;
+                state.isTimeComplexityError = true
                 state.message = action.payload
             })
             .addCase(rejectStory.pending, (state) => {
