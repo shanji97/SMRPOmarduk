@@ -351,18 +351,34 @@ export class TaskService {
     });
   }
 
-  async endTask(taskId: number): Promise<void> {
+  async closeTask(taskId: number): Promise<void> {
     // Allow to stop timing after sprint isn't active anymore
 
     const task = await this.getTaskById(taskId);
     if (!task)
       throw new ValidationException('Invalid task id');
-    if (task.category !== TaskCategory.ACCEPTED)
-      throw new ValidationException('Task not accepted');
+    if ([TaskCategory.ACCEPTED, TaskCategory.ASSIGNED, TaskCategory.UNASSIGNED].includes(task.category))
+      throw new ValidationException('Task can\'t be closed');
 
     await this.taskRepository.update({ id: taskId }, {
       category: TaskCategory.ENDED,
-      dateActive: null,
+      dateActive: null, // Override if set
+      dateEnded: () => 'NOW()',
+    });
+  }
+
+  async reopenTask(taskId: number, accept: boolean = false): Promise<void> {
+    const task = await this.getTaskById(taskId);
+    if (!task)
+      throw new ValidationException('Invalid task id');
+    if (task.category !== TaskCategory.ENDED)
+      throw new ValidationException('Task is not closed');
+    
+    await this.taskRepository.update({ id: taskId }, {
+      category: (task.assignedUserId) ? ((accept) ? TaskCategory.ACCEPTED : TaskCategory.ASSIGNED) : TaskCategory.UNASSIGNED,
+      dateAccepted: () => (accept) ? 'NOW()' : 'NULL',
+      dateAssigned: () => (task.assignedUserId) ? 'NOW()' : 'NULL',
+      dateEnded: null,
     });
   }
 
