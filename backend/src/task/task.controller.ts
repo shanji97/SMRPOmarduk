@@ -453,12 +453,12 @@ export class TaskController {
     }
   }
 
-  @ApiOperation({ summary: 'End task' })
+  @ApiOperation({ summary: 'Close task' })
   @ApiOkResponse()
   @ApiForbiddenResponse()
   @HttpCode(200)
-  @Get(':taskId/end')
-  async endTask(
+  @Post(':taskId/close')
+  async closeTask(
     @Token() token: TokenDto,
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<void> {
@@ -471,11 +471,41 @@ export class TaskController {
       throw new NotFoundException();
 
     // User can assign only himself, project scrum master can also others
-    if (token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
-      throw new ForbiddenException("Can't end, because not assigned to task");
+    if (task.assignedUserId && token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't close, because not assigned to task");
 
     try {
-      await this.taskService.endTask(taskId);
+      await this.taskService.closeTask(taskId);
+    } catch (ex) {
+      if (ex instanceof ValidationException)
+        throw new BadRequestException(ex.message);
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Reopen task' })
+  @ApiOkResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Post(':taskId/reopen')
+  async reopenTask(
+    @Token() token: TokenDto,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.Developer, UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+    
+    // Check if someone is already assigned to task or if task even exitsts
+    const task = await this.taskService.getTaskById(taskId);
+    if (!task)
+      throw new NotFoundException();
+    
+    // User can assign only himself, project scrum master can also others
+    if (task.assignedUserId && token.sid !== task.assignedUserId && !token.isAdmin && !await this.taskService.hasUserPermissionForTask(token.sid, taskId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException("Can't reopen, because user not assigned to task");
+
+    try {
+      await this.taskService.reopenTask(taskId, token.sid === task.assignedUserId);
     } catch (ex) {
       if (ex instanceof ValidationException)
         throw new BadRequestException(ex.message);
