@@ -410,13 +410,13 @@ export class TaskService {
   async getWorkOnTask(taskId: number): Promise<TaskUserTime[]> {
     if (!await this.taskExists(taskId))
       return [];
-    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { 'date': 'ASC' }})
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId }, relations: ['user'], order: { date: 'ASC', dateUpdated: 'ASC' }});
   }
 
   async getWorkOnTaskForUser(taskId: number, userId: number): Promise<TaskUserTime[]> {
     if (!await this.taskExists(taskId))
       return [];
-    return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' }})
+    return await this.taskUserTimeRepository.find({ where: { taskId: taskId, userId: userId }, order: { 'date': 'ASC' }});
   }
 
   async getWorkOnTaskForUserByDate(taskId: number, userId: number, date: string): Promise<TaskUserTime | null> {
