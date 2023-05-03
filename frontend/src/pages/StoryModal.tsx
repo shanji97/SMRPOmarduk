@@ -106,13 +106,9 @@ function StoryModal({ onCancel, show, item }: StoryModalProps) {
 
   useEffect(() => {
     if (isNotificationSuccess && !isNotificationLoading) {
-<<<<<<< HEAD
       if (message !== '')  {
       toast.success(message);
       }
-=======
-      toast.success(message);
->>>>>>> develop
       dispatch(getNotifications(item.id!));
     }
     if (isNotificationError && !isNotificationLoading) {
