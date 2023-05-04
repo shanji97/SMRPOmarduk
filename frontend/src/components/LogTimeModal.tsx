@@ -24,6 +24,18 @@ export interface TimeLog {
   description?: string,
   dateCreated?: string,
   dateUpdated?: string,
+  user: {
+    dateCreated?: string,
+    dateUpdated?: string,
+    deleted: boolean,
+    description?: string,
+    email: string,
+    firstName: string,
+    id: string,
+    isAdmin: boolean,
+    lastName: string,
+    username: string
+  }
 }
 
 const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, updateTimeValues}) => {
@@ -96,7 +108,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, 
   }, [workLogs]);
 
   const closeModal = () => {
-    updateTimeValues(logs);
+    //updateTimeValues(logs);
     hideModal();
   };
 
@@ -113,7 +125,15 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, 
       let oldLogIndex = index;
       let oldLog = prevLogs[index];
 
-      const newLog: TimeLog = {date: oldLog.date, spent: -1, remaining: -1, taskId: oldLog.taskId, userId: oldLog.userId};
+      const newLog: TimeLog = {
+        date: oldLog.date, 
+        spent: -1, 
+        remaining: -1, 
+        taskId: oldLog.taskId, 
+        userId: oldLog.userId,
+        user: oldLog.user
+      };
+
       if (spentTime === -1) {
         newLog.spent = oldLog.spent;
         newLog.remaining = remainingTime;

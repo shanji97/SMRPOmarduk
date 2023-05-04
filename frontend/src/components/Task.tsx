@@ -36,8 +36,6 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   const [showModal, setShowModal] = useState(false);
   const [workLogs, setWorkLogs] = useState<any[]>([]);
 
-
-
   //uporabniki
   const usersState = useAppSelector((state) => state.users);
   const [currentUser, setUserName] = useState("");
@@ -134,10 +132,10 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   const hoursSpentInTotal = useMemo(() => {
 
     const userSpent: UserSpent = {};
-    console.log(workLogs)
     // Loop through the data and populate the userSpent object
     workLogs.forEach(entry => {
       const { user: { username }, spent } = entry;
+      
       if (!userSpent[username]) {
         userSpent[username] = spent;
       } else {
@@ -179,10 +177,8 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   const handleReopen = () => {
     dispatch(reopenTask(task.id));
   };
-    console.log(workLogs)
 
   let Remainingtime = workLogs.length > 0 ? workLogs?.[workLogs.length - 1]?.remaining ?? undefined : task.remaining
-
 
   return (
     <Fragment>
