@@ -14,7 +14,7 @@ import {
   reopenTask,
 } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
-import {getBaseUrl} from "../helpers/helpers";
+import {getBaseUrl, parseJwt} from "../helpers/helpers";
 
 interface TaskProps {
   task: any;
@@ -35,6 +35,24 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   } = useAppSelector((state) => state.tasks);
   const [showModal, setShowModal] = useState(false);
   const [workLogs, setWorkLogs] = useState<any[]>([]);
+
+
+
+  //uporabniki
+  const usersState = useAppSelector((state) => state.users);
+  const [currentUser, setUserName] = useState("");
+
+  useEffect(() => {
+    if (usersState.user === null) {
+      return;
+    }
+    const token = JSON.parse(localStorage.getItem("user")!).token;
+    const userData = parseJwt(token);
+    setUserName(userData.sub);
+
+  }, [usersState.user]);
+
+
 
   useEffect(() => {
     if (isSuccess && !isLoading) {
@@ -109,12 +127,43 @@ const Task: React.FC<TaskProps> = ({ task }) => {
     }
   };
 
+  type UserSpent = {
+    [username: string]: number;
+  };
+
   const hoursSpentInTotal = useMemo(() => {
-    let sum = 0;
-    workLogs.forEach((log) => {
-      sum += Number(log.spent);
+
+    const userSpent: UserSpent = {};
+    console.log(workLogs)
+    // Loop through the data and populate the userSpent object
+    workLogs.forEach(entry => {
+      const { user: { username }, spent } = entry;
+      if (!userSpent[username]) {
+        userSpent[username] = spent;
+      } else {
+        userSpent[username] += spent;
+      }
     });
-    return sum;
+  
+    const userSpentList = [];
+
+    if (userSpent) {
+    for (const username in userSpent) {
+      if (username === currentUser) {
+        userSpentList.push(
+          <p className="m-0 p-0" key={username}>{`${userSpent[username]}h`}</p>
+        );
+        }
+      else {
+        userSpentList.push(
+          <p className="m-0 p-0" key={username}>{`${username}: ${userSpent[username]}h`}</p>
+        );
+      }
+      
+    }
+  }
+
+    return userSpentList
   }, [workLogs]);
 
   const handleStartWork = () => {
@@ -130,7 +179,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   const handleReopen = () => {
     dispatch(reopenTask(task.id));
   };
-
+    console.log(workLogs)
 
   let Remainingtime = workLogs.length > 0 ? workLogs?.[workLogs.length - 1]?.remaining ?? undefined : task.remaining
 
@@ -174,8 +223,8 @@ const Task: React.FC<TaskProps> = ({ task }) => {
         <td>{task.name}</td>
         <td>{getStatusFromCategory(task.category)}</td>
 
-        <td>{hoursSpentInTotal}h</td>
-        <td>{Remainingtime} h</td>
+        <td>{hoursSpentInTotal}</td>
+        <td>{Remainingtime}h</td>
         <td>
 
           <Button

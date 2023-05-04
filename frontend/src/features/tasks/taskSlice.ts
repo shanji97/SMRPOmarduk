@@ -411,12 +411,12 @@ export const taskSlice = createSlice({
             state.message = action.payload
         })
         .addCase(logWork.pending, (state) => {
-            state.isLoading = true
+            state.isMyTaskLoading = true
         })
         .addCase(logWork.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
             state.message = '';
 
             const newWorkLog = {...action.meta.arg};
@@ -432,9 +432,9 @@ export const taskSlice = createSlice({
             }
         })
         .addCase(logWork.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
+            state.isMyTaskLoading = false
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true
             state.message = action.payload
         })
           .addCase(deleteWork.pending, (state) => {
