@@ -771,7 +771,7 @@ function ProductBacklog() {
                                               </>
                                             )}
                                           {status !==
-                                            ProductBacklogItemStatus.WONTHAVE && (
+                                            ProductBacklogItemStatus.WONTHAVE &&  (
                                               <DropdownStory
                                                 item={item}
                                                 status={status}
@@ -781,6 +781,7 @@ function ProductBacklog() {
                                                 getDataReject={({ item, status, index }) => getDataReject(item, status, index)}
                                                 show={show}
                                                 handleShowPlanningPokerModal={handleShowPlanningPokerModal}
+                                                isUserProductOwn={isUserProductOwn}
                                               />
                                           )}
                                         </Card.Header>

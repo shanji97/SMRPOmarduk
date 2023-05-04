@@ -46,13 +46,15 @@ export interface DropdownProps {
       index: number;
     }) => void;
   show: boolean;
+  isUserProductOwn: () => boolean;
   handleShowPlanningPokerModal: (story: any) => void;
 }
 
 const DropdownStory = memo(
-  ({ status, item, index, getDataReject, openEditStoryModal, setShow, show, handleShowPlanningPokerModal }: DropdownProps) => {
+  ({ status, item, index, getDataReject, openEditStoryModal, setShow, show, handleShowPlanningPokerModal, isUserProductOwn}: DropdownProps) => {
     return (
         <>
+      
       <Dropdown   className="ms-auto">
         <Dropdown.Toggle
           variant="link"
@@ -94,6 +96,7 @@ const DropdownStory = memo(
           />
         </Dropdown.Menu>
       </Dropdown>
+    
       </>
     );
   }
