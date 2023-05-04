@@ -7,9 +7,7 @@ import {
   getAllStoryById,
   reset,
 } from "../features/stories/storySlice";
-import { toast } from "react-toastify";
-import { getActiveProject, getProjectUserRoles } from "../features/projects/projectSlice";
-import { getActiveSprint, getAllSprints } from "../features/sprints/sprintSlice";
+
 
 export interface DeleteConfirmationProps {
   onCancel: VoidFunction;
@@ -23,30 +21,8 @@ function DeleteConfirmation({
   item,
 }: DeleteConfirmationProps) {
   const dispatch = useAppDispatch();
-  let { isDeleteSuccess, isLoading, isDeleteError, message } = useAppSelector(
-    (state) => state.stories
-  );
-  const { activeProject } = useAppSelector((state) => state.projects);
   
 
-
-  useEffect(() => {
-    if (isDeleteSuccess && !isLoading) {
-      toast.success("Story successfully deleted");
-      dispatch(reset());
-      dispatch(getAllStoryById(activeProject.id!));
-      //
-      //dispatch(getAllSprints(activeProject.id!));
-      //dispatch(getProjectUserRoles(activeProject.id!));
-      dispatch(getActiveSprint(activeProject.id!));
-      //
-      onCancel();
-    }
-    if (isDeleteError && !isLoading) {
-      toast.error(message);
-      dispatch(reset());
-    }
-  }, [isDeleteSuccess, isDeleteError, isLoading]);
 
   const handleDelete = () => {
     dispatch(deleteStory(item.id!)); // NOTE CHECK THIS !!!!

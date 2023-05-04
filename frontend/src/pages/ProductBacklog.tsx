@@ -114,12 +114,9 @@ function ProductBacklog() {
     isStoriesSuccess,
     isStoriesLoading,
     isStoriesError,
-    isCategoryError,
-    isCategorySuccess,
-    isCategoryLoading,
-    isTimeComplexityError,
-    isTimeComplexityLoading,
-    isTimeComplexitySuccess
+    isStoryUpdateError,
+    isStoryUpdateSuccess,
+    isStoryUpdateLoading,
   } = useAppSelector((state) => state.stories);
   let SprintSelector = useAppSelector((state) => state.sprints);
   let projectsState = useAppSelector((state) => state.projects);
@@ -165,17 +162,18 @@ function ProductBacklog() {
   }, [isSuccess, isError, isLoading]);
 
   useEffect(() => {
-    if (isTimeComplexitySuccess && !isTimeComplexityLoading) {
+
+    if (isStoryUpdateSuccess && !isStoryUpdateLoading && projectsState.activeProject.id) {
       dispatch(reset());
       dispatch(getAllStoryById(projectsState.activeProject.id!));
    
       dispatch(getActiveSprint(projectsState.activeProject.id!));
       toast.success(message)
     }
-    if (isTimeComplexityError && !isTimeComplexityLoading) {
+    if (isStoryUpdateError && !isStoryUpdateLoading) {
       toast.error(message);
     }
-  }, [isTimeComplexityError, isTimeComplexityLoading, isTimeComplexitySuccess]);
+  }, [isStoryUpdateError, isStoryUpdateLoading, isStoryUpdateSuccess]);
 
   useEffect(() => {
     dispatch(getActiveProject());
@@ -196,15 +194,7 @@ function ProductBacklog() {
 
 
 
-  useEffect(() => {
-    
-    if (projectsState.activeProject.id) {
-      dispatch(getAllStoryById(projectsState.activeProject.id!));
-      dispatch(getAllSprints(projectsState.activeProject.id!));
-      dispatch(getProjectUserRoles(projectsState.activeProject.id!))
-      console.log(projectsState.activeProject)
-    }
-  }, [isCategoryError, isCategorySuccess, isCategoryLoading]);
+
 
 
 
@@ -918,8 +908,7 @@ function ProductBacklog() {
         </DragDropContext>
       </div>
       {showNewStoryModal && (
-        <Modal show={showNewStoryModal} onHide={hideNewStoryModal}>
-          <Modal.Body>
+        
             <StoryForm
               projectId={projectsState.activeProject.id}
               isEdit={false}
@@ -930,9 +919,9 @@ function ProductBacklog() {
               priorityInit=""
               businessValueInit=""
               closeModal={hideNewStoryModal}
+              show={showNewStoryModal}
             />
-          </Modal.Body>
-        </Modal>
+        
       )}
       {showstory && (
         <StoryModal
@@ -942,8 +931,6 @@ function ProductBacklog() {
         />
       )}
       {showEditStoryModal && (
-        <Modal show={showEditStoryModal} onHide={hideEditStoryModal}>
-          <Modal.Body>
             <StoryForm
               id={tempDataStory.id}
               isEdit={true}
@@ -954,9 +941,8 @@ function ProductBacklog() {
               priorityInit={tempDataStory.priority.toString()}
               businessValueInit={tempDataStory.businessValue.toString()}
               closeModal={hideEditStoryModal}
+              show={showEditStoryModal}
             />
-          </Modal.Body>
-        </Modal>
       )}
       {showRejectStoryModal && (
         <RejectStoryModal
