@@ -306,6 +306,7 @@ const StoryForm: React.FC<StoryProps> = ({
         category: 0,
         timeComplexity: 0,
         isRealized: false,
+        tasks: [],
       };
       console.log(updatedStory);
       dispatch(editStory(updatedStory));
@@ -322,6 +323,7 @@ const StoryForm: React.FC<StoryProps> = ({
         category: 0,
         timeComplexity: 0,
         isRealized: false,
+        tasks: [],
       };
 
       dispatch(createStory(newStory));

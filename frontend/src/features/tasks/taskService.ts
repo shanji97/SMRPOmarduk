@@ -72,6 +72,27 @@ const createTask = async (taskData: any, token: string) => { // TODO change data
     return response.data;
 }
 
+const closeTask = async (taskId: string, token: string) => { // TODO change data type from any to TaskData if possible
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.post(`${TASK_API_URL}/${taskId}/close`, taskId, config);
+    return response.data;
+}
+const reopenTask = async (taskId: string, token: string) => { // TODO change data type from any to TaskData if possible
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.post(`${TASK_API_URL}/${taskId}/reopen`, taskId, config);
+    return response.data;
+}
+
 const acceptTask = async (body: {taskId?: number, confirm?: boolean}, token: string) => { // TODO change data type from any to TaskData if possible
     const config = {
         headers: {
@@ -235,7 +256,9 @@ const taskService = {
     deleteWork,
     getTaskCategorys,
     getBurndownData,
-    getProjectStatistics
+    getProjectStatistics,
+    closeTask,
+    reopenTask
 }
 
 export default taskService;

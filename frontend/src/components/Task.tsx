@@ -10,6 +10,8 @@ import {
   acceptTask,
   reset,
   getTaskForUser,
+  closeTask,
+  reopenTask,
 } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
 import {getBaseUrl} from "../helpers/helpers";
@@ -122,6 +124,16 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   const handleStopWork = () => {
     dispatch(stopTime(task.id));
   };
+  const handleClose = () => {
+    dispatch(closeTask(task.id));
+  };
+  const handleReopen = () => {
+    dispatch(reopenTask(task.id));
+  };
+
+
+  let Remainingtime = workLogs.length > 0 ? workLogs?.[workLogs.length - 1]?.remaining ?? undefined : task.remaining
+
 
   return (
     <Fragment>
@@ -163,8 +175,9 @@ const Task: React.FC<TaskProps> = ({ task }) => {
         <td>{getStatusFromCategory(task.category)}</td>
 
         <td>{hoursSpentInTotal}h</td>
-        <td>{workLogs.length > 0 ? `${workLogs?.[workLogs.length - 1]?.remaining}h` ?? "/" : `${task.remaining}h`}</td>
+        <td>{Remainingtime} h</td>
         <td>
+
           <Button
             variant="outline-primary"
             size="sm"
@@ -174,7 +187,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
           </Button>
         </td>
         <td>
-          {currentlyWorkingOnTaskId === "" && (
+          {task.category !== 250 && Remainingtime !== 0 && currentlyWorkingOnTaskId === "" && (
             <Button variant="primary" size="sm" onClick={handleStartWork}>
               Start work
             </Button>
@@ -182,6 +195,16 @@ const Task: React.FC<TaskProps> = ({ task }) => {
           {currentlyWorkingOnTaskId === task.id && (
             <Button variant="primary" size="sm" onClick={handleStopWork}>
               Stop work
+            </Button>
+          )}
+          {task.category !== 250 && Remainingtime === 0 && workLogs.length > 0 && (
+            <Button variant="primary" size="sm" onClick={handleClose}>
+              Close task
+            </Button>
+          )}
+          {task.category === 250 && (
+            <Button variant="primary" size="sm" onClick={handleReopen}>
+              Reopen task
             </Button>
           )}
         </td>
@@ -199,3 +222,4 @@ const Task: React.FC<TaskProps> = ({ task }) => {
 };
 
 export default Task;
+

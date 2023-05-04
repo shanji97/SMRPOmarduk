@@ -157,6 +157,24 @@ export const getWorkLogs = createAsyncThunk('/task/getWorkLogs', async (taskId: 
         return thunkAPI.rejectWithValue(message)
     }
 });
+export const closeTask = createAsyncThunk('/task/closeTask', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.closeTask(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+export const reopenTask = createAsyncThunk('/task/reopenTask', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.reopenTask(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
 
 export const logWork = createAsyncThunk('/task/logWork', async (body: {date: string, userId: string, taskId: string, spent: number, remaining: number, description: string, type?: string}, thunkAPI: any) => {
     try {
@@ -267,6 +285,36 @@ export const taskSlice = createSlice({
             state.isLoading = false
             state.isSuccess = false;
             state.isError = true
+            state.message = action.payload
+        })
+        .addCase(closeTask.pending, (state) => {
+            state.isMyTaskLoading = true
+        })
+        .addCase(closeTask.fulfilled, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
+            state.message = '';
+        })
+        .addCase(closeTask.rejected, (state, action) => {
+            state.isMyTaskLoading = false
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true
+            state.message = action.payload
+        })
+        .addCase(reopenTask.pending, (state) => {
+            state.isMyTaskLoading = true
+        })
+        .addCase(reopenTask.fulfilled, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
+            state.message = '';
+        })
+        .addCase(reopenTask.rejected, (state, action) => {
+            state.isMyTaskLoading = false
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true
             state.message = action.payload
         })
         .addCase(getTaskCategorys.pending, (state) => {

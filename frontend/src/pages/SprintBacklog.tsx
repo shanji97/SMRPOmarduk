@@ -271,6 +271,7 @@ function SprintBacklog() {
     category: 0,
     timeComplexity: 0,
     isRealized: false,
+    tasks: []
   };
 
   //modal za form

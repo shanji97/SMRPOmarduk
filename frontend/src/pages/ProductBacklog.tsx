@@ -317,11 +317,11 @@ function ProductBacklog() {
 
   const categoryChange = (category: string): number => {
     switch (category) {
-      case "Won't have this time":
+      case ProductBacklogItemStatus.WONTHAVE:
         return 0;
-      case "Unallocated":
+      case ProductBacklogItemStatus.UNALLOCATED:
         return 1;
-      case "Allocated":
+      case ProductBacklogItemStatus.ALLOCATED:
         return 2;
       default:
         return 3;
@@ -336,7 +336,7 @@ function ProductBacklog() {
   }) => void;
 
   //console.log(SprintSelector.activeSprint)
-  const allocatedItems = itemsByStatus["Allocated"];
+  const allocatedItems = itemsByStatus[ProductBacklogItemStatus.ALLOCATED];
   const totalComplexity = allocatedItems.map((item) => item.timeComplexity).reduce((acc, curr) => acc + curr, 0);
 
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
@@ -352,7 +352,7 @@ function ProductBacklog() {
           return;
         }
 
-        if (destination.droppableId === "Allocated") {
+        if (destination.droppableId === ProductBacklogItemStatus.ALLOCATED) {
           if (SprintSelector.activeSprint?.velocity !== undefined &&
             SprintSelector.activeSprint?.velocity < totalComplexity
           ) {
@@ -362,12 +362,12 @@ function ProductBacklog() {
           }
         }
         if (
-          source.droppableId === "Unallocated" &&
-          destination.droppableId === "Done"
+          source.droppableId === ProductBacklogItemStatus.UNALLOCATED &&
+          destination.droppableId === ProductBacklogItemStatus.DONE
         ) {
           if (
             SprintSelector.activeSprint?.velocity ==
-            itemsByStatus["Allocated"].length
+            itemsByStatus[ProductBacklogItemStatus.ALLOCATED].length
           ) {
             toast.error("Story is not in active Sprint and is not realised");
             return;
@@ -396,7 +396,7 @@ function ProductBacklog() {
         dispatch(updateStoryCategory(projectRoleData));
 
         if (
-          destination.droppableId === "Allocated" &&
+          destination.droppableId === ProductBacklogItemStatus.ALLOCATED &&
           destination.droppableId != source.droppableId
         ) {
           const storySprint: StorySprint = {
@@ -408,8 +408,8 @@ function ProductBacklog() {
         //itemsByStatus[destination.droppableId].length
 
         if (
-          source.droppableId === "Allocated" &&
-          destination.droppableId != "Done"
+          source.droppableId === ProductBacklogItemStatus.ALLOCATED &&
+          destination.droppableId != ProductBacklogItemStatus.DONE
         ) {
         }
       })
@@ -539,6 +539,7 @@ function ProductBacklog() {
                 category: story.category,
                 timeComplexity: story.timeComplexity,
                 isRealized: story.isRealized,
+                tasks: story.tasks
               });
             });
 
@@ -606,6 +607,7 @@ function ProductBacklog() {
     category: 0,
     timeComplexity: 0,
     isRealized: false,
+    tasks: []
   };
 
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
@@ -632,7 +634,7 @@ function ProductBacklog() {
     dispatch(confirmStory(item.id!));
     let projectRoleData = {
       projectId: parseInt(projectsState.activeProject?.id || ""),
-      category: categoryChange("Done"),
+      category: categoryChange(ProductBacklogItemStatus.DONE),
       storyId: item.id || "",
     };
     dispatch(updateStoryCategory(projectRoleData));
@@ -656,8 +658,11 @@ function ProductBacklog() {
   
   //console.log(totalComplexity)
   return (
-    <>
-      <div className="row flex-row flex-sm-nowrap m-1 mt-3">
+    <><div className="col-sm-8 col-md-6 col-xl-6 p-3 pb-0">
+        <div className="d-flex align-items-end justify-content-center bg-light">Product Backlog</div>
+
+      </div>
+      <div className="row flex-row flex-sm-nowrap m-1">
         <DragDropContext onDragEnd={handleDragEnd}>
           {Object.values(ProductBacklogItemStatus).map((status) => {
             return (
@@ -680,7 +685,7 @@ function ProductBacklog() {
                     )}
                     {status === ProductBacklogItemStatus.ALLOCATED && (
                       <p className="fs-6 my-0 ms-auto">
-                    Velocity: {totalComplexity}  / {SprintSelector.activeSprint?.velocity}
+                    Velocity: {totalComplexity}  / {SprintSelector.activeSprint?.velocity} PT
                       </p>
                      
                     )}
@@ -742,7 +747,7 @@ function ProductBacklog() {
                                           </p>
                                           {status ===
                                             ProductBacklogItemStatus.ALLOCATED &&
-                                            isUserProductOwn() && (
+                                            isUserProductOwn() && item.tasks.every(item => item.category === 250) && (
                                               <>
                                                 <p className="fs-6 text-muted m-1 mx-auto">
                                                   Task Finished:{" "}
@@ -771,7 +776,7 @@ function ProductBacklog() {
                                                     )
                                                   }
                                                 >
-                                                  Approve
+                                                  Accept
                                                 </Button>
                                               </>
                                             )}

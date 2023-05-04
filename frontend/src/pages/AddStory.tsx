@@ -255,6 +255,7 @@ const AddStory = () => {
       category: 0,
       timeComplexity: 0,
       isRealized: false,
+      tasks: []
     };
 
     // console.log(newStory);
