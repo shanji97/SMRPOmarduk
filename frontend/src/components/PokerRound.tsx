@@ -6,6 +6,7 @@ import {Button} from "react-bootstrap";
 import {Check, X} from "react-bootstrap-icons";
 import {endPlanningPoker, reset} from "../features/planningPoker/planningPokerSlice";
 import {toast} from "react-toastify";
+import { applyResult } from "../features/planningPoker/planningPokerSlice";
 interface PokerRoundProps {
   round: Round,
   numberOfRounds: number,
@@ -29,7 +30,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
 }) => {
   const dispatch = useAppDispatch();
   const {isError, message, isSuccess} = useAppSelector(state => state.poker);
-  const [resultSubmited, setResultSubmited] = useState(false);
+  const [showApplyEstimate, setShowApplyEstimate] = useState(false);
   const [singleRound, setSingleRound] = useState<RoundWithVotes>({
     id: '',
     storyId: '',
@@ -59,12 +60,13 @@ const PokerRound: React.FC<PokerRoundProps> = (
   }, [singleRound]);
 
   const rowCells = useMemo(() => {
-    console.log(singleRound);
     let numberOfVotes = -1;
+    console.log(singleRound);
     if (singleRound.votes) {
       numberOfVotes = singleRound.votes.length;
     }
     if (roundEndedAndScrumMaster) {
+      setShowApplyEstimate(true);
       return singleRound.votes.map(vote => {
         return <td key={Math.random()}>{vote.value}h</td>;
       });
@@ -85,9 +87,13 @@ const PokerRound: React.FC<PokerRoundProps> = (
 
   const endRoundHandler = () => {
     dispatch(endPlanningPoker(round.id!));
-    setResultSubmited(true);
     setShowVotingOptions(false);
     toast.success('Round ended!');
+  }
+
+  const applyEstimate = () => {
+    dispatch(applyResult(round.id!));
+    toast.success('Estimate applied!');
   }
 
   return (
@@ -99,7 +105,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
           {round.dateEnded === null && isUserScrumMaster && <Button onClick={endRoundHandler} style={{marginRight: '.5rem'}} variant='success'>End round</Button>}
         </td>
       </tr>
-      {isUserScrumMaster && round.dateEnded !== null && index === numberOfRounds-1 && <Button>Apply estimate</Button>}
+      {isUserScrumMaster && showApplyEstimate && round.dateEnded !== null && index === numberOfRounds-1 && <Button onClick={applyEstimate}>Apply estimate</Button>}
     </Fragment>
 
   );
