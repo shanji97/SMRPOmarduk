@@ -51,46 +51,33 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   }, [usersState.user]);
 
 
-
-  useEffect(() => {
-    if (isSuccess && !isLoading) {
-      if (currentlyWorkingOnTaskId !== "") {
-        //toast.success("Started timer!");
-      } else {
-        //toast.success("Stopped timer!");
-      }
-    }
-
-    return () => {
-      dispatch(reset());
-    }
-  }, [isSuccess, isError, isLoading]);
-
-  useEffect(() => {
-  }, [workLogs])
+const fetchData = async () => {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        const response = await fetch(`${getBaseUrl()}/api/task/${task.id}/time`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `JWT ${token}`
+          }
+        })
+  
+        const json = await response.json();
+        setWorkLogs(json);
+      };
 
   useEffect(() => {
     if (isMyTaskSuccess && !isMyTaskLoading) {
      
       dispatch(getTaskForUser());
       dispatch(reset());
+      fetchData();
+    }  if (isMyTaskError && !isMyTaskLoading) {
+      toast.error(message);
+      dispatch(reset());
     }
   
   }, [isMyTaskSuccess, isMyTaskError, isMyTaskLoading]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const token = JSON.parse(localStorage.getItem('user')!).token;
-      const response = await fetch(`${getBaseUrl()}/api/task/${task.id}/time`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `JWT ${token}`
-        }
-      })
-
-      const json = await response.json();
-      setWorkLogs(json);
-    };
     fetchData();
   }, []);
 
@@ -145,7 +132,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   
     const userSpentList = [];
 
-    if (userSpent) {
+    if (Object.keys(userSpent).length !== 0) {
     for (const username in userSpent) {
       if (username === currentUser) {
         userSpentList.push(
@@ -159,8 +146,10 @@ const Task: React.FC<TaskProps> = ({ task }) => {
       }
       
     }
+  } else {
+    userSpentList.push(<p className="m-0 p-0">0h</p>)
   }
-
+  console.log(userSpent)
     return userSpentList
   }, [workLogs]);
 
@@ -202,7 +191,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
                   dispatch(acceptTask({ taskId: task.id, confirm: false }))
                 }
               >
-                Release
+                Decline
               </Button>
             </div>
           )}
@@ -212,7 +201,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
               variant="primary"
               onClick={() => dispatch(releaseTask(task.id))}
             >
-              Decline
+              Release 
             </Button>
           )}
         </td>
@@ -232,12 +221,12 @@ const Task: React.FC<TaskProps> = ({ task }) => {
           </Button>
         </td>
         <td>
-          {task.category !== 250 && Remainingtime !== 0 && currentlyWorkingOnTaskId === "" && (
+          {task.category === 3 && (
             <Button variant="primary" size="sm" onClick={handleStartWork}>
               Start work
             </Button>
           )}
-          {currentlyWorkingOnTaskId === task.id && (
+          {task.category === 4 && (
             <Button variant="primary" size="sm" onClick={handleStopWork}>
               Stop work
             </Button>

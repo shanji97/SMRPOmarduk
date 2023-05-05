@@ -65,7 +65,7 @@ const DropdownStory = memo(
           <ThreeDots />
         </Dropdown.Toggle>
         <Dropdown.Menu >
-          {status !== ProductBacklogItemStatus.UNALLOCATED && (
+          {status !== ProductBacklogItemStatus.UNALLOCATED && isUserProductOwn() &&  (
             <Dropdown.Item
               onClick={() => {
                 getDataReject({item, status, index})
