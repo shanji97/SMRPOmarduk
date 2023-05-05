@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from "react";
+import React, {Component, useEffect, useMemo, useState} from "react";
 import {
   DragDropContext,
   Draggable,
@@ -93,9 +93,6 @@ function SprintBacklog() {
   const [userId, setUserId] = useState("");
   const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
   const [itemsByStatus, setItemsByStatus] = useState<StoryData[]>([]);
-
-
-
 
   useEffect(() => {
     if (users.length === 0) {
@@ -200,6 +197,17 @@ function SprintBacklog() {
   // this is for add/edit modals
   const [selectedStoryId, setSelectedStoryId] = useState("");
   const [selectedTask, setSelectedTask] = useState<any>({});
+
+  const sumOfEstimatedTimes = (storyId: string) => {
+    let sum = 0;
+    taskState.tasksForSprint.forEach(task => {
+      if (storyId === task.storyId) {
+        sum += task.remaining;
+      }
+    })
+
+    return sum;
+  }
 
   const openAddTaskModal = (id: string) => {
     setSelectedStoryId(id);
@@ -465,6 +473,7 @@ function SprintBacklog() {
                         >
                           Add new task
                         </Button>
+                        <span> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
                       </Tab.Pane>
                       <Tab.Pane eventKey="second"></Tab.Pane>
                     </Tab.Content>
