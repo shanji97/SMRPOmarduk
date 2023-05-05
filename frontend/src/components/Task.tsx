@@ -35,6 +35,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
   } = useAppSelector((state) => state.tasks);
   const [showModal, setShowModal] = useState(false);
   const [workLogs, setWorkLogs] = useState<any[]>([]);
+  const [workStarted, setWorkStarted] = useState(false);
 
   //uporabniki
   const usersState = useAppSelector((state) => state.users);
@@ -149,16 +150,17 @@ const fetchData = async () => {
   } else {
     userSpentList.push(<p className="m-0 p-0">0h</p>)
   }
-  console.log(userSpent)
     return userSpentList
   }, [workLogs]);
 
   const handleStartWork = () => {
     dispatch(startTime(task.id));
+    setWorkStarted(true);
   };
 
   const handleStopWork = () => {
     dispatch(stopTime(task.id));
+    setWorkStarted(false);
   };
   const handleClose = () => {
     dispatch(closeTask(task.id));
@@ -222,9 +224,14 @@ const fetchData = async () => {
         </td>
         <td>
           {task.category === 3 && (
-            <Button variant="primary" size="sm" onClick={handleStartWork}>
-              Start work
-            </Button>
+            workStarted ?
+              <Button variant="primary" size="sm" onClick={handleStopWork}>
+                Stop work
+              </Button> :
+              <Button variant="primary" size="sm" onClick={handleStartWork}>
+                Start work
+              </Button>
+
           )}
           {task.category === 4 && (
             <Button variant="primary" size="sm" onClick={handleStopWork}>

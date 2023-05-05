@@ -108,7 +108,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, 
   }, [workLogs]);
 
   const closeModal = () => {
-    updateTimeValues(logs);
+    // updateTimeValues(logs);
     hideModal();
   };
 
