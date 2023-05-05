@@ -11,6 +11,7 @@ import {getProjectUserRoles} from "../features/projects/projectSlice";
 import PokerRound from "./PokerRound";
 import VotesContainer from "./VotesContainer";
 import {ArrowClockwise} from "react-bootstrap-icons";
+import { toast } from "react-toastify";
 
 interface PlanningPokerModalProps {
   isUserScrumMaster: boolean
@@ -39,6 +40,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
 
   useEffect(() => {
     dispatch(getActivePokerRound(storyIdForPoker));
+    dispatch(getAllPokerRounds(storyIdForPoker));
   }, [roundStarted]);
 
   const developers = useMemo(() => {
@@ -47,7 +49,8 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
 
   const startNewRoundHandler = () => {
     dispatch(newPokerRound(storyIdForPoker));
-    setShowVotingOptions(true);
+    toast.success('New round started!');
+    dispatch(getAllPokerRounds(storyIdForPoker));
   }
 
   const reloadRounds = () => {
