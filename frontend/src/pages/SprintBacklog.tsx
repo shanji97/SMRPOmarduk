@@ -473,7 +473,7 @@ function SprintBacklog() {
                         >
                           Add new task
                         </Button>
-                        <span> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
+                        <span className='text-secondary'> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
                       </Tab.Pane>
                       <Tab.Pane eventKey="second"></Tab.Pane>
                     </Tab.Content>
