@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import Card from "../components/Card";
 import { Form } from "react-bootstrap";
 
@@ -31,7 +31,8 @@ interface StoryProps {
   testsInit: string[];
   priorityInit: string;
   businessValueInit: string;
-  closeModal: () => void;
+  closeModal: VoidFunction;
+  show: boolean;
 }
 
 const StoryForm: React.FC<StoryProps> = ({
@@ -45,63 +46,19 @@ const StoryForm: React.FC<StoryProps> = ({
   priorityInit,
   businessValueInit,
   closeModal,
+  show
 }) => {
   const dispatch = useAppDispatch();
   let storyState = useAppSelector((state) => state.stories);
   let projectsState = useAppSelector((state) => state.projects);
   const navigate = useNavigate();
 
-  // get id
-  const { projectID } = useParams();
+
   const [userId, setUserId] = useState(-1);
 
 
-  useEffect(() => {
-    dispatch(getActiveProject());
-  }, []);
+  
 
-  useEffect(() => {
-    
-    if (projectsState.activeProject.id) {
-      dispatch(getAllStoryById(projectsState.activeProject.id!));
-      
-    }
-  }, [projectsState.activeProject]);
-
-
-
-  useEffect(() => {
-    if (storyState.isUpdateSuccess && !storyState.isLoading) {
-      toast.success(
-        isEdit ? "Story successfully updated!" : "Story successfully created!"
-      );
-      resetInputs();
-      dispatch(reset());
-      if (projectsState.activeProject.id) {
-        dispatch(getAllStoryById(projectsState.activeProject.id!));
-        
-      }
-      closeModal();
-    }
-    if (storyState.isUpdateError && !storyState.isLoading) {
-      toast.error(storyState.message);
-      dispatch(reset());
-      if (projectsState.activeProject.id) {
-        dispatch(getAllStoryById(projectsState.activeProject.id!));
-        
-      }
-    }
-  }, [
-    storyState.isUpdateSuccess,
-    storyState.isUpdateError,
-    storyState.isLoading,
-  ]);
-
-  useEffect(() => {
-    if (projectID !== undefined) {
-      dispatch(getProject(projectID));
-    }
-  }, [projectID]);
 
   // TODO
   // this is temporary - checks if user is product owner or scrum master
@@ -253,23 +210,6 @@ const StoryForm: React.FC<StoryProps> = ({
     setBusinessValueTouched(true);
   };
 
-  const resetInputs = () => {
-    // set inputs to default values
-    setSequenceNumber("");
-    setTitle("");
-    setDescription("");
-    setTests([""]);
-    setPriority("");
-    setBusinessValue("");
-
-    // set touch states values back to default
-    setSequenceNumberTouched(false);
-    setTitleTouched(false);
-    setDescriptionTouched(false);
-    setTestsTouched([false]);
-    setPriorityTouched(false);
-    setBusinessValueTouched(false);
-  };
 
   // handle submit
   const submitFormHandler = (e: React.FormEvent<HTMLFormElement>) => {
@@ -301,7 +241,7 @@ const StoryForm: React.FC<StoryProps> = ({
         tests,
         priority: parseInt(priority),
         businessValue: parseInt(businessValue),
-        projectID,
+        projectID: projectsState.activeProject.id,
         userId,
         category: 0,
         timeComplexity: 0,
@@ -310,6 +250,7 @@ const StoryForm: React.FC<StoryProps> = ({
       };
       console.log(updatedStory);
       dispatch(editStory(updatedStory));
+      closeModal();
     } else {
       const newStory: StoryData = {
         sequenceNumber: parseInt(sequenceNumber),
@@ -327,11 +268,13 @@ const StoryForm: React.FC<StoryProps> = ({
       };
 
       dispatch(createStory(newStory));
+      closeModal();
     }
   };
 
   return (
-    <Fragment>
+    <Modal show={show} onHide={closeModal}>
+          <Modal.Body>
       <h1 className={`${classes.cardHeading} text-primary`}>
         {isEdit ? "Update user story" : "Add User Story"}
       </h1>
@@ -494,7 +437,8 @@ const StoryForm: React.FC<StoryProps> = ({
           {isEdit ? "Update story" : "Add story"}
         </Button>
       </Form>
-    </Fragment>
+      </Modal.Body>
+        </Modal>
   );
 };
 
