@@ -231,7 +231,6 @@ const fetchData = async () => {
               <Button variant="primary" size="sm" onClick={handleStartWork}>
                 Start work
               </Button>
-
           )}
           {task.category === 4 && (
             <Button variant="primary" size="sm" onClick={handleStopWork}>

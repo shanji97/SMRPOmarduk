@@ -461,7 +461,13 @@ export const taskSlice = createSlice({
             state.isTimerSuccess = true;
             state.isTimerError = false;
             state.message = '';
-            state.currentlyWorkingOnTaskId = action.meta.arg;
+
+            const taskId = action.meta.arg;
+            const index = state.tasksForUser.findIndex(task => task.id === taskId);
+            const taskToUpdate = state.tasksForUser.find(task => task.id === taskId);
+            const updatedTask = {...taskToUpdate};
+            updatedTask.category = 4;
+            state.tasksForUser[index] = updatedTask;
         })
         .addCase(startTime.rejected, (state, action) => {
             state.isLoading = false
@@ -477,7 +483,13 @@ export const taskSlice = createSlice({
             state.isTimerSuccess = true;
             state.isTimerError = false;
             state.message = '';
-            state.currentlyWorkingOnTaskId = "";
+
+            const taskId = action.meta.arg;
+            const index = state.tasksForUser.findIndex(task => task.id === taskId);
+            const taskToUpdate = state.tasksForUser.find(task => task.id === taskId);
+            const updatedTask = {...taskToUpdate};
+            updatedTask.category = 3;
+            state.tasksForUser[index] = updatedTask;
         })
         .addCase(stopTime.rejected, (state, action) => {
             state.isLoading = false;
