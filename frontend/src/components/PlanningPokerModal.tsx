@@ -79,6 +79,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
             {developers.map(role => (
               <th key={Math.random()}>{role.user.username}</th>
             ))}
+            <th>Average</th>
           </tr>
           </thead>
           <tbody>
@@ -103,7 +104,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
           </tbody>
         </Table>
         <Fragment>
-        {activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={activeRound.id!} />}
+        {activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={pokerRounds[pokerRounds.length-1].id!} />}
         </Fragment>
 
       </Modal.Body>

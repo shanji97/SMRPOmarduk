@@ -55,22 +55,13 @@ const PokerRound: React.FC<PokerRoundProps> = (
     fetchData();
   }, [shouldReload]);
 
-  const roundEndedAndScrumMaster = useMemo(() => {
-    return isUserScrumMaster && singleRound.votes.length === numberOfPlayers;
-  }, [singleRound]);
-
   const rowCells = useMemo(() => {
     let numberOfVotes = -1;
-    console.log(singleRound);
     if (singleRound.votes) {
       numberOfVotes = singleRound.votes.length;
     }
-    if (roundEndedAndScrumMaster) {
-      setShowApplyEstimate(true);
-      return singleRound.votes.map(vote => {
-        return <td key={Math.random()}>{vote.value}h</td>;
-      });
-    } else if (numberOfVotes < numberOfPlayers && singleRound.dateEnded !== null) {
+
+    if (numberOfVotes < numberOfPlayers && singleRound.dateEnded !== null) {
       return <td className='text-primary' colSpan={numberOfPlayers} style={{ textAlign: "center" }}>
         Ended
       </td>;
@@ -80,9 +71,15 @@ const PokerRound: React.FC<PokerRoundProps> = (
       </td>;
     }
 
-    return singleRound.votes.map(vote => {
-      return <td key={Math.random()}>{vote.value}h</td>;
-    });
+    const tableData: any[] = [];
+    let average = 0;
+    singleRound.votes.forEach(vote => {
+      tableData.push(<td key={Math.random()}>{vote.value}h</td>);
+      average += vote.value;
+    })
+    tableData.push(<td key={Math.random()}>{average / numberOfPlayers}h</td>)
+
+    return tableData;
   }, [singleRound]);
 
   const endRoundHandler = () => {
