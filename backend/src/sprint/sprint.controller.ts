@@ -89,7 +89,7 @@ export class SprintController {
     @Param('projectId', ParseIntPipe) projectId: number,
   ): Promise<Sprint> {
     // Check permissions
-    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster]))
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
       throw new ForbiddenException();
 
     const sprint = await this.sprintService.getActiveSprintForProject(projectId);
