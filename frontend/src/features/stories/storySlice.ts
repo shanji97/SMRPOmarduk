@@ -360,7 +360,7 @@ export const storySlice = createSlice({
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.isError = false;
-                state.message = action.payload;
+                state.message = "Story is approved";
                 state.isSuccessConfirm = true;
                 state.isSuccessLoading = false
                 

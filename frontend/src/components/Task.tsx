@@ -138,7 +138,7 @@ const fetchData = async () => {
     for (const username in userSpent) {
       if (username === currentUser) {
         userSpentList.push(
-          <p className="m-0 p-0" key={username}>{`${userSpent[username].toFixed(2)}h`}</p>
+          <p className="m-0 p-0" key={username}>{`${username}: ${userSpent[username].toFixed(2)}h`}</p>
         );
         }
       else {

@@ -344,6 +344,8 @@ function SprintBacklog() {
     setValueBar(val);
   };
   
+  const StoryDesc = storiesForSprint.filter((item) => item.isRealized === false);
+  
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
@@ -370,7 +372,7 @@ function SprintBacklog() {
               </ToggleButtonGroup>
             </ButtonToolbar>
           </div>
-          {storiesForSprint.map((story) => {
+          {StoryDesc.map((story) => {
             // console.log(item);
             return (
               <Card className="mt-3" key={story.id}>
@@ -473,7 +475,7 @@ function SprintBacklog() {
                         >
                           Add new task
                         </Button>
-                        <span className='text-secondary'> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
+                        <span className='text-secondary ms-auto'> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
                       </Tab.Pane>
                       <Tab.Pane eventKey="second"></Tab.Pane>
                     </Tab.Content>

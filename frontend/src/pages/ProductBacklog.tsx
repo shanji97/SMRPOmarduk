@@ -104,7 +104,45 @@ function ProductBacklog() {
   const [storyIdForPoker, setStoryIdForPoker] = useState('');
   //dispatch(getActiveProject());
   //helper funkcija za updatat useState
-  
+   //uporabniki
+   let { users, user } = useAppSelector((state) => state.users);
+   const [allUsers, setAllUsers] = useState<String[]>([]);
+ 
+   useEffect(() => {
+     if (users.length !== 0) {
+       const usernames = users.map((user) => user.username);
+       setAllUsers(usernames);
+     }
+   }, [users]);
+ 
+   const [isAdmin, setIsAdmin] = useState(false);
+   const [userName, setUserName] = useState("");
+   const [userId, setUserId] = useState();
+   const [scrumMasterId, setScrumMasterId] = useState();
+   const [productOwnerId, setScrumProductOwnerId] = useState();
+ 
+   useEffect(() => {
+     if (user === null) {
+       navigate("/login");
+       return;
+     }
+     if (user !== null) {
+     const token = JSON.parse(localStorage.getItem("user")!).token;
+     const userData = parseJwt(token);
+     setIsAdmin(userData.isAdmin);
+     setUserName(userData.sub);
+     setUserId(userData.sid);
+     }
+   }, [user]);
+ 
+   const isUserScramMaster = () => {
+     if (scrumMasterId === userId && userId && scrumMasterId) return true;
+     else return false;
+   };
+   const isUserProductOwn = () => {
+     if (productOwnerId === userId && userId && productOwnerId) return true;
+     else return false;
+   };
 
   let {
     stories,
@@ -121,19 +159,25 @@ function ProductBacklog() {
   } = useAppSelector((state) => state.stories);
   let SprintSelector = useAppSelector((state) => state.sprints);
   let projectsState = useAppSelector((state) => state.projects);
+
+
   useEffect(() => {
-    if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading && SprintSelector.message !== '') {
-      toast.success(SprintSelector.message);
+    if (SprintSelector.isToSprintSuccess && !SprintSelector.isToSprintLoading) {
+      if (SprintSelector.message !== '') {
+        toast.success(SprintSelector.message);
+      }
       //dispatch(reset());
     }
-    if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading && SprintSelector.message !== '') {
+    if (SprintSelector.isToSprintError && !SprintSelector.isToSprintLoading) {
       toast.error(SprintSelector.message);
     }
   }, [
-    SprintSelector.isStoryInSprint,
-    SprintSelector.isNotStoryInSprint,
-    SprintSelector.isLoading,
+    SprintSelector.isToSprintSuccess,
+    SprintSelector.isToSprintError,
+    SprintSelector.isToSprintLoading,
   ]);
+
+
 
   useEffect(() => {
     if (SprintSelector.isSuccessActive && !SprintSelector.isLoadingActive) {
@@ -146,8 +190,8 @@ function ProductBacklog() {
       } 
       //dispatch(reset());
     }
-    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive && SprintSelector.message !== '') {
-      toast.error(SprintSelector.message);
+    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive) {
+      //toast.error(SprintSelector.message);
       console.log("active sprint not")
       if (SprintSelector.sprints) {
         SprintSelector.sprints.map((item) => {
@@ -176,12 +220,12 @@ function ProductBacklog() {
 
   useEffect(() => {
 
-    if (isStoryUpdateSuccess && !isStoryUpdateLoading && projectsState.activeProject.id) {
+    if (isStoryUpdateSuccess && !isStoryUpdateLoading && projectsState.activeProject.id ) {
       dispatch(reset());
       dispatch(getAllStoryById(projectsState.activeProject.id!));
    
       dispatch(getActiveSprint(projectsState.activeProject.id!));
-      toast.success(message)
+      if (message !== '') {toast.success(message)}
     }
     if (isStoryUpdateError && !isStoryUpdateLoading && message !== '') {
       toast.error(message);
@@ -202,7 +246,7 @@ function ProductBacklog() {
       if (SprintSelector.activeSprint === undefined && projectsState.activeProject !== undefined) {
         dispatch(getActiveSprint(projectsState.activeProject.id!));
       }
-      
+      toast.success(projectsState.message)
     }
     if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading && projectsState.message !== '') {
       toast.error(projectsState.message);
@@ -242,52 +286,13 @@ function ProductBacklog() {
 
   //console.log(projectroles.userRoles)
 
-  //uporabniki
-  let { users, user } = useAppSelector((state) => state.users);
-  const [allUsers, setAllUsers] = useState<String[]>([]);
-
-  useEffect(() => {
-    if (!(users.length === 0)) {
-      const usernames = users.map((user) => user.username);
-      setAllUsers(usernames);
-    }
-  }, [users]);
-
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [userId, setUserId] = useState();
-  const [scrumMasterId, setScrumMasterId] = useState();
-  const [productOwnerId, setScrumProductOwnerId] = useState();
-
-  useEffect(() => {
-    if (user === null) {
-      return;
-    }
-    const token = JSON.parse(localStorage.getItem("user")!).token;
-    const userData = parseJwt(token);
-    setIsAdmin(userData.isAdmin);
-    setUserName(userData.sub);
-    setUserId(userData.sid);
-  }, [user]);
-
-  const isUserScramMaster = () => {
-    if (scrumMasterId === userId && userId && scrumMasterId) return true;
-    else return false;
-  };
-  const isUserProductOwn = () => {
-    if (productOwnerId === userId && userId && productOwnerId) return true;
-    else return false;
-  };
+ 
 
 
   //console.log(stories)
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user === null) {
-      navigate("/login");
-    }
-  }, [user]);
+ 
 
   const [itemsByStatus, setItemsByStatus] = useState<TaskboardData>(
     defaultItems
@@ -557,7 +562,7 @@ function ProductBacklog() {
       );
       }
       if (SprintSelector.isUnrealizedError && !SprintSelector.isUnrealizedLoading) {
-        toast.error("Sprint ni Aktiviran");
+        //toast.error("Sprint ni Aktiviran");
         
     }
   
@@ -687,7 +692,7 @@ function ProductBacklog() {
                     </Card.Title>
                     <div className="vr my-0"></div>
                     <p className="fs-6 my-0">{itemsByStatus[status].length}</p>
-                    {status === ProductBacklogItemStatus.UNALLOCATED && (
+                    {status === ProductBacklogItemStatus.UNALLOCATED && (isUserProductOwn() || isUserScramMaster()) && (
                       <Button
                         className="ms-auto m-0 p-0"
                         variant="light"
@@ -738,6 +743,8 @@ function ProductBacklog() {
                                     ? true
                                     : SprintSelector.activeSprint?.velocity! < (totalComplexity + item.timeComplexity)
                                     ? true
+                                    : SprintSelector.activeSprint === undefined
+                                    ? true
                                     : undefined
                                 }
                               >
@@ -760,7 +767,7 @@ function ProductBacklog() {
                                           </p>
                                           {status ===
                                             ProductBacklogItemStatus.ALLOCATED &&
-                                            isUserProductOwn() && item.tasks.every(item => item.category === 250) && (
+                                            isUserProductOwn() && item.tasks.every(item => item.category === 250) && item.tasks.length !== 0 && (
                                               <>
                                                 <p className="fs-6 text-muted m-1 mx-auto">
                                                   Task Finished:{" "}
@@ -820,16 +827,8 @@ function ProductBacklog() {
                                               {item.title}
                                             </Button>
                                           </Card.Text>
-
-                                          <div className="text-end">
-                                            <small className="custom-font-size text-muted mb-1 d-inline-block">
-                                              25%
-                                            </small>
-                                          </div>
-                                          <ProgressBar
-                                            style={{ height: "3px" }}
-                                            now={60}
-                                          />
+                                            
+                                         
 
                                           <div className="pt-3 hstack gap-2 ">
                                             <p
