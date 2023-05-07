@@ -121,6 +121,8 @@ function StoryModal({ onCancel, show, item }: StoryModalProps) {
   const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newPost: NotificationData = {
+      authorName: userName,
+      created: new Date().toString(),
       description: postContent,
       storyId: item.id!,
     };

@@ -31,9 +31,6 @@ const initialState: StoryState = {
   
 }
 
-
-
-
 export const createNotification = createAsyncThunk('story/createNotification', async (notificationData: NotificationData, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -107,6 +104,17 @@ export const storySlice = createSlice({
                 state.isSuccess = true;
                 state.isError = false;
                 state.message = '';
+                const bodyComment = action.meta.arg;
+
+                const newComment: PostDataNotification = {
+                    approved: false,
+                    authorName: bodyComment.authorName!,
+                    notificationText: bodyComment.description,
+                    notificationType: 0,
+                    created: bodyComment.created,
+                }
+
+                state.storiesNotification.push(newComment)
             })
             .addCase(createNotification.rejected, (state, action) => {
                 state.isLoading = false
