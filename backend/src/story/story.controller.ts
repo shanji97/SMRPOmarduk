@@ -289,9 +289,6 @@ export class StoryController {
     if (!await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ProjectOwner]))
       throw new ForbiddenException('Only a product owner can realize a story.');
 
-    if (!await this.storyService.isStoryInActiveSprint(storyId))
-      throw new BadRequestException('The story is already outside an active sprint.');
-
     if (story.category == Category.Finished)
       throw new BadRequestException('The story was already finished.');
 
