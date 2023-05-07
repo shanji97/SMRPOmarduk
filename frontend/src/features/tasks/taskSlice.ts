@@ -18,7 +18,7 @@ interface TaskState {
     isTimerSuccess: boolean
     isTimerError: boolean
     message: any
-    changed: boolean
+    timerStarted: boolean
     isMyTaskLoading: boolean
     isMyTaskSuccess: boolean
     isMyTaskError: boolean
@@ -40,7 +40,7 @@ const initialState: TaskState = {
     isTimerSuccess: false,
     isTimerError: false,
     message: '',
-    changed: false,
+    timerStarted: false,
     isMyTaskLoading: false,
     isMyTaskSuccess: false,
     isMyTaskError: false,
@@ -461,6 +461,7 @@ export const taskSlice = createSlice({
             state.isTimerSuccess = true;
             state.isTimerError = false;
             state.message = '';
+            state.timerStarted = true;
 
             const taskId = action.meta.arg;
             const index = state.tasksForUser.findIndex(task => task.id === taskId);
@@ -483,6 +484,7 @@ export const taskSlice = createSlice({
             state.isTimerSuccess = true;
             state.isTimerError = false;
             state.message = '';
+            state.timerStarted = false;
 
             const taskId = action.meta.arg;
             const index = state.tasksForUser.findIndex(task => task.id === taskId);

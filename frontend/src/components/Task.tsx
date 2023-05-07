@@ -31,7 +31,8 @@ const Task: React.FC<TaskProps> = ({ task }) => {
     message,
     isMyTaskError,
     isMyTaskSuccess,
-    isMyTaskLoading
+    isMyTaskLoading,
+    timerStarted
   } = useAppSelector((state) => state.tasks);
   const [showModal, setShowModal] = useState(false);
   const [workLogs, setWorkLogs] = useState<any[]>([]);
@@ -80,7 +81,7 @@ const fetchData = async () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [timerStarted]);
 
   const updateTimeValue = (logs: any) => {
     setWorkLogs(logs);
@@ -137,12 +138,12 @@ const fetchData = async () => {
     for (const username in userSpent) {
       if (username === currentUser) {
         userSpentList.push(
-          <p className="m-0 p-0" key={username}>{`${userSpent[username]}h`}</p>
+          <p className="m-0 p-0" key={username}>{`${userSpent[username].toFixed(2)}h`}</p>
         );
         }
       else {
         userSpentList.push(
-          <p className="m-0 p-0" key={username}>{`${username}: ${userSpent[username]}h`}</p>
+          <p className="m-0 p-0" key={username}>{`${username}: ${userSpent[username].toFixed(2)}h`}</p>
         );
       }
       
