@@ -32,7 +32,7 @@ function MyTasks() {
     return <h2>No stories</h2>;
   }
   const uniqueStoryIds = Array.from(new Set(tasksForUser.map((item) => item.storyId)));
-
+  console.log(tasksForUser)
     //console.log(uniqueStorytitle)
     return (
  <>

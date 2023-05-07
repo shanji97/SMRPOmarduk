@@ -144,6 +144,15 @@ function ProductBacklog() {
     }
     if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive) {
       toast.error(SprintSelector.message);
+      console.log("active sprint not")
+      if (SprintSelector.sprints) {
+        SprintSelector.sprints.map((item) => {
+        const endDate = new Date(item.endDate);
+        const todayDate = new Date();
+        if (endDate < todayDate) {
+          dispatch(getUnrealizedStoriesForSprint(item.id!))
+        }})
+      }
     }
   }, [
     SprintSelector.isSuccessActive,
@@ -176,7 +185,9 @@ function ProductBacklog() {
   }, [isStoryUpdateError, isStoryUpdateLoading, isStoryUpdateSuccess]);
 
   useEffect(() => {
-    dispatch(getActiveProject());
+    if (projectsState.activeProject.id === "") {
+      dispatch(getActiveProject());
+    }
   }, []);
 
   useEffect(() => {
@@ -184,7 +195,9 @@ function ProductBacklog() {
       dispatch(getAllStoryById(projectsState.activeProject.id!));
       dispatch(getAllSprints(projectsState.activeProject.id!));
       dispatch(getProjectUserRoles(projectsState.activeProject.id!));
-      dispatch(getActiveSprint(projectsState.activeProject.id!));
+      if (SprintSelector.activeSprint === undefined && projectsState.activeProject !== undefined) {
+        dispatch(getActiveSprint(projectsState.activeProject.id!));
+      }
       
     }
     if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading) {
@@ -463,7 +476,7 @@ function ProductBacklog() {
 
     //console.log("doblejni podatki1")
       //dispatch(getAllStoryById(projectsState.activeProject.id!));
-
+      console.log("se to slploh štarta")
       resetState();
       if (SprintSelector.isUnrealizedSuccess && !SprintSelector.isUnrealizedLoading) {
       
@@ -492,7 +505,7 @@ function ProductBacklog() {
             stories.forEach((story: StoryData) => {
               
               if (story.category === 2) {
-                if (SprintSelector.activeSprint === undefined) { return; }
+                //if (SprintSelector.activeSprint === undefined) { return; }
                 const storyInSprint = SprintSelector.unrealizedStories.find((item) => item.id === story.id);
                 if (storyInSprint === undefined) {
                   return;
@@ -540,9 +553,10 @@ function ProductBacklog() {
       );
       }
       if (SprintSelector.isUnrealizedError && !SprintSelector.isUnrealizedLoading) {
-        toast.error(message);
-      }
-    
+        toast.error("Sprint ni Aktiviran");
+        
+    }
+  
   }, [SprintSelector.isUnrealizedSuccess, SprintSelector.isUnrealizedLoading, SprintSelector.isUnrealizedError]);
 
   //{Object.values.map(([columnId, column], index) => {
@@ -627,6 +641,7 @@ function ProductBacklog() {
       category: categoryChange(ProductBacklogItemStatus.DONE),
       storyId: item.id || "",
     };
+    console.log(projectRoleData)
     dispatch(updateStoryCategory(projectRoleData));
     dispatch(reset());
   };

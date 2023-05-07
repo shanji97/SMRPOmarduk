@@ -343,7 +343,7 @@ function SprintBacklog() {
   const handleChangeBar = (val: number) => {
     setValueBar(val);
   };
-
+  
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
@@ -409,14 +409,14 @@ function SprintBacklog() {
                           {taskState.tasksForSprint
                             .filter((task) => task.storyId === story.id)
                             .map((task) => (
-                              <>
+                              
+                              <> 
                                 {(valueBar === 0 ||  task.category === valueBar) && (
                                   <tr key={task.id}>
                                     <td>{task.id}</td>
                                     <td>{task.name}</td>
                                     <td className="">{task.remaining}</td>
                                     <td>{renderStatus(task)}</td>
-
                                     <td className="text-center">
                                       {!isTaskFinished(task) && (
                                         <Dropdown className="ms-auto">
