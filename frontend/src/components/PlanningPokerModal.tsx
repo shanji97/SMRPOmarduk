@@ -108,7 +108,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({updateTimeComple
           </tbody>
         </Table>
         <Fragment>
-        {activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={pokerRounds[pokerRounds.length-1].id!} />}
+        {activeRound && activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={pokerRounds[pokerRounds.length-1].id!} />}
         </Fragment>
 
       </Modal.Body>
