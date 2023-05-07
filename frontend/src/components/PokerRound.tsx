@@ -18,6 +18,7 @@ interface PokerRoundProps {
   shouldReload: boolean,
   updateTimeComplexities: (newComplexities: any) => void
   itemTime: any,
+  refreshRounds: () => void
 }
 const PokerRound: React.FC<PokerRoundProps> = (
   {
@@ -30,7 +31,8 @@ const PokerRound: React.FC<PokerRoundProps> = (
     index,
     numberOfRounds,
     itemTime,
-    updateTimeComplexities
+    updateTimeComplexities,
+    refreshRounds
 }) => {
   const dispatch = useAppDispatch();
   const [singleRound, setSingleRound] = useState<RoundWithVotes>({
@@ -41,6 +43,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
     votes: []
   });
   const [average, setAverage] = useState(0);
+  const [estimateApplied, setEstimateApplied] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +91,9 @@ const PokerRound: React.FC<PokerRoundProps> = (
   const endRoundHandler = () => {
     dispatch(endPlanningPoker(round.id!));
     setShowVotingOptions(false);
+    setTimeout(() => {
+      refreshRounds();
+    }, 500)
     toast.success('Round ended!');
   }
 
@@ -96,19 +102,20 @@ const PokerRound: React.FC<PokerRoundProps> = (
     const newComplexities = {...itemTime};
     newComplexities[singleRound.storyId!] = average;
     updateTimeComplexities(newComplexities);
+    setEstimateApplied(true);
     toast.success('Estimate applied!');
   }
 
   return (
     <Fragment>
       <tr>
-        <td>{singleRound.id}</td>
+        <td>{index+1}</td>
         {rowCells}
         <td>
           {round.dateEnded === null && isUserScrumMaster && <Button onClick={endRoundHandler} style={{marginRight: '.5rem'}} variant='success'>End round</Button>}
         </td>
       </tr>
-      {isUserScrumMaster && round.dateEnded !== null && index === numberOfRounds-1 && <Button onClick={applyEstimate}>Apply estimate</Button>}
+      {isUserScrumMaster && round.dateEnded !== null && index === numberOfRounds-1 && <Button onClick={applyEstimate} disabled={estimateApplied}>Apply estimate</Button>}
     </Fragment>
 
   );

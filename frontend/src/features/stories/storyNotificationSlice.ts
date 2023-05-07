@@ -34,9 +34,6 @@ const initialState: StoryState = {
     isGetNotError: false,
 }
 
-
-
-
 export const createNotification = createAsyncThunk('story/createNotification', async (notificationData: NotificationData, thunkAPI: any) => {
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
@@ -106,6 +103,35 @@ export const storySlice = createSlice({
     extraReducers: builder => {
         builder
             .addCase(createNotification.pending, (state) => {
+<<<<<<< HEAD
+=======
+                state.isLoading = true
+            })
+            .addCase(createNotification.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                const bodyComment = action.meta.arg;
+
+                const newComment: PostDataNotification = {
+                    approved: false,
+                    authorName: bodyComment.authorName!,
+                    notificationText: bodyComment.description,
+                    notificationType: 0,
+                    created: bodyComment.created,
+                }
+
+                state.storiesNotification.push(newComment)
+            })
+            .addCase(createNotification.rejected, (state, action) => {
+                state.isLoading = false
+                state.isSuccess = false;
+                state.isError = true
+                state.message = action.payload
+            })
+            .addCase(getNotifications.pending, (state) => {
+>>>>>>> c31d7c3baa73d52f090b0c8e473387800df94f1a
                 state.isNotificationLoading = true
             })
             .addCase(createNotification.fulfilled, (state, action) => {

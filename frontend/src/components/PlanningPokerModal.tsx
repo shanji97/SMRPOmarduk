@@ -52,7 +52,9 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({updateTimeComple
   const startNewRoundHandler = () => {
     dispatch(newPokerRound(storyIdForPoker));
     toast.success('New round started!');
-    dispatch(getAllPokerRounds(storyIdForPoker));
+    setTimeout(() => {
+      dispatch(getAllPokerRounds(storyIdForPoker));
+    }, 800);
   }
 
   const reloadRounds = () => {
@@ -77,7 +79,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({updateTimeComple
         <Table striped bordered hover>
           <thead>
           <tr>
-            <th>id</th>
+            <th>#</th>
             {developers.map(role => (
               <th key={Math.random()}>{role.user.username}</th>
             ))}
@@ -99,6 +101,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({updateTimeComple
                 shouldReload={shouldReload}
                 itemTime={itemTime}
                 updateTimeComplexities={updateTimeComplexities}
+                refreshRounds={reloadRounds}
               />
             </Fragment>
 
