@@ -55,6 +55,7 @@ import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
 import {
+  activateProject,
   getActiveProject,
   getProject,
 } from "../features/projects/projectSlice";
@@ -621,6 +622,10 @@ function ProductBacklog() {
     return setShowRejectStoryModal(true);
   };
 
+  const updateTimeComplexities = (newComplexities: any) => {
+    setItemTime(newComplexities);
+  }
+
   const getDataApproved = (item: StoryData, status: string, index: number) => {
     //setTempDataApproved({ item, status, index });
     //console.log(item);
@@ -955,7 +960,17 @@ function ProductBacklog() {
           show={showRejectStoryModal}
         />
       )}
-      {showPlanningPokerModal && <PlanningPokerModal projectId={projectsState.activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
+      {showPlanningPokerModal &&
+          <PlanningPokerModal
+            projectId={projectsState.activeProject.id!}
+            storyIdForPoker={storyIdForPoker}
+            isUserScrumMaster={isUserScramMaster()}
+            showModal={showPlanningPokerModal}
+            closeModal={closePlanningPokerModal}
+            itemTime={itemTime}
+            updateTimeComplexities={updateTimeComplexities}
+          />
+      }
     </>
   );
 }
