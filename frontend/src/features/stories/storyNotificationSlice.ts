@@ -5,7 +5,7 @@ import storyService from "./storyNotificationService";
 let user = JSON.parse(localStorage.getItem('user')!);
 
 interface StoryState {
-    storiesNotification: PostDataNotification[]
+    storiesNotification: any[]
     rejectMessage: string
     isLoading: boolean
     isSuccess: boolean
@@ -14,8 +14,9 @@ interface StoryState {
     isNotificationLoading: boolean
     isNotificationSuccess: boolean
     isNotificationError: boolean
- 
-    
+    isGetNotLoading: boolean
+    isGetNotSuccess: boolean
+    isGetNotError: boolean
 }
 
 const initialState: StoryState = {
@@ -27,8 +28,10 @@ const initialState: StoryState = {
     isNotificationSuccess: false,
     isNotificationError: false,
     message: '',
-    rejectMessage: ''
-  
+    rejectMessage: '',
+    isGetNotLoading: false,
+    isGetNotSuccess: false,
+    isGetNotError: false,
 }
 
 
@@ -46,7 +49,7 @@ export const createNotification = createAsyncThunk('story/createNotification', a
 export const getNotifications = createAsyncThunk('/story/getNotifications', async (storyId: string, thunkAPI: any) => { 
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await storyService.getNotifications(storyId, token!);
+        return await storyService.getNotifications(storyId, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         console.log(message);
@@ -94,33 +97,36 @@ export const storySlice = createSlice({
             state.isNotificationLoading = false
             state.isNotificationError = false
             state.isNotificationSuccess = false
+            state.isGetNotLoading = false
+            state.isGetNotError = false
+            state.isGetNotSuccess = false
            
         }
     },
     extraReducers: builder => {
         builder
             .addCase(createNotification.pending, (state) => {
-                state.isLoading = true
-            })
-            .addCase(createNotification.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
-                state.message = '';
-            })
-            .addCase(createNotification.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
-                state.message = action.payload
-            })
-            .addCase(getNotifications.pending, (state) => {
                 state.isNotificationLoading = true
             })
-            .addCase(getNotifications.fulfilled, (state, action) => {
+            .addCase(createNotification.fulfilled, (state, action) => {
                 state.isNotificationLoading = false;
                 state.isNotificationSuccess = true;
                 state.isNotificationError = false;
+                state.message = '';
+            })
+            .addCase(createNotification.rejected, (state, action) => {
+                state.isNotificationLoading = false;
+                state.isNotificationSuccess = false;
+                state.isNotificationError = true;
+                state.message = action.payload
+            })
+            .addCase(getNotifications.pending, (state) => {
+                state.isGetNotLoading = true;
+            })
+            .addCase(getNotifications.fulfilled, (state, action) => {
+                state.isGetNotLoading = false;
+                state.isGetNotSuccess = true;
+                state.isGetNotError = false;
                 state.message = '';
                 state.storiesNotification = action.payload
 
@@ -139,9 +145,9 @@ export const storySlice = createSlice({
             })
 
             .addCase(getNotifications.rejected, (state, action) => {
-                state.isNotificationLoading = false
-                state.isNotificationSuccess = false;
-                state.isNotificationError = true
+                state.isGetNotLoading = false
+                state.isGetNotSuccess = false;
+                state.isGetNotError = true
                 state.message = action.payload
             })
             .addCase(getrejectionNotification.pending, (state) => {

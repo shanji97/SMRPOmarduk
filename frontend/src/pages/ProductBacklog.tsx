@@ -801,7 +801,8 @@ function ProductBacklog() {
                                               </>
                                             )}
                                           {status !==
-                                            ProductBacklogItemStatus.WONTHAVE &&  (
+                                            ProductBacklogItemStatus.WONTHAVE && status !==
+                                            ProductBacklogItemStatus.DONE &&  (
                                               <DropdownStory
                                                 item={item}
                                                 status={status}
