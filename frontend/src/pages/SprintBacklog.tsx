@@ -1,4 +1,4 @@
-import React, {Component, useEffect, useMemo, useState} from "react";
+import React, { Component, useEffect, useMemo, useState } from "react";
 import {
   DragDropContext,
   Draggable,
@@ -69,7 +69,10 @@ import {
   getActiveSprint,
   getAllSprints,
 } from "../features/sprints/sprintSlice";
-import { getActiveProject, getProject } from "../features/projects/projectSlice";
+import {
+  getActiveProject,
+  getProject,
+} from "../features/projects/projectSlice";
 import { getAllUsers } from "../features/users/userSlice";
 import { UserRole } from "../classes/projectData";
 import { toast } from "react-toastify";
@@ -113,8 +116,6 @@ function SprintBacklog() {
     }
   }, []);
 
-
-
   // fetch stories in sprint
   useEffect(() => {
     if (activeSprint !== undefined) {
@@ -122,22 +123,32 @@ function SprintBacklog() {
     }
   }, [activeSprint]);
 
-
   useEffect(() => {
-    if (projectsState.isActiveProjectSuccess && !projectsState.isActiveProjectLoading) {
+    if (
+      projectsState.isActiveProjectSuccess &&
+      !projectsState.isActiveProjectLoading
+    ) {
       // get developer list
       dispatch(getProjectUserRoles(projectsState.activeProject.id!));
       // get active sprint id
-      if (activeSprint === undefined && projectsState.activeProject !== undefined) {
+      if (
+        activeSprint === undefined &&
+        projectsState.activeProject !== undefined
+      ) {
         dispatch(getActiveSprint(projectsState.activeProject.id!));
       }
     }
-    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading) {
+    if (
+      projectsState.isActiveProjectError &&
+      !projectsState.isActiveProjectLoading
+    ) {
       toast.error(projectsState.message);
     }
-  }, [projectsState.isActiveProjectSuccess, projectsState.isActiveProjectLoading, projectsState.isActiveProjectError]);
-
-
+  }, [
+    projectsState.isActiveProjectSuccess,
+    projectsState.isActiveProjectLoading,
+    projectsState.isActiveProjectError,
+  ]);
 
   useEffect(() => {
     if (projectRolesState.isSuccess && !projectRolesState.isLoading) {
@@ -200,14 +211,14 @@ function SprintBacklog() {
 
   const sumOfEstimatedTimes = (storyId: string) => {
     let sum = 0;
-    taskState.tasksForSprint.forEach(task => {
+    taskState.tasksForSprint.forEach((task) => {
       if (storyId === task.storyId) {
         sum += task.remaining;
       }
-    })
+    });
 
     return sum;
-  }
+  };
 
   const openAddTaskModal = (id: string) => {
     setSelectedStoryId(id);
@@ -279,7 +290,7 @@ function SprintBacklog() {
     category: 0,
     timeComplexity: 0,
     isRealized: false,
-    tasks: []
+    tasks: [],
   };
 
   //modal za form
@@ -320,13 +331,17 @@ function SprintBacklog() {
     } else if (isTaskAssigned(task)) {
       return (
         <Badge bg="primary">
-          <span className={classesSprint.badgeStatus}>Assigned</span>
+          <span className={classesSprint.badgeStatus}>
+            Assigned: {task.assignedUser.username}
+          </span>
         </Badge>
       );
     } else if (isTaskInProgress(task)) {
       return (
         <Badge bg="warning">
-          <span className={classesSprint.badgeStatus}>In progress</span>
+          <span className={classesSprint.badgeStatus}>
+            In progress: {task.assignedUser.username}
+          </span>
         </Badge>
       );
     } else if (isTaskFinished(task)) {
@@ -343,17 +358,23 @@ function SprintBacklog() {
   const handleChangeBar = (val: number) => {
     setValueBar(val);
   };
-  
-  const StoryDesc = storiesForSprint.filter((item) => item.isRealized === false);
-  
+
+  const StoryDesc = storiesForSprint.filter(
+    (item) => item.isRealized === false
+  );
+
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
         <div className="col-sm-8">
           <div className="d-flex flex-row-reverse">
-
             <ButtonToolbar>
-              <ToggleButtonGroup type="radio" name="options" defaultValue={0} onChange={handleChangeBar}>
+              <ToggleButtonGroup
+                type="radio"
+                name="options"
+                defaultValue={0}
+                onChange={handleChangeBar}
+              >
                 <ToggleButton id="tbg-radio-0" value={0}>
                   All
                 </ToggleButton>
@@ -398,72 +419,76 @@ function SprintBacklog() {
                           className={` ${classes["gfg"]} small`}
                         >
                           <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Description</th>
-                            <th>Estimated time (hrs)</th>
-                            <th>Status</th>
-                            <th>Options</th>
-                          </tr>
+                            <tr>
+                              <th>#</th>
+                              <th>Description</th>
+                              <th>Estimated time (hrs)</th>
+                              <th>Status</th>
+                              <th>Options</th>
+                            </tr>
                           </thead>
 
                           <tbody>
-                          {taskState.tasksForSprint
-                            .filter((task) => task.storyId === story.id)
-                            .map((task) => (
-                              
-                              <> 
-                                {(valueBar === 0 ||  task.category === valueBar) && (
-                                  <tr key={task.id}>
-                                    <td>{task.id}</td>
-                                    <td>{task.name}</td>
-                                    <td className="">{task.remaining}</td>
-                                    <td>{renderStatus(task)}</td>
-                                    <td className="text-center">
-                                      {!isTaskFinished(task) && (
-                                        <Dropdown className="ms-auto">
-                                          <Dropdown.Toggle
-                                            variant="link"
-                                            id="dropdown-custom-components"
-                                            bsPrefix="p-0"
-                                          >
-                                            <ThreeDots />
-                                          </Dropdown.Toggle>
-                                          <Dropdown.Menu>
-                                            <Dropdown.Item
-                                              onClick={() =>
-                                                openEditTaskModal(task)
-                                              }
+                            {taskState.tasksForSprint
+                              .filter((task) => task.storyId === story.id)
+                              .map((task) => (
+                                <>
+                                  {(valueBar === 0 ||
+                                    task.category === valueBar) && (
+                                    <tr key={task.id}>
+                                      <td>{task.id}</td>
+                                      <td>{task.name}</td>
+                                      <td className="">{task.remaining}</td>
+                                      <td>{renderStatus(task)}</td>
+                                      <td className="text-center">
+                                        {!isTaskFinished(task) && (
+                                          <Dropdown className="ms-auto">
+                                            <Dropdown.Toggle
+                                              variant="link"
+                                              id="dropdown-custom-components"
+                                              bsPrefix="p-0"
                                             >
-                                              <Pencil /> Edit
-                                            </Dropdown.Item>
-                                            {(isTaskUnassigned(task) ||
-                                              (isUserScrumMaster(projectRolesState.userRoles) &&
-                                                isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
+                                              <ThreeDots />
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu>
                                               <Dropdown.Item
                                                 onClick={() =>
-                                                  openAssignUserModal(task)
+                                                  openEditTaskModal(task)
                                                 }
                                               >
-                                                <Person /> Assign User
+                                                <Pencil /> Edit
                                               </Dropdown.Item>
-                                            )}
-                                            {(isTaskUnassigned(task) ||
-                                              isTaskAssigned(task)) && (
-                                              <Dropdown.Item
-                                                onClick={() =>
-                                                  openDeleteTaskModal(task)
-                                                }
-                                              >
-                                                <Trash /> Delete
-                                              </Dropdown.Item>
-                                            )}
-                                          </Dropdown.Menu>
-                                        </Dropdown>
-                                      )}
-                                    </td>
-                                  </tr>
-                                )} </>))}
+                                              {(isTaskUnassigned(task) ||
+                                                (isUserScrumMaster(
+                                                  projectRolesState.userRoles
+                                                ) &&
+                                                  isTaskAssigned(task))) && ( // TODO scrum master can update it when it is assigned !!!!
+                                                <Dropdown.Item
+                                                  onClick={() =>
+                                                    openAssignUserModal(task)
+                                                  }
+                                                >
+                                                  <Person /> Assign User
+                                                </Dropdown.Item>
+                                              )}
+                                              {(isTaskUnassigned(task) ||
+                                                isTaskAssigned(task)) && (
+                                                <Dropdown.Item
+                                                  onClick={() =>
+                                                    openDeleteTaskModal(task)
+                                                  }
+                                                >
+                                                  <Trash /> Delete
+                                                </Dropdown.Item>
+                                              )}
+                                            </Dropdown.Menu>
+                                          </Dropdown>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  )}{" "}
+                                </>
+                              ))}
                           </tbody>
                         </Table>
 
@@ -475,7 +500,11 @@ function SprintBacklog() {
                         >
                           Add new task
                         </Button>
-                        <span className='text-secondary ms-auto'> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
+                        <span className="text-secondary ms-auto">
+                          {" "}
+                          Estimated time for story:{" "}
+                          {sumOfEstimatedTimes(story.id!)}h
+                        </span>
                       </Tab.Pane>
                       <Tab.Pane eventKey="second"></Tab.Pane>
                     </Tab.Content>
