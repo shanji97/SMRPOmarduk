@@ -50,6 +50,7 @@ const Task: React.FC<TaskProps> = ({ task }) => {
     const userData = parseJwt(token);
     setUserName(userData.sub);
 
+
   }, [usersState.user]);
 
 
@@ -121,6 +122,7 @@ const fetchData = async () => {
   const hoursSpentInTotal = useMemo(() => {
 
     const userSpent: UserSpent = {};
+    console.log(workLogs)
     // Loop through the data and populate the userSpent object
     workLogs.forEach(entry => {
       const { user: { username }, spent } = entry;

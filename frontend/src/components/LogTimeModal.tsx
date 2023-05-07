@@ -1,4 +1,4 @@
-import {Button, Modal} from "react-bootstrap";
+import {Button, Form, Modal} from "react-bootstrap";
 import React, {useEffect, useMemo, useState} from "react";
 
 import TimeInputs from "./TimeInputs";
@@ -7,12 +7,13 @@ import { getWorkLogs, reset } from "../features/tasks/taskSlice";
 import { toast } from "react-toastify";
 import CustomTimeLog from "./CustomTimeLog";
 import {parseJwt} from "../helpers/helpers";
+import classes from "./LogTimeModal.module.css";
 
 interface LogTimeModalProps {
   task: any,
   showModal: boolean,
-  hideModal: () => void
-  updateTimeValues: (logs: any) => void
+  hideModal: () => void,
+  updateTimeValues: (logs: any) => void,
 }
 
 export interface TimeLog {
@@ -57,7 +58,7 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, 
     const userData = parseJwt(token);
 
     setUserId(userData.sid);
-  }, [user]);
+  }, [user, workLogs]);
 
   useEffect(() => {
     if (isError) {
@@ -157,6 +158,64 @@ const LogTimeModal: React.FC<LogTimeModalProps> = ({task, showModal, hideModal, 
       </Modal.Header>
 
       <Modal.Body>
+
+
+
+
+
+
+      {workLogs.map((log, i) => {
+        if (log.user.id === userId) {return null;} 
+
+        return (
+
+      <Form >
+        <div className={classes.inputsContainer}>
+          <p style={{ marginTop: ".9rem", paddingRight: "1rem" }}>{log.date}</p>
+          <Form.Group
+            className={classes.inputGroup}
+            controlId="formBasicworkspent"
+          >
+            <div style={{ display: "inline-flex" }}>
+              <Form.Label>Spent</Form.Label>
+              <Form.Control
+                name="spentTime"
+                type="number"
+                value={log.spent}
+                style={{ width: '100px' }}
+                disabled
+              />
+            </div>
+          </Form.Group>
+          <span style={{ marginTop: ".9rem" }}>hours,&nbsp;</span>
+          <Form.Group
+            className={classes.inputGroup}
+            controlId="formBasicremaining"
+          >
+            <div style={{ display: "inline-flex" }}>
+              <Form.Label>Remaining</Form.Label>
+              <Form.Control
+                className={classes.input}
+                type="number"
+                name="remainingTime"
+                value={log.remaining}
+                step={0.1}
+                style={{ width: '100px' }}
+                disabled
+              />
+            </div>
+          </Form.Group>
+          <span style={{ marginTop: ".9rem" }}>User: {log.user.username}</span>
+        </div>
+      </Form>
+      )})}
+
+    
+
+
+
+    
+
           {showTodayLog && <CustomTimeLog lastRemaining={lastRemaining} userId={userId} taskId={task.id!} hide={handleHideTodayLog} />}
           {initialLogs}
       </Modal.Body>

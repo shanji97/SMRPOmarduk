@@ -120,7 +120,6 @@ function StoryModal({ onCancel, show, item }: StoryModalProps) {
       description: postContent,
       storyId: item.id!,
     };
-    
     dispatch(createNotification(newPost));
     toast.info("Post created!");
     setPostContent("");

@@ -179,7 +179,7 @@ function Header() {
               <NavDropdown.Item onClick={redirectToProductBacklog}>
                 ProductBacklog
               </NavDropdown.Item>
-              {(isUserProductOwn() || isUserScramMaster()) && (
+              {!isUserProductOwn() && (
                                           
                 <NavDropdown.Item onClick={redirectToSprintBacklog}>
                   SprintBacklog
