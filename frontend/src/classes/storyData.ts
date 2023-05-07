@@ -17,7 +17,8 @@ export interface StoryData {
     userId?: number,
     category: number
     timeComplexity: number,
-    isRealized: boolean
+    isRealized: boolean,
+    tasks: any[]
 }
 
 export interface StoryDataOfProject {
@@ -42,9 +43,9 @@ export enum SprintBacklogItemStatus {
 
 export enum ProductBacklogItemStatus {
     WONTHAVE = "Won't have this time",
-    UNALLOCATED = 'Unallocated',
-    ALLOCATED = 'Allocated',
-    DONE = 'Done',
+    UNALLOCATED = 'Unassigned',
+    ALLOCATED = 'Sprint Backlog',
+    DONE = 'Finished',
 }
 
 export interface UpdateStoryCategory {

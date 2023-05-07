@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from "react";
+import React, {Component, useEffect, useMemo, useState} from "react";
 import {
   DragDropContext,
   Draggable,
@@ -93,9 +93,6 @@ function SprintBacklog() {
   const [userId, setUserId] = useState("");
   const [developersOnProject, setDevelopersOnProject] = useState<string[]>([]);
   const [itemsByStatus, setItemsByStatus] = useState<StoryData[]>([]);
-
-
-
 
   useEffect(() => {
     if (users.length === 0) {
@@ -201,6 +198,17 @@ function SprintBacklog() {
   const [selectedStoryId, setSelectedStoryId] = useState("");
   const [selectedTask, setSelectedTask] = useState<any>({});
 
+  const sumOfEstimatedTimes = (storyId: string) => {
+    let sum = 0;
+    taskState.tasksForSprint.forEach(task => {
+      if (storyId === task.storyId) {
+        sum += task.remaining;
+      }
+    })
+
+    return sum;
+  }
+
   const openAddTaskModal = (id: string) => {
     setSelectedStoryId(id);
     setShowAddTaskModal(true);
@@ -271,6 +279,7 @@ function SprintBacklog() {
     category: 0,
     timeComplexity: 0,
     isRealized: false,
+    tasks: []
   };
 
   //modal za form
@@ -334,7 +343,9 @@ function SprintBacklog() {
   const handleChangeBar = (val: number) => {
     setValueBar(val);
   };
-
+  
+  const StoryDesc = storiesForSprint.filter((item) => item.isRealized === false);
+  
   return (
     <>
       <div className="row flex-row flex-sm-nowrap m-1 mt-3 justify-content-center">
@@ -361,7 +372,7 @@ function SprintBacklog() {
               </ToggleButtonGroup>
             </ButtonToolbar>
           </div>
-          {storiesForSprint.map((story) => {
+          {StoryDesc.map((story) => {
             // console.log(item);
             return (
               <Card className="mt-3" key={story.id}>
@@ -400,14 +411,14 @@ function SprintBacklog() {
                           {taskState.tasksForSprint
                             .filter((task) => task.storyId === story.id)
                             .map((task) => (
-                              <>
+                              
+                              <> 
                                 {(valueBar === 0 ||  task.category === valueBar) && (
                                   <tr key={task.id}>
                                     <td>{task.id}</td>
                                     <td>{task.name}</td>
                                     <td className="">{task.remaining}</td>
                                     <td>{renderStatus(task)}</td>
-
                                     <td className="text-center">
                                       {!isTaskFinished(task) && (
                                         <Dropdown className="ms-auto">
@@ -464,6 +475,7 @@ function SprintBacklog() {
                         >
                           Add new task
                         </Button>
+                        <span className='text-secondary ms-auto'> Estimated time for story: {sumOfEstimatedTimes(story.id!)}h</span>
                       </Tab.Pane>
                       <Tab.Pane eventKey="second"></Tab.Pane>
                     </Tab.Content>

@@ -12,3 +12,7 @@
 .btn {
     margin-top: .5rem;
 }
+
+.textLine {
+    white-space: pre-line;
+}

@@ -7,7 +7,7 @@ import classes from "./AddStory.module.css";
 
 import { StoryData } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { createStory, reset } from "../features/stories/storySlice";
+import { createStory, getAllStoryById, reset } from "../features/stories/storySlice";
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -15,40 +15,39 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getProject } from "../features/projects/projectSlice";
 import { parseJwt } from "../helpers/helpers";
+import { getActiveSprint } from "../features/sprints/sprintSlice";
 
 const AddStory = () => {
   const dispatch = useAppDispatch();
-  let storyState = useAppSelector((state) => state.stories);
-  let projectsState = useAppSelector((state) => state.projects);
+  const storyState = useAppSelector((state) => state.stories);
+  const projectsState = useAppSelector((state) => state.projects);
   const navigate = useNavigate();
 
   // get id
-  const { projectID } = useParams();
+
 
   const [invalidFormMessage, setInvalidFormMessage] = useState("");
 
   const [userId, setUserId] = useState(-1);
 
   useEffect(() => {
-    if (storyState.isUpdateSuccess && !storyState.isLoading) {
+    if (storyState.isUpdateSuccess && !storyState.isUpdateLoading) {
       toast.success("Story successfully created!");
       resetInputs();
       dispatch(reset());
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+      dispatch(getActiveSprint(projectsState.activeProject.id!));
     }
-    if (storyState.isUpdateError && !storyState.isLoading) {
+    if (storyState.isUpdateError && !storyState.isUpdateLoading) {
       toast.error(storyState.message);
     }
   }, [
     storyState.isUpdateSuccess,
     storyState.isUpdateError,
-    storyState.isLoading,
+    storyState.isUpdateLoading,
   ]);
 
-  useEffect(() => {
-    if (projectID !== undefined) {
-      dispatch(getProject(projectID));
-    }
-  }, [projectID]);
+ 
 
   // TODO
   // this is temporary - checks if user is product owner or scrum master
@@ -250,11 +249,12 @@ const AddStory = () => {
       tests,
       priority: parseInt(priority),
       businessValue: parseInt(businessValue),
-      projectID,
+      projectID: projectsState.activeProject.id!,
       userId,
       category: 0,
       timeComplexity: 0,
       isRealized: false,
+      tasks: []
     };
 
     // console.log(newStory);

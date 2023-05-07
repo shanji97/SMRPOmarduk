@@ -18,7 +18,7 @@ interface TaskState {
     isTimerSuccess: boolean
     isTimerError: boolean
     message: any
-    changed: boolean
+    timerStarted: boolean
     isMyTaskLoading: boolean
     isMyTaskSuccess: boolean
     isMyTaskError: boolean
@@ -40,7 +40,7 @@ const initialState: TaskState = {
     isTimerSuccess: false,
     isTimerError: false,
     message: '',
-    changed: false,
+    timerStarted: false,
     isMyTaskLoading: false,
     isMyTaskSuccess: false,
     isMyTaskError: false,
@@ -152,6 +152,24 @@ export const getWorkLogs = createAsyncThunk('/task/getWorkLogs', async (taskId: 
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await taskService.getWorkLogs(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+export const closeTask = createAsyncThunk('/task/closeTask', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.closeTask(taskId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+});
+export const reopenTask = createAsyncThunk('/task/reopenTask', async (taskId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await taskService.reopenTask(taskId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         return thunkAPI.rejectWithValue(message)
@@ -269,6 +287,36 @@ export const taskSlice = createSlice({
             state.isError = true
             state.message = action.payload
         })
+        .addCase(closeTask.pending, (state) => {
+            state.isMyTaskLoading = true
+        })
+        .addCase(closeTask.fulfilled, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
+            state.message = '';
+        })
+        .addCase(closeTask.rejected, (state, action) => {
+            state.isMyTaskLoading = false
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true
+            state.message = action.payload
+        })
+        .addCase(reopenTask.pending, (state) => {
+            state.isMyTaskLoading = true
+        })
+        .addCase(reopenTask.fulfilled, (state, action) => {
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
+            state.message = '';
+        })
+        .addCase(reopenTask.rejected, (state, action) => {
+            state.isMyTaskLoading = false
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true
+            state.message = action.payload
+        })
         .addCase(getTaskCategorys.pending, (state) => {
             state.isLoading = true
         })
@@ -363,12 +411,12 @@ export const taskSlice = createSlice({
             state.message = action.payload
         })
         .addCase(logWork.pending, (state) => {
-            state.isLoading = true
+            state.isMyTaskLoading = true
         })
         .addCase(logWork.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isSuccess = true;
-            state.isError = false;
+            state.isMyTaskLoading = false;
+            state.isMyTaskSuccess = true;
+            state.isMyTaskError = false;
             state.message = '';
 
             const newWorkLog = {...action.meta.arg};
@@ -384,9 +432,9 @@ export const taskSlice = createSlice({
             }
         })
         .addCase(logWork.rejected, (state, action) => {
-            state.isLoading = false
-            state.isSuccess = false;
-            state.isError = true
+            state.isMyTaskLoading = false
+            state.isMyTaskSuccess = false;
+            state.isMyTaskError = true
             state.message = action.payload
         })
           .addCase(deleteWork.pending, (state) => {
@@ -413,7 +461,14 @@ export const taskSlice = createSlice({
             state.isTimerSuccess = true;
             state.isTimerError = false;
             state.message = '';
-            state.currentlyWorkingOnTaskId = action.meta.arg;
+            state.timerStarted = true;
+
+            const taskId = action.meta.arg;
+            const index = state.tasksForUser.findIndex(task => task.id === taskId);
+            const taskToUpdate = state.tasksForUser.find(task => task.id === taskId);
+            const updatedTask = {...taskToUpdate};
+            updatedTask.category = 4;
+            state.tasksForUser[index] = updatedTask;
         })
         .addCase(startTime.rejected, (state, action) => {
             state.isLoading = false
@@ -429,7 +484,14 @@ export const taskSlice = createSlice({
             state.isTimerSuccess = true;
             state.isTimerError = false;
             state.message = '';
-            state.currentlyWorkingOnTaskId = "";
+            state.timerStarted = false;
+
+            const taskId = action.meta.arg;
+            const index = state.tasksForUser.findIndex(task => task.id === taskId);
+            const taskToUpdate = state.tasksForUser.find(task => task.id === taskId);
+            const updatedTask = {...taskToUpdate};
+            updatedTask.category = 3;
+            state.tasksForUser[index] = updatedTask;
         })
         .addCase(stopTime.rejected, (state, action) => {
             state.isLoading = false;

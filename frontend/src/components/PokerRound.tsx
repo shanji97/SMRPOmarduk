@@ -1,31 +1,40 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {Fragment, useEffect, useMemo, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {getBaseUrl} from "../helpers/helpers";
-import {RoundWithVotes} from "../classes/pokerRound";
+import {Round, RoundWithVotes} from "../classes/round";
 import {Button} from "react-bootstrap";
 import {Check, X} from "react-bootstrap-icons";
 import {endPlanningPoker, reset} from "../features/planningPoker/planningPokerSlice";
 import {toast} from "react-toastify";
+import { applyResult } from "../features/planningPoker/planningPokerSlice";
 interface PokerRoundProps {
-  roundId: string,
+  round: Round,
+  numberOfRounds: number,
+  index: number,
   isUserScrumMaster: boolean,
   numberOfPlayers: number,
   activeRound: RoundWithVotes,
   setShowVotingOptions: (acceptResult: boolean) => void,
-  shouldReload: boolean
+  shouldReload: boolean,
+  updateTimeComplexities: (newComplexities: any) => void
+  itemTime: any,
+  refreshRounds: () => void
 }
 const PokerRound: React.FC<PokerRoundProps> = (
   {
-    roundId,
+    round,
     isUserScrumMaster,
     numberOfPlayers,
     activeRound,
     setShowVotingOptions,
-    shouldReload
+    shouldReload,
+    index,
+    numberOfRounds,
+    itemTime,
+    updateTimeComplexities,
+    refreshRounds
 }) => {
   const dispatch = useAppDispatch();
-  const {isError, message, isSuccess} = useAppSelector(state => state.poker);
-  const [resultSubmited, setResultSubmited] = useState(false);
   const [singleRound, setSingleRound] = useState<RoundWithVotes>({
     id: '',
     storyId: '',
@@ -33,11 +42,13 @@ const PokerRound: React.FC<PokerRoundProps> = (
     dateEnded: '',
     votes: []
   });
+  const [average, setAverage] = useState(0);
+  const [estimateApplied, setEstimateApplied] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const token = JSON.parse(localStorage.getItem('user')!).token;
-      const response = await fetch(`${getBaseUrl()}/api/planning-pocker/${roundId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/planning-pocker/${round.id!}`, {
         method: 'GET',
         headers: {
           'Authorization': `JWT ${token}`
@@ -50,63 +61,63 @@ const PokerRound: React.FC<PokerRoundProps> = (
     fetchData();
   }, [shouldReload]);
 
-  const roundEndedAndScrumMaster = useMemo(() => {
-    return isUserScrumMaster && singleRound.votes.length === numberOfPlayers;
-  }, [singleRound]);
-
   const rowCells = useMemo(() => {
     let numberOfVotes = -1;
     if (singleRound.votes) {
       numberOfVotes = singleRound.votes.length;
     }
-    if (roundEndedAndScrumMaster) {
-      return singleRound.votes.map(vote => {
-        return <td key={Math.random()}>{vote.value}h</td>;
-      });
-    } else if (numberOfVotes !== numberOfPlayers) {
+
+    if (numberOfVotes < numberOfPlayers && singleRound.dateEnded !== null) {
       return <td className='text-primary' colSpan={numberOfPlayers} style={{ textAlign: "center" }}>
+        Ended
+      </td>;
+    } else if (numberOfVotes !== numberOfPlayers && singleRound.dateEnded == null) {
+      return <td className='text-primary' colSpan={numberOfPlayers} style={{textAlign: "center"}}>
         In progress
       </td>;
     }
 
-    return singleRound.votes.map(vote => {
-      return <td key={Math.random()}>{vote.value}h</td>;
-    });
+    const tableData: any[] = [];
+    let average = 0;
+    singleRound.votes.forEach(vote => {
+      tableData.push(<td key={Math.random()}>{vote.value}h</td>);
+      average += vote.value;
+    })
+    tableData.push(<td key={Math.random()}>{average / numberOfPlayers}h</td>)
+    setAverage(average / numberOfPlayers);
+    return tableData;
   }, [singleRound]);
 
-  const acceptRoundHandler = () => {
-    const body = {
-      roundId,
-      acceptResult: true
-    }
-    dispatch(endPlanningPoker(body));
-    setResultSubmited(true);
+  const endRoundHandler = () => {
+    dispatch(endPlanningPoker(round.id!));
     setShowVotingOptions(false);
-    toast.success('Result accepted!');
+    setTimeout(() => {
+      refreshRounds();
+    }, 500)
+    toast.success('Round ended!');
   }
 
-  const rejectRoundHandler = () => {
-    const body = {
-      roundId,
-      acceptResult: false
-    }
-    dispatch(endPlanningPoker(body));
-    setResultSubmited(true);
-    setShowVotingOptions(false);
-    toast.success('Result rejected!');
+  const applyEstimate = () => {
+    dispatch(applyResult(round.id!));
+    const newComplexities = {...itemTime};
+    newComplexities[singleRound.storyId!] = average;
+    updateTimeComplexities(newComplexities);
+    setEstimateApplied(true);
+    toast.success('Estimate applied!');
   }
 
   return (
-    <tr>
-      <td>{singleRound.id}</td>
-      {rowCells}
-      {roundEndedAndScrumMaster && activeRound.id === roundId && !resultSubmited && (
+    <Fragment>
+      <tr>
+        <td>{index+1}</td>
+        {rowCells}
         <td>
-          <Button onClick={acceptRoundHandler} style={{marginRight: '.5rem'}} variant='success'><Check size={20} /></Button>
-          <Button onClick={rejectRoundHandler} variant='danger'><X size={20}/></Button>
+          {round.dateEnded === null && isUserScrumMaster && <Button onClick={endRoundHandler} style={{marginRight: '.5rem'}} variant='success'>End round</Button>}
         </td>
-      )}
-    </tr>
+      </tr>
+      {isUserScrumMaster && round.dateEnded !== null && index === numberOfRounds-1 && <Button onClick={applyEstimate} disabled={estimateApplied}>Apply estimate</Button>}
+    </Fragment>
+
   );
 }
 

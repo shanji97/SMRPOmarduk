@@ -48,13 +48,13 @@ const newPokerRound = async (storyId: string, token: string) => {
   return response.data;
 }
 
-const endPlanningPoker = async (body: {roundId: string, acceptResult: boolean}, token: string) => {
+const endPlanningPoker = async (roundId: string, token: string) => {
   const config = {
     headers: {
       Authorization: `JWT ${token}`
     }
   }
-  const response = await axios.post(`${PLANNING_POKER_API_URL}/${body.roundId}/end/${body.acceptResult}`, {}, config);
+  const response = await axios.post(`${PLANNING_POKER_API_URL}/${roundId}/end/`, {}, config);
 
   return response.data;
 }
@@ -81,6 +81,17 @@ const voteForRound = async (body: {roundId: string, value: number}, token: strin
   return response.data;
 }
 
+const applyResult = async (roundId: string, token: string) => {
+  const config = {
+    headers: {
+      Authorization: `JWT ${token}`
+    }
+  }
+  const response = await axios.post(`${PLANNING_POKER_API_URL}/${roundId}/apply`, {}, config);
+
+  return response.data;
+}
+
 
 const planningPokerService = {
   getAllPokerRounds,
@@ -90,6 +101,7 @@ const planningPokerService = {
   endPlanningPoker,
   getVoteForRound,
   voteForRound,
+  applyResult,
 }
 
 export default planningPokerService;

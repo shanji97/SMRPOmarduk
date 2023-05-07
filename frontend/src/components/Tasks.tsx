@@ -39,7 +39,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks }) => {
 
     return (
         <Fragment>
-              <Task key={tasks.id} task={tasks} />
+          <Task key={tasks.id} task={tasks} />
         </Fragment>
     )
 }

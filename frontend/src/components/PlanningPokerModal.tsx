@@ -11,6 +11,7 @@ import {getProjectUserRoles} from "../features/projects/projectSlice";
 import PokerRound from "./PokerRound";
 import VotesContainer from "./VotesContainer";
 import {ArrowClockwise} from "react-bootstrap-icons";
+import { toast } from "react-toastify";
 
 interface PlanningPokerModalProps {
   isUserScrumMaster: boolean
@@ -18,8 +19,10 @@ interface PlanningPokerModalProps {
   showModal: boolean
   closeModal: () => void
   projectId: string
+  itemTime: any,
+  updateTimeComplexities: (newComplexities: any) => void
 }
-const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, storyIdForPoker, isUserScrumMaster, closeModal}) => {
+const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({updateTimeComplexities, itemTime, projectId, storyIdForPoker, isUserScrumMaster, closeModal}) => {
   const dispatch = useAppDispatch();
   const {userRoles} = useAppSelector(state => state.projects);
   const {pokerRounds, roundStarted, activeRound} = useAppSelector(state => state.poker);
@@ -39,15 +42,19 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
 
   useEffect(() => {
     dispatch(getActivePokerRound(storyIdForPoker));
+    dispatch(getAllPokerRounds(storyIdForPoker));
   }, [roundStarted]);
 
-  const userRolesWithoutOwner = useMemo(() => {
-    return userRoles.filter(user => user.role !== 2);
+  const developers = useMemo(() => {
+    return userRoles.filter(user => user.role !== 2 && user.role !== 1);
   }, [userRoles]);
 
   const startNewRoundHandler = () => {
     dispatch(newPokerRound(storyIdForPoker));
-    setShowVotingOptions(true);
+    toast.success('New round started!');
+    setTimeout(() => {
+      dispatch(getAllPokerRounds(storyIdForPoker));
+    }, 800);
   }
 
   const reloadRounds = () => {
@@ -72,30 +79,39 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
         <Table striped bordered hover>
           <thead>
           <tr>
-            <th>id</th>
-            {userRolesWithoutOwner.map(role => (
+            <th>#</th>
+            {developers.map(role => (
               <th key={Math.random()}>{role.user.username}</th>
             ))}
+            <th>Average</th>
           </tr>
           </thead>
           <tbody>
           {pokerRounds.length > 0 ? pokerRounds.map((round, i) => (
-            <PokerRound
-              key={i}
-              roundId={round.id!}
-              activeRound={activeRound}
-              isUserScrumMaster={isUserScrumMaster}
-              numberOfPlayers={userRoles.length-1}
-              setShowVotingOptions={setShowVotingOptions}
-              shouldReload={shouldReload}
-            />
+            <Fragment>
+              <PokerRound
+                key={i}
+                index={i}
+                round={round}
+                numberOfRounds={pokerRounds.length}
+                activeRound={activeRound}
+                isUserScrumMaster={isUserScrumMaster}
+                numberOfPlayers={developers.length}
+                setShowVotingOptions={setShowVotingOptions}
+                shouldReload={shouldReload}
+                itemTime={itemTime}
+                updateTimeComplexities={updateTimeComplexities}
+                refreshRounds={reloadRounds}
+              />
+            </Fragment>
+
           )) : <td className='text-secondary' colSpan={userRoles.length} style={{ textAlign: "center" }}>
             No rounds yet
           </td>}
           </tbody>
         </Table>
         <Fragment>
-          {activeRound.id !== '' && <VotesContainer storyId={storyIdForPoker} activeRoundId={activeRound.id!} />}
+        {activeRound && activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={pokerRounds[pokerRounds.length-1].id!} />}
         </Fragment>
 
       </Modal.Body>

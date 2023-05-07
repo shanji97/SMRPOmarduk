@@ -20,6 +20,9 @@ interface SprintState {
     isUnrealizedError: boolean
     isUnrealizedLoading: boolean
     isUnrealizedSuccess: boolean
+    isToSprintLoading: boolean
+    isToSprintSuccess: boolean
+    isToSprintError: boolean
 }
 
 const initialState: SprintState = {
@@ -40,6 +43,9 @@ const initialState: SprintState = {
     isUnrealizedLoading: false,
     isUnrealizedSuccess: false,
     isUnrealizedError: false,
+    isToSprintLoading: false,
+    isToSprintSuccess: false,
+    isToSprintError: false,
 }
 
 export const createSprint = createAsyncThunk('sprint/create', async (sprintBody: SprintBody, thunkAPI: any) => {
@@ -131,6 +137,9 @@ export const sprintSlice = createSlice({
             state.isUnrealizedLoading = false
             state.isUnrealizedError = false
             state.isUnrealizedSuccess = false
+            state.isToSprintLoading = false
+            state.isToSprintError = false
+            state.isToSprintSuccess = false
         },
         setActiveSprint: (state, action) => {
             state.activeSprint = action.payload;
@@ -155,19 +164,19 @@ export const sprintSlice = createSlice({
             state.message = action.payload
         })
         .addCase(addStoryToSprint.pending, (state) => {
-            state.isLoading = true
+            state.isToSprintLoading = true
         })
         .addCase(addStoryToSprint.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.isStoryInSprint = true;
-            state.isNotStoryInSprint = false;
+            state.isToSprintLoading = false;
+            state.isToSprintSuccess = true;
+            state.isToSprintError = false;
             state.message = 'Story successfully added to sprint';
             state.sprints.push(action.payload);
         })
         .addCase(addStoryToSprint.rejected, (state, action) => {
-            state.isLoading = false
-            state.isStoryInSprint = false;
-            state.isNotStoryInSprint = true
+            state.isToSprintLoading = false
+            state.isToSprintSuccess = false;
+            state.isToSprintError = true
             state.message = action.payload
         })
         .addCase(updateSprint.pending, (state) => {

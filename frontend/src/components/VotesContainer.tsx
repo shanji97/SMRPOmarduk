@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Button} from "react-bootstrap";
-import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {getActivePokerRound, voteForRound} from "../features/planningPoker/planningPokerSlice";
+import {useAppDispatch} from "../app/hooks";
+import {voteForRound} from "../features/planningPoker/planningPokerSlice";
 import {toast} from "react-toastify";
 
 const HOURS = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100];
@@ -30,7 +30,7 @@ const VotesContainer: React.FC<VotesContainerProps> = ({storyId, activeRoundId})
   ), [HOURS]);
 
   return <div>
-    <span>Your estimate:</span>
+    <span>Your estimate (hours):</span>
     {possibleVotes}
   </div>
 }

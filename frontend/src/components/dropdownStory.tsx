@@ -32,28 +32,29 @@ import DeleteConfirmation from "../pages/DeleteConfirmation";
 import { ProductBacklogItemStatus, StoryData } from "../classes/storyData";
 import { Link } from "react-router-dom";
 
-
-
-  export interface DropdownProps {
-    item: StoryData;
-    status: string;
-    index: number;
-    openEditStoryModal: (args: {
-        item: StoryData;
-      }) => void;
-    setShow: (arg0: boolean) => void;
-    getDataReject: (args: {
-        item: StoryData;
-        status: string;
-        index: number;
-      }) => void;
-    show: boolean;
-  }
+export interface DropdownProps {
+  item: StoryData;
+  status: string;
+  index: number;
+  openEditStoryModal: (args: {
+      item: StoryData;
+    }) => void;
+  setShow: (arg0: boolean) => void;
+  getDataReject: (args: {
+      item: StoryData;
+      status: string;
+      index: number;
+    }) => void;
+  show: boolean;
+  isUserProductOwn: () => boolean;
+  handleShowPlanningPokerModal: (story: any) => void;
+}
 
 const DropdownStory = memo(
-  ({ status, item, index, getDataReject, openEditStoryModal, setShow, show }: DropdownProps) => {
+  ({ status, item, index, getDataReject, openEditStoryModal, setShow, show, handleShowPlanningPokerModal, isUserProductOwn}: DropdownProps) => {
     return (
         <>
+      
       <Dropdown   className="ms-auto">
         <Dropdown.Toggle
           variant="link"
@@ -64,7 +65,7 @@ const DropdownStory = memo(
           <ThreeDots />
         </Dropdown.Toggle>
         <Dropdown.Menu >
-          {status !== ProductBacklogItemStatus.UNALLOCATED && (
+          {status !== ProductBacklogItemStatus.UNALLOCATED && isUserProductOwn() &&  (
             <Dropdown.Item
               onClick={() => {
                 getDataReject({item, status, index})
@@ -83,6 +84,11 @@ const DropdownStory = memo(
               <Trash /> Delete
             </Dropdown.Item>
           )}
+          {status === ProductBacklogItemStatus.UNALLOCATED && (
+            <Dropdown.Item onClick={() => {handleShowPlanningPokerModal(item)}}>
+              <SuitSpadeFill /> Planning poker
+            </Dropdown.Item>
+          )}
           <DeleteConfirmation
             item={item}
             onCancel={() => setShow(false)}
@@ -90,6 +96,7 @@ const DropdownStory = memo(
           />
         </Dropdown.Menu>
       </Dropdown>
+    
       </>
     );
   }

@@ -74,7 +74,7 @@ const PostNotification: React.FC<PostProps> = ({id, user, content, author, creat
                 <span><b>{author}, </b></span>
                 <span>{formattedDate}</span>
               </div>
-              <Card.Text>{content}</Card.Text>
+              <Card.Text className={classes.textLine}>{content}</Card.Text>
             </Col>
             
             

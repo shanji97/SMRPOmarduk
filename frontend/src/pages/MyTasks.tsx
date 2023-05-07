@@ -9,18 +9,59 @@ import { getTaskForUser } from "../features/tasks/taskSlice";
 import classes from "./Dashboard.module.css";
 import Tasks from "../components/Tasks";
 import {activateProject, getActiveProject} from "../features/projects/projectSlice";
+import { toast } from "react-toastify";
+import { getActiveSprint } from "../features/sprints/sprintSlice";
+import { getStoriesForSprint } from "../features/stories/storySlice";
 
 function MyTasks() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.users);
   let { tasksForUser, isSuccess } = useAppSelector((state) => state.tasks);
-  const { activeProject } = useAppSelector((state) => state.projects);
+  const projectsState = useAppSelector((state) => state.projects);
+  const SprintSelector = useAppSelector((state) => state.sprints);
+  const StoriesSelector = useAppSelector((state) => state.stories);
+
 
   useEffect(() => {
     dispatch(getTaskForUser());
     dispatch(getActiveProject());
   }, []);
+
+
+  useEffect(() => {
+    if (SprintSelector.isSuccessActive && !SprintSelector.isLoadingActive) {
+      if (SprintSelector.message !== '') {
+        toast.success(SprintSelector.message);
+      }
+
+      if (SprintSelector.activeSprint !== undefined) {
+        dispatch(getStoriesForSprint(SprintSelector.activeSprint.id!))
+      } 
+      //dispatch(reset());
+    }
+    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive && SprintSelector.message !== '') {
+      toast.error(SprintSelector.message);
+      console.log("active sprint not")
+      
+    }
+  }, [
+    SprintSelector.isSuccessActive,
+    SprintSelector.isErrorActive,
+    SprintSelector.isLoadingActive,
+  ]);
+
+  useEffect(() => {
+    if (projectsState.isActiveProjectSuccess && !projectsState.isActiveProjectLoading) {
+      if (SprintSelector.activeSprint === undefined && projectsState.activeProject !== undefined) {
+        dispatch(getActiveSprint(projectsState.activeProject.id!));
+      }
+      
+    }
+    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading && projectsState.message !== '') {
+      toast.error(projectsState.message);
+    }
+  }, [projectsState.isActiveProjectSuccess, projectsState.isActiveProjectLoading, projectsState.isActiveProjectError]);
 
   useEffect(() => {
     if (user === null) {
@@ -31,14 +72,17 @@ function MyTasks() {
   if (tasksForUser.length === 0) {
     return <h2>No stories</h2>;
   }
+                
+  const storiesForSprint = Array.from(new Set(StoriesSelector.storiesForSprint.map((item) => item.id)));
   const uniqueStoryIds = Array.from(new Set(tasksForUser.map((item) => item.storyId)));
-
+  const joinedArray = uniqueStoryIds.filter(value => storiesForSprint.includes(value));
+  console.log(tasksForUser)
     //console.log(uniqueStorytitle)
     return (
  <>
-    {uniqueStoryIds.map((storyidentity) => {
+    {joinedArray.map((storyidentity) => {
       const StoryDesc = tasksForUser.filter((item) => item.story.id === storyidentity);
-
+      
       const taskWithStory = tasksForUser.find((item) => item.story.id === storyidentity);
       const Storyid = taskWithStory ? taskWithStory.story.id : null;
       const Storytitle = taskWithStory ? taskWithStory.story.title : null;
