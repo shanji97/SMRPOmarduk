@@ -55,6 +55,7 @@ import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
 import {
+  activateProject,
   getActiveProject,
   getProject,
 } from "../features/projects/projectSlice";
@@ -121,11 +122,11 @@ function ProductBacklog() {
   let SprintSelector = useAppSelector((state) => state.sprints);
   let projectsState = useAppSelector((state) => state.projects);
   useEffect(() => {
-    if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading) {
+    if (SprintSelector.isStoryInSprint && !SprintSelector.isLoading && SprintSelector.message !== '') {
       toast.success(SprintSelector.message);
       //dispatch(reset());
     }
-    if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading) {
+    if (SprintSelector.isNotStoryInSprint && !SprintSelector.isLoading && SprintSelector.message !== '') {
       toast.error(SprintSelector.message);
     }
   }, [
@@ -136,13 +137,16 @@ function ProductBacklog() {
 
   useEffect(() => {
     if (SprintSelector.isSuccessActive && !SprintSelector.isLoadingActive) {
-      toast.success(SprintSelector.message);
+      if (SprintSelector.message !== '') {
+        toast.success(SprintSelector.message);
+      }
+
       if (SprintSelector.activeSprint !== undefined) {
         dispatch(getUnrealizedStoriesForSprint(SprintSelector.activeSprint.id!))
       } 
       //dispatch(reset());
     }
-    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive) {
+    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive && SprintSelector.message !== '') {
       toast.error(SprintSelector.message);
       console.log("active sprint not")
       if (SprintSelector.sprints) {
@@ -162,10 +166,10 @@ function ProductBacklog() {
 
   //console.log(SprintSelector)
   useEffect(() => {
-    if (isSuccess && !isLoading) {
+    if (isSuccess && !isLoading && message !== '') {
       toast.success(message)
     }
-    if (isError && !isLoading) {
+    if (isError && !isLoading && message !== '') {
       toast.error(message);
     }
   }, [isSuccess, isError, isLoading]);
@@ -179,7 +183,7 @@ function ProductBacklog() {
       dispatch(getActiveSprint(projectsState.activeProject.id!));
       toast.success(message)
     }
-    if (isStoryUpdateError && !isStoryUpdateLoading) {
+    if (isStoryUpdateError && !isStoryUpdateLoading && message !== '') {
       toast.error(message);
     }
   }, [isStoryUpdateError, isStoryUpdateLoading, isStoryUpdateSuccess]);
@@ -200,7 +204,7 @@ function ProductBacklog() {
       }
       
     }
-    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading) {
+    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading && projectsState.message !== '') {
       toast.error(projectsState.message);
     }
   }, [projectsState.isActiveProjectSuccess, projectsState.isActiveProjectLoading, projectsState.isActiveProjectError]);
@@ -632,6 +636,10 @@ function ProductBacklog() {
     return setShowRejectStoryModal(true);
   };
 
+  const updateTimeComplexities = (newComplexities: any) => {
+    setItemTime(newComplexities);
+  }
+
   const getDataApproved = (item: StoryData, status: string, index: number) => {
     //setTempDataApproved({ item, status, index });
     //console.log(item);
@@ -967,7 +975,17 @@ function ProductBacklog() {
           show={showRejectStoryModal}
         />
       )}
-      {showPlanningPokerModal && <PlanningPokerModal projectId={projectsState.activeProject.id!} storyIdForPoker={storyIdForPoker} isUserScrumMaster={isUserScramMaster()} showModal={showPlanningPokerModal} closeModal={closePlanningPokerModal} />}
+      {showPlanningPokerModal &&
+          <PlanningPokerModal
+            projectId={projectsState.activeProject.id!}
+            storyIdForPoker={storyIdForPoker}
+            isUserScrumMaster={isUserScramMaster()}
+            showModal={showPlanningPokerModal}
+            closeModal={closePlanningPokerModal}
+            itemTime={itemTime}
+            updateTimeComplexities={updateTimeComplexities}
+          />
+      }
     </>
   );
 }

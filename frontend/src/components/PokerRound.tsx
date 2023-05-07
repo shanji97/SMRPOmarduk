@@ -15,7 +15,9 @@ interface PokerRoundProps {
   numberOfPlayers: number,
   activeRound: RoundWithVotes,
   setShowVotingOptions: (acceptResult: boolean) => void,
-  shouldReload: boolean
+  shouldReload: boolean,
+  updateTimeComplexities: (newComplexities: any) => void
+  itemTime: any,
 }
 const PokerRound: React.FC<PokerRoundProps> = (
   {
@@ -27,10 +29,10 @@ const PokerRound: React.FC<PokerRoundProps> = (
     shouldReload,
     index,
     numberOfRounds,
+    itemTime,
+    updateTimeComplexities
 }) => {
   const dispatch = useAppDispatch();
-  const {isError, message, isSuccess} = useAppSelector(state => state.poker);
-  const [showApplyEstimate, setShowApplyEstimate] = useState(false);
   const [singleRound, setSingleRound] = useState<RoundWithVotes>({
     id: '',
     storyId: '',
@@ -38,6 +40,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
     dateEnded: '',
     votes: []
   });
+  const [average, setAverage] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,7 +81,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
       average += vote.value;
     })
     tableData.push(<td key={Math.random()}>{average / numberOfPlayers}h</td>)
-
+    setAverage(average / numberOfPlayers);
     return tableData;
   }, [singleRound]);
 
@@ -90,6 +93,9 @@ const PokerRound: React.FC<PokerRoundProps> = (
 
   const applyEstimate = () => {
     dispatch(applyResult(round.id!));
+    const newComplexities = {...itemTime};
+    newComplexities[singleRound.storyId!] = average;
+    updateTimeComplexities(newComplexities);
     toast.success('Estimate applied!');
   }
 
@@ -102,7 +108,7 @@ const PokerRound: React.FC<PokerRoundProps> = (
           {round.dateEnded === null && isUserScrumMaster && <Button onClick={endRoundHandler} style={{marginRight: '.5rem'}} variant='success'>End round</Button>}
         </td>
       </tr>
-      {isUserScrumMaster && showApplyEstimate && round.dateEnded !== null && index === numberOfRounds-1 && <Button onClick={applyEstimate}>Apply estimate</Button>}
+      {isUserScrumMaster && round.dateEnded !== null && index === numberOfRounds-1 && <Button onClick={applyEstimate}>Apply estimate</Button>}
     </Fragment>
 
   );

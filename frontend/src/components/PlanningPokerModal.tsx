@@ -19,8 +19,10 @@ interface PlanningPokerModalProps {
   showModal: boolean
   closeModal: () => void
   projectId: string
+  itemTime: any,
+  updateTimeComplexities: (newComplexities: any) => void
 }
-const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, storyIdForPoker, isUserScrumMaster, closeModal}) => {
+const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({updateTimeComplexities, itemTime, projectId, storyIdForPoker, isUserScrumMaster, closeModal}) => {
   const dispatch = useAppDispatch();
   const {userRoles} = useAppSelector(state => state.projects);
   const {pokerRounds, roundStarted, activeRound} = useAppSelector(state => state.poker);
@@ -95,6 +97,8 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
                 numberOfPlayers={developers.length}
                 setShowVotingOptions={setShowVotingOptions}
                 shouldReload={shouldReload}
+                itemTime={itemTime}
+                updateTimeComplexities={updateTimeComplexities}
               />
             </Fragment>
 
@@ -104,7 +108,7 @@ const PlanningPokerModal: React.FC<PlanningPokerModalProps> = ({projectId, story
           </tbody>
         </Table>
         <Fragment>
-        {activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={pokerRounds[pokerRounds.length-1].id!} />}
+        {activeRound && activeRound.id !== '' && !isUserScrumMaster && <VotesContainer storyId={storyIdForPoker} activeRoundId={pokerRounds[pokerRounds.length-1].id!} />}
         </Fragment>
 
       </Modal.Body>
