@@ -97,8 +97,8 @@ export class StoryController {
       throw new NotFoundException('Story for the given ID not found.');
 
     // If the user is only a developer he can see only approved notifications.
-    if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster]))
-      return storyNotifications.filter(sn => sn.approved == true);
+  //  if (await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.Developer]) && !await this.projectService.hasUserRoleOnProject(story.projectId, token.sid, [UserRole.ScrumMaster,UserRole.ProjectOwner]))
+  //    return storyNotifications.filter(sn => sn.approved == true);
     return storyNotifications;
   }
 
