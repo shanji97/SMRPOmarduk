@@ -54,6 +54,7 @@ async function bootstrap() {
       })
       .addTag('auth', 'Authentication')
       .addTag('common-password', 'Common password')
+      .addTag('documentation', 'Documentation')
       .addTag('health', 'Healthcheck')
       .addTag('user', 'User')
       .addTag('planning-pocker', 'Story planning pocker')

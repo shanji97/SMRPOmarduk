@@ -9,6 +9,8 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
   STATIC_DIR: Joi.string().default('static'),
   DATA_DIR: Joi.string().default('data'),
 
+  UPLOAD_OVERWRITE: Joi.boolean().default(true),
+
   CONFIG: Joi.string(),
   IGNORE_CONFIG: Joi.boolean(),
 
@@ -42,11 +44,15 @@ export const ConfigSchema: Joi.ObjectSchema = Joi.object().keys({
 	JWT_SECRET: Joi.string(),
 	JWT_PUBLIC_KEY_PATH: Joi.string(),
 	JWT_PRIVATE_KEY_PATH: Joi.string(),
-	JWT_ACCESS_TOKEN_EXPIRE: Joi.allow(Joi.string(), Joi.number()).default('1h'),
+	JWT_ACCESS_TOKEN_EXPIRE: Joi.allow(Joi.string(), Joi.number()).default('6h'),
 
   /**
    * Bussines logic validation parameters
    */
   PERSON_HOURS_PER_DAY: Joi.number().min(0).default(8),
   PERSON_MAX_LOAD_FACTOR: Joi.number().min(0).default(1.5),
+  HOURS_PER_POINT: Joi.number().default(6),
+  TASK_MAX_TIME_FACTOR: Joi.number().min(0).default(5),
+  TASK_AUTO_CLOSE: Joi.boolean().default(true),
+  TASK_AUTO_REOPEN: Joi.boolean().default(true),
 });

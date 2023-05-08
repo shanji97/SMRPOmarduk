@@ -1,5 +1,4 @@
 import { CreateDateColumn, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-
 import { PlanningPokerVote } from './planning-poker-vote.entity';
 import { Story } from './story.entity';
 
@@ -11,7 +10,7 @@ export class PlanningPokerRound {
   @Column({ unsigned: true })
   storyId: number;
 
-  @ManyToOne(type => Story, story => story.planningPockerRounds, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  @ManyToOne(type => Story, story => story.planningPokerRounds, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   story: Story;
 
   @CreateDateColumn()

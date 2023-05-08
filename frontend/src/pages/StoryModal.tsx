@@ -1,106 +1,140 @@
-import React, { useEffect, useState } from 'react'
-import { Modal, Button, Tab, Card, Nav, CloseButton, FormControl, Table, ListGroup, Row, Form, Col } from "react-bootstrap";
-import { StoryData } from '../classes/storyData';
-import classes from './Dashboard.module.css';
-import { X } from 'react-bootstrap-icons';
-import { useAppDispatch, useAppSelector } from "../app/hooks";
-import Users from './Users';
-import { getAllUsers} from "../features/users/userSlice";
-import { UserData } from '../classes/userData';
-import { parseJwt } from '../helpers/helpers';
+import React, { useEffect, useState } from "react";
+import {
+  Modal,
+  Button,
+  Tab,
+  Card,
+  Nav,
+  CloseButton,
+  FormControl,
+  Table,
+  ListGroup,
+  Row,
+  Form,
+  Col,
+} from "react-bootstrap";
+import { NotificationData, StoryData } from "../classes/storyData";
 
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+
+import { getAllUsers } from "../features/users/userSlice";
+import { parseJwt } from "../helpers/helpers";
+import { useParams } from "react-router-dom";
+import { getActiveProject } from "../features/projects/projectSlice";
+import {
+  createNotification,
+  getNotifications,
+  getRejectMessage,
+  reset,
+} from "../features/stories/storyNotificationSlice";
+//import  isGetNotSuccess  from "../features/stories/storyNotificationSlice";
+import { toast } from "react-toastify";
+import PostNotification from "../components/PostNotification";
+import { getNotificationReject } from "../features/stories/storySlice";
 
 export interface StoryModalProps {
-    onCancel: VoidFunction
-    show: boolean
-    item: StoryData
+  onCancel: VoidFunction;
+  show: boolean;
+  item: StoryData;
 }
 
-function StoryModal({ 
-    onCancel,
-    show,
-    item,
-}: StoryModalProps) {
-  
-
+function StoryModal({ onCancel, show, item }: StoryModalProps) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(getAllUsers())
-  }, [])
-
-
-
-
-  //demo
-  const initialList = [
-    {
-      id: 1,
-      title: "title1",
-      status: "asigned",
-      user: "matevz",
-      workedTime: 3,
-      remainingTime: 2,
-      estimatedTime: 6
-    },
-    {
-      id: 2,
-      title: "title2",
-      status: "unasigned",
-      user: "janez",
-      workedTime: 4,
-      remainingTime: 1,
-      estimatedTime: 5
-    },
-  ];
-  const [list, setList] = useState(initialList);
-  function handleChange() {
-    // track input field's state
-  }
-
+    dispatch(getAllUsers());
+  }, []);
 
   const handleAdd = (e: any) => {
     e.preventDefault();
-
   };
 
-  let {users, user} = useAppSelector(state => state.users);
-  const [allUsers, setAllUsers] = useState<String[]>([]);
+  let { users, user } = useAppSelector((state) => state.users);
 
-useEffect(() => {
-  if (!(users.length === 0)){
-    const usernames = users.map(user => user.username);
-    setAllUsers(usernames)
-  }
-}, [users]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
 
-const [isAdmin, setIsAdmin]   = useState(false);
-const [userName, setUserName] = useState('');
-useEffect(() => {
-  if (user === null) {
+  //comments
+
+  const params = useParams();
+  const {
+    message,
+    isError,
+    storiesNotification,
+    rejectMessage,
+    isNotificationError,
+    isNotificationLoading,
+    isNotificationSuccess,
+  } = useAppSelector((state) => state.storyNotifications);
+  const niki = useAppSelector((state) => state.storyNotifications);
+  const { activeProject } = useAppSelector((state) => state.projects);
+  const storyState = useAppSelector((state) => state.stories);
+
+  const [postContent, setPostContent] = useState("");
+  const [currentUser, setUser] = useState({
+    sub: "",
+    sid: "",
+  });
+
+  useEffect(() => {
+    if (user === null) {
       return;
-  }
-  const token = JSON.parse(localStorage.getItem('user')!).token;
-  const userData = parseJwt(token);
-  setIsAdmin(userData.isAdmin);
-  setUserName(userData.sub);
+    }
+    const token = JSON.parse(localStorage.getItem("user")!).token;
+    const userData = parseJwt(token);
 
-}, [user, ]);
-
-
-
-
-    return (
+    setUser(userData);
+    setIsAdmin(userData.isAdmin);
+    setUserName(userData.sub);
     
-        <Modal
-        
-        show={show} 
-        
-        onHide={onCancel}
-        backdrop="static"
-        keyboard={false}
-        size="xl"
-        centered>
+  }, []);
+
+  useEffect(() => {
+    dispatch(getNotifications(item.id!));
+    //dispatch(getRejectMessage(item.id!));
+    dispatch(getNotificationReject(item.id!));
+  }, []);
+
+ 
+
+  useEffect(() => {
+    if (isNotificationSuccess && !isNotificationLoading) {
+      //dispatch(reset())
+      toast.success(message);
+      dispatch(getNotifications(item.id!));
+    }
+    if (isNotificationError && !isNotificationLoading) {
+      toast.error(message);
+    }
+  }, [isNotificationSuccess, isNotificationError, isNotificationLoading]);
+
+  const postContentChanged = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPostContent(e.currentTarget.value);
+  };
+
+  const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const newPost: NotificationData = {
+      authorName: userName,
+      created: new Date().toString(),
+      description: postContent,
+      storyId: item.id!,
+    };
+    dispatch(createNotification(newPost));
+    toast.info("Post created!");
+    setPostContent("");
+    //dispatch(getNotifications(item.id!));
+  };
+  
+  return (
+    <Modal
+      show={show}
+      onHide={onCancel}
+      backdrop="static"
+      keyboard={false}
+      size="xl"
+      centered
+    >
       <Tab.Container id="left-tabs-example" defaultActiveKey="first">
         <Card>
           <Card.Header className="d-flex align-items-center">
@@ -112,7 +146,7 @@ useEffect(() => {
                 <Nav.Link eventKey="second">Comments</Nav.Link>
               </Nav.Item>
             </Nav>
-            <CloseButton className="ms-auto" onClick={onCancel}/>
+            <CloseButton className="ms-auto" onClick={onCancel} />
           </Card.Header>
           <Card.Body>
             <Tab.Content>
@@ -120,92 +154,61 @@ useEffect(() => {
                 <Card.Title>{item.title}</Card.Title>
                 <Card.Text>
                   {item.description}
+
+                  {storyState.notificationReject.map((post, i) => {
+                    return (
+                      <PostNotification
+                        key={i}
+                        id={post.id!}
+                        content={post.notificationText}
+                        author={post.authorName}
+                        created={post.created!}
+                        user={currentUser}
+                        approved={post.approved}
+                      />
+                    );
+                  })}
                 </Card.Text>
-                
-      {isAdmin && 
-          (  
-                                        
-      <Table responsive="lg"   className={` ${classes["gfg"]} small`}>
-      <thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Status</th>
-            <th>User</th>
-            <th>workedTime</th>
-            <th>Remaining time</th>
-            <th>Estimated time</th>
-          </tr>
-        </thead>
-        
-      <tbody>
-
-      {list.map((item) => (
-        <tr key={item.id}>
-          <td >{item.id}</td>
-          <td >{item.title}</td>
-          <td >{item.status}</td>
-          <td >{item.user}</td>
-          <td >{item.workedTime}</td>
-          <td >{item.remainingTime}</td>
-          <td >{item.estimatedTime}</td>
-        </tr>
-      ))}
-      
-  
-      <tr className="align-middle">
-            <th><Button form='my_form' size="sm" type="button" onClick={handleAdd}>
-          Add
-        </Button></th>
-            <th>
-         
-         <Form.Control form='my_form' size="sm" placeholder="Title"/>
-       </th>
-            <th>Status</th>
-            <th>
-        
-        <Form.Select form='my_form' size="sm" defaultValue="Choose..." >
-        <option>/</option>
-        {allUsers.map((user) => (
-          <option key={allUsers.indexOf(user)}>{user}</option>
-
-           ))}
-        
-        </Form.Select>
-            </th>
-            <th >/</th>
-            <th>/</th>
-            <th>
-         
-         <Form.Control form='my_form' size="sm" placeholder="Title"/>
-      </th>
-          </tr>
-
-</tbody>
-
-
-
-
-      </Table>
-     
-     )
-    }
-
-                
               </Tab.Pane>
               <Tab.Pane eventKey="second">
-                dfvdf
+                {storiesNotification.map((post, i) => {
+                  return (
+                    <PostNotification
+                      key={i}
+                      id={post.id!}
+                      content={post.notificationText}
+                      author={post.authorName}
+                      created={post.created!}
+                      user={currentUser}
+                      approved={post.approved}
+                    />
+                  );
+                })}
+
+                <Form onSubmit={submitNewPost}>
+                  <Form.Group className="mb-3" controlId="postContent">
+                    <Form.Label>Write a new post</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      value={postContent}
+                      onChange={postContentChanged}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={postContent === ""}
+                      style={{ marginTop: ".5rem" }}
+                    >
+                      Post
+                    </Button>
+                  </Form.Group>
+                </Form>
               </Tab.Pane>
             </Tab.Content>
-            </Card.Body>
+          </Card.Body>
         </Card>
       </Tab.Container>
     </Modal>
-    
-    )
+  );
 }
-
-
-
 
 export default StoryModal;

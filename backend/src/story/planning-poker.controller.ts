@@ -100,17 +100,39 @@ export class PlanningPokerController {
   @ApiBadRequestResponse()
   @ApiForbiddenResponse()
   @HttpCode(200)
-  @Post(':roundId/end/:acceptResult')
+  @Post(':roundId/end')
   async endPlanningPokerRound(
     @Token() token: TokenDto,
     @Param('roundId', ParseIntPipe) roundId: number,
-    @Param('acceptResult', ParseBoolPipe) acceptResult: boolean,
   ): Promise<void> {
     if (!token.isAdmin && !await this.planningPokerService.hasUserPermissionForRound(token.sid, roundId, [UserRole.ScrumMaster]))
       throw new ForbiddenException();
 
     try {
-      await this.planningPokerService.endRound(roundId, acceptResult)
+      await this.planningPokerService.endRound(roundId);
+    } catch (ex) {
+      if (ex instanceof ValidationException) {
+        throw new BadRequestException(ex.message);
+      }
+      throw ex;
+    }
+  }
+
+  @ApiOperation({ summary: 'Apply result of planning poker to story' })
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiForbiddenResponse()
+  @HttpCode(200)
+  @Post(':roundId/apply')
+  async applyResultPokerRound(
+    @Token() token: TokenDto,
+    @Param('roundId', ParseIntPipe) roundId: number,
+  ): Promise<void> {
+    if (!token.isAdmin && !await this.planningPokerService.hasUserPermissionForRound(token.sid, roundId, [UserRole.ScrumMaster]))
+      throw new ForbiddenException();
+
+    try {
+      await this.planningPokerService.applyResultOfRound(roundId);
     } catch (ex) {
       if (ex instanceof ValidationException) {
         throw new BadRequestException(ex.message);

@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from "react";
+import React, {Component, Fragment, useEffect, useState} from "react";
 import {
   DragDropContext,
   Draggable,
@@ -32,31 +32,49 @@ import {
   Stack,
   ConeStriped,
   X,
+  Eraser,
+  Stickies, SuitSpadeFill,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.css";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { StoryData, ProductBacklogItemStatus } from "../classes/storyData";
 
 import produce from "immer";
 import DeleteConfirmation from "./DeleteConfirmation";
 import {
-  getAllStory,
+  getAllStoryById,
   deleteStory,
   reset,
   updateStoryCategory,
   updateTimeComplexity,
+  confirmStory,
 } from "../features/stories/storySlice";
 import classes from "./Dashboard.module.css";
 import StoryModal from "./StoryModal";
 import DropdownMenu from "react-bootstrap/esm/DropdownMenu";
 import StoryForm from "../components/StoryForm";
-import { getActiveProject } from "../features/projects/projectSlice";
+import {
+  activateProject,
+  getActiveProject,
+  getProject,
+} from "../features/projects/projectSlice";
 import {
   addStoryToSprint,
+  getActiveSprint,
   getAllSprints,
+  getUnrealizedStoriesForSprint,
+  updateSprint,
 } from "../features/sprints/sprintSlice";
 import { StorySprint } from "../classes/sprintData";
+import Projects from "./Projects";
+import { getProjectUserRoles } from "../features/projects/projectSlice";
+import { parseJwt } from "../helpers/helpers";
+
+import { toast } from "react-toastify";
+import RejectStoryModal from "./RejectStoryModal";
+import PlanningPokerModal from "../components/PlanningPokerModal";
+import DropdownStory from "../components/dropdownStory";
 
 //const token = JSON.parse(localStorage.getItem('user')!).token;
 
@@ -68,45 +86,6 @@ import { StorySprint } from "../classes/sprintData";
 //npm install --save react-bootstrap
 //npm install bootstrap --save
 
-/*
-
-const itemsFromBackend123 = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-
-
-
-    
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: []
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
-  
-
-  
-
-*/
-
 const defaultItems = {
   [ProductBacklogItemStatus.WONTHAVE]: [],
   [ProductBacklogItemStatus.UNALLOCATED]: [],
@@ -114,64 +93,206 @@ const defaultItems = {
   [ProductBacklogItemStatus.DONE]: [],
 };
 
-console.log(Object.keys(defaultItems));
-
 type TaskboardData = Record<ProductBacklogItemStatus, StoryData[]>;
 
 function ProductBacklog() {
   const dispatch = useAppDispatch();
-  const { activeProject } = useAppSelector((state) => state.projects);
+
+  
+  const { userRoles } = useAppSelector((state) => state.projects);
+  const [showPlanningPokerModal, setShowPlanningPokerModal] = useState(false);
+  const [storyIdForPoker, setStoryIdForPoker] = useState('');
   //dispatch(getActiveProject());
   //helper funkcija za updatat useState
-  const [sgs, setSgs] = useState("undefined");
+   //uporabniki
+   let { users, user } = useAppSelector((state) => state.users);
+   const [allUsers, setAllUsers] = useState<String[]>([]);
+ 
+   useEffect(() => {
+     if (users.length !== 0) {
+       const usernames = users.map((user) => user.username);
+       setAllUsers(usernames);
+     }
+   }, [users]);
+ 
+   const [isAdmin, setIsAdmin] = useState(false);
+   const [userName, setUserName] = useState("");
+   const [userId, setUserId] = useState();
+   const [scrumMasterId, setScrumMasterId] = useState();
+   const [productOwnerId, setScrumProductOwnerId] = useState();
+ 
+   useEffect(() => {
+     if (user === null) {
+       navigate("/login");
+       return;
+     }
+     if (user !== null) {
+     const token = JSON.parse(localStorage.getItem("user")!).token;
+     const userData = parseJwt(token);
+     setIsAdmin(userData.isAdmin);
+     setUserName(userData.sub);
+     setUserId(userData.sid);
+     }
+   }, [user]);
+ 
+   const isUserScramMaster = () => {
+     if (scrumMasterId === userId && userId && scrumMasterId) return true;
+     else return false;
+   };
+   const isUserProductOwn = () => {
+     if (productOwnerId === userId && userId && productOwnerId) return true;
+     else return false;
+   };
 
-  let { stories, isSuccess, isLoading, isError } = useAppSelector(
-    (state) => state.stories
-  );
-
+  let {
+    stories,
+    isSuccess,
+    isLoading,
+    isError,
+    message,
+    isStoriesSuccess,
+    isStoriesLoading,
+    isStoriesError,
+    isStoryUpdateError,
+    isStoryUpdateSuccess,
+    isStoryUpdateLoading,
+  } = useAppSelector((state) => state.stories);
   let SprintSelector = useAppSelector((state) => state.sprints);
+  let projectsState = useAppSelector((state) => state.projects);
+
+
+  useEffect(() => {
+    if (SprintSelector.isToSprintSuccess && !SprintSelector.isToSprintLoading) {
+      if (SprintSelector.message !== '') {
+        toast.success(SprintSelector.message);
+      }
+      //dispatch(reset());
+    }
+    if (SprintSelector.isToSprintError && !SprintSelector.isToSprintLoading) {
+      toast.error(SprintSelector.message);
+    }
+  }, [
+    SprintSelector.isToSprintSuccess,
+    SprintSelector.isToSprintError,
+    SprintSelector.isToSprintLoading,
+  ]);
+
+
+
+  useEffect(() => {
+    if (SprintSelector.isSuccessActive && !SprintSelector.isLoadingActive) {
+      if (SprintSelector.message !== '') {
+        toast.success(SprintSelector.message);
+      }
+
+      if (SprintSelector.activeSprint !== undefined) {
+        dispatch(getUnrealizedStoriesForSprint(SprintSelector.activeSprint.id!))
+      } 
+      //dispatch(reset());
+    }
+    if (SprintSelector.isErrorActive && !SprintSelector.isLoadingActive) {
+      //toast.error(SprintSelector.message);
+      console.log("active sprint not")
+      if (SprintSelector.sprints) {
+        SprintSelector.sprints.map((item) => {
+        const endDate = new Date(item.endDate);
+        const todayDate = new Date();
+        if (endDate < todayDate) {
+          dispatch(getUnrealizedStoriesForSprint(item.id!))
+        }})
+      }
+    }
+  }, [
+    SprintSelector.isSuccessActive,
+    SprintSelector.isErrorActive,
+    SprintSelector.isLoadingActive,
+  ]);
 
   //console.log(SprintSelector)
   useEffect(() => {
-    if (isSuccess && !isLoading) {
-      dispatch(reset);
-      console.log("kul");
+    if (isSuccess && !isLoading && message !== '') {
+      toast.success(message)
     }
-    if (isError && !isLoading) {
-      dispatch(reset);
-      console.log("error");
+    if (isError && !isLoading && message !== '') {
+      toast.error(message);
     }
   }, [isSuccess, isError, isLoading]);
 
   useEffect(() => {
-    dispatch(getAllStory());
-    dispatch(getActiveProject());
-    dispatch(getAllSprints(activeProject.id!));
+
+    if (isStoryUpdateSuccess && !isStoryUpdateLoading && projectsState.activeProject.id ) {
+      dispatch(reset());
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+   
+      dispatch(getActiveSprint(projectsState.activeProject.id!));
+      if (message !== '') {toast.success(message)}
+    }
+    if (isStoryUpdateError && !isStoryUpdateLoading && message !== '') {
+      toast.error(message);
+    }
+  }, [isStoryUpdateError, isStoryUpdateLoading, isStoryUpdateSuccess]);
+
+  useEffect(() => {
+    if (projectsState.activeProject.id === "") {
+      dispatch(getActiveProject());
+    }
   }, []);
 
-  // NOTE: temporary fix, change this if needed
-  /*
   useEffect(() => {
-    if (isSuccess && !isLoading) {
-      dispatch(reset());
+    if (projectsState.isActiveProjectSuccess && !projectsState.isActiveProjectLoading) {
+      dispatch(getAllStoryById(projectsState.activeProject.id!));
+      dispatch(getAllSprints(projectsState.activeProject.id!));
+      dispatch(getProjectUserRoles(projectsState.activeProject.id!));
+      if (SprintSelector.activeSprint === undefined && projectsState.activeProject !== undefined) {
+        dispatch(getActiveSprint(projectsState.activeProject.id!));
+      }
+      toast.success(projectsState.message)
     }
-    if (isError && !isLoading) {
-      dispatch(reset());
+    if (projectsState.isActiveProjectError && !projectsState.isActiveProjectLoading && projectsState.message !== '') {
+      toast.error(projectsState.message);
     }
-  }, [isSuccess, isError, isLoading]);
+  }, [projectsState.isActiveProjectSuccess, projectsState.isActiveProjectLoading, projectsState.isActiveProjectError]);
 
-  */
-  //let stories = useAppSelector((state) => state.stories);
+
+
+
+
+
+
+
+  useEffect(() => {
+    if (projectsState.activeProject.id) {
+      const dataArray = Object.values(projectsState.userRoles);
+      const filteredDataScramMaster = dataArray.filter(
+        (item) => item.role === 1
+      );
+      const filteredDataProductOwner = dataArray.filter(
+        (item) => item.role === 2
+      );
+      if (filteredDataScramMaster) {
+        setScrumMasterId(filteredDataScramMaster[0].userId);
+      }
+      if (filteredDataProductOwner) {
+        setScrumProductOwnerId(filteredDataProductOwner[0].userId);
+      }
+    }
+  }, [projectsState.userRoles]);
+
+
+
+
+
+
+
+  //console.log(projectroles.userRoles)
+
+ 
+
+
   //console.log(stories)
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.users);
 
-  useEffect(() => {
-    if (user === null) {
-      console.log("redirect");
-      navigate("/login");
-    }
-  }, [user]);
+ 
 
   const [itemsByStatus, setItemsByStatus] = useState<TaskboardData>(
     defaultItems
@@ -208,16 +329,27 @@ function ProductBacklog() {
 
   const categoryChange = (category: string): number => {
     switch (category) {
-      case "Won't have this time":
+      case ProductBacklogItemStatus.WONTHAVE:
         return 0;
-      case "Unallocated":
+      case ProductBacklogItemStatus.UNALLOCATED:
         return 1;
-      case "Allocated":
+      case ProductBacklogItemStatus.ALLOCATED:
         return 2;
       default:
         return 3;
     }
   };
+
+  type HandrejectFunc = (args: {
+    status: string;
+    //itemToDelete: StoryData;
+    index: number;
+    destination: string;
+  }) => void;
+
+  //console.log(SprintSelector.activeSprint)
+  const allocatedItems = itemsByStatus[ProductBacklogItemStatus.ALLOCATED];
+  const totalComplexity = allocatedItems.map((item) => item.timeComplexity).reduce((acc, curr) => acc + curr, 0);
 
   const handleDragEnd: DragDropContextProps["onDragEnd"] = ({
     source,
@@ -226,15 +358,39 @@ function ProductBacklog() {
     setItemsByStatus((current) =>
       produce(current, (draft) => {
         // dropped outside the list
-        if (!destination) {
+        dispatch(getActiveProject());
+        dispatch(getAllStoryById(projectsState.activeProject.id!));
+        if (!destination || destination.droppableId === source.droppableId) {
           return;
+        }
+
+        if (destination.droppableId === ProductBacklogItemStatus.ALLOCATED) {
+          if (SprintSelector.activeSprint?.velocity !== undefined &&
+            SprintSelector.activeSprint?.velocity < totalComplexity
+          ) {
+            toast.error("Sprint Velocity is full");
+
+            return;
+          }
+        }
+        if (
+          source.droppableId === ProductBacklogItemStatus.UNALLOCATED &&
+          destination.droppableId === ProductBacklogItemStatus.DONE
+        ) {
+          if (
+            SprintSelector.activeSprint?.velocity ==
+            itemsByStatus[ProductBacklogItemStatus.ALLOCATED].length
+          ) {
+            toast.error("Story is not in active Sprint and is not realised");
+            return;
+          }
         }
 
         /*
         const niki = draft[
                   source.droppableId as ProductBacklogItemStatus
                 ][source.index];
-                */
+           */
         const [removed] = draft[
           source.droppableId as ProductBacklogItemStatus
         ].splice(source.index, 1);
@@ -245,44 +401,43 @@ function ProductBacklog() {
           removed
         );
         let projectRoleData = {
-          projectId: parseInt(activeProject?.id || ""),
+          projectId: parseInt(projectsState.activeProject?.id || ""),
           category: categoryChange(destination.droppableId),
           storyId: removed.id || "",
         };
         dispatch(updateStoryCategory(projectRoleData));
 
-        /*if (destination.droppableId === "Allocated" && destination.droppableId != source.droppableId) {
+        if (
+          destination.droppableId === ProductBacklogItemStatus.ALLOCATED &&
+          destination.droppableId != source.droppableId
+        ) {
           const storySprint: StorySprint = {
-            sprintId: number,
-            storyId: removed.id
-          
-        };
-        dispatch(updateSprint(sprintBody)); 
-        } */
+            sprintId: parseInt(SprintSelector.activeSprint?.id || ""),
+            storyId: parseInt(removed.id || ""),
+          };
+          dispatch(addStoryToSprint(storySprint));
+        }
+        //itemsByStatus[destination.droppableId].length
+
+        if (
+          source.droppableId === ProductBacklogItemStatus.ALLOCATED &&
+          destination.droppableId != ProductBacklogItemStatus.DONE
+        ) {
+        }
       })
     );
   };
 
-  type HandleDeleteFunc = (args: {
-    status: ProductBacklogItemStatus;
-    itemToDelete: StoryData;
-  }) => void;
 
-  const handleDelete: HandleDeleteFunc = ({ status, itemToDelete }) =>
-    setItemsByStatus((current) =>
-      produce(current, (draft) => {
-        draft[status] = draft[status].filter(
-          (item) => item.id !== itemToDelete.id
-        );
-        setShow(false);
-        dispatch(deleteStory(itemToDelete.id!));
-        dispatch(getAllStory());
-      })
-    );
+
 
   //za beleženje časa
   const [itemVisibility, setItemVisibility] = useState<{
     [itemId: string]: boolean;
+  }>({});
+  //za beleženje vnosačasa
+  const [itemTime, setItemTime] = useState<{
+    [itemId: string]: number;
   }>({});
 
   const handleFormToggle = (itemId: string) => {
@@ -296,20 +451,28 @@ function ProductBacklog() {
     (itemId: string) => (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       handleFormToggle(itemId);
+
+      let projectRoleData = {
+        timeComplexity: itemTime[itemId],
+        storyId: itemId,
+      };
+      dispatch(updateTimeComplexity(projectRoleData));
+
     };
   const handleKeyDown = (e: any) => {
     e.preventDefault();
 
     const val = e.target.value;
-    let projectRoleData1 = {
-      timeComplexity: val,
-      storyId: e.target.id,
-    };
+    const targetId = e.target.id;
 
-    console.log(projectRoleData1);
     if (val.length > 0 && /^\d+$/.test(val)) {
-      dispatch(updateTimeComplexity(projectRoleData1));
+      setItemTime((prev) => {
+        const newState = { ...prev };
+        newState[targetId] = val;
+        return newState;
+      });
     }
+
     //else if (e.target.value == '') dispatch(updateTimeComplexity(projectRoleData2));
     //dispatch(getAllStory());
   };
@@ -321,8 +484,15 @@ function ProductBacklog() {
     //console.log(itemsByStatus)
 
     //console.log("doblejni podatki1")
-    if (isSuccess) {
+      //dispatch(getAllStoryById(projectsState.activeProject.id!));
+      console.log("se to slploh štarta")
       resetState();
+      if (SprintSelector.isUnrealizedSuccess && !SprintSelector.isUnrealizedLoading) {
+      
+
+        //dispatch(reset());
+        //dispatch(getAllStoryById(projectsState.activeProject.id!));
+
       setItemsByStatus((current) =>
         produce(current, (draft) => {
           //for (const status of Object.values(ProductBacklogItemStatus)) {
@@ -332,49 +502,78 @@ function ProductBacklog() {
           const isEmpty = Object.values(current).every(
             (value) => value.length === 0
           );
-
           // Adding new item as "to do"
           //console.log("zgodbice ob updatu")
           //console.log(stories)
-          stories.forEach((story: StoryData) => {
-            //za beleženje časa init values
-            const visibilityObject: { [itemId: string]: boolean } = {};
-            visibilityObject[story.id!] = false;
-            setItemVisibility(visibilityObject);
-            //storyi
-            let cat;
-            if (story.priority === 0) {
-              cat = category(0);
-            } else {
-              cat = category(story.category);
-            }
+          const visibilityObject: { [itemId: string]: boolean } = {};
+          const insertTimeObject: { [itemId: string]: number } = {};
 
-            draft[
-              ProductBacklogItemStatus[
-                cat as keyof typeof ProductBacklogItemStatus
-              ]
-            ].push({
-              id: story.id?.toString(),
-              title: story.title,
-              description: story.description,
-              tests: story.tests,
-              priority: story.priority,
-              businessValue: story.businessValue,
-              sequenceNumber: story.sequenceNumber,
-              category: story.category,
-              timeComplexity: story.timeComplexity,
-              isRealized: story.isRealized,
+          //sprint zgodbice
+          //  const uniquePrintStoryIds = Array.from(new Set(SprintSelector.unrealizedStories.map((item) => item.id)));
+          if (stories) {
+            stories.forEach((story: StoryData) => {
+              
+              if (story.category === 2) {
+                //if (SprintSelector.activeSprint === undefined) { return; }
+                const storyInSprint = SprintSelector.unrealizedStories.find((item) => item.id === story.id);
+                if (storyInSprint === undefined) {
+                  return;
+                }
+                
+              }
+              
+              
+              //za beleženje časa init values
+              visibilityObject[story.id!] = false;
+              //za beleženje vnosa časa
+              insertTimeObject[story.id!] = story.timeComplexity;
+
+              //storyi
+              let cat;
+              if (story.priority === 0) {
+                cat = category(0);
+              } else {
+                cat = category(story.category);
+              }
+              //ce je category 2 potem dodaj elemnte iz sprint trenutnega oz lahko bi primerjal
+              draft[
+                ProductBacklogItemStatus[
+                  cat as keyof typeof ProductBacklogItemStatus
+                ]
+              ].push({
+                id: story.id?.toString(),
+                title: story.title,
+                description: story.description,
+                tests: story.tests,
+                priority: story.priority,
+                businessValue: story.businessValue,
+                sequenceNumber: story.sequenceNumber,
+                category: story.category,
+                timeComplexity: story.timeComplexity,
+                isRealized: story.isRealized,
+                tasks: story.tasks
+              });
             });
-          });
+
+            setItemVisibility(visibilityObject);
+            setItemTime(insertTimeObject);
+          }
         })
       );
+      }
+      if (SprintSelector.isUnrealizedError && !SprintSelector.isUnrealizedLoading) {
+        //toast.error("Sprint ni Aktiviran");
+        
     }
-  }, [isSuccess, stories]);
+  
+  }, [SprintSelector.isUnrealizedSuccess, SprintSelector.isUnrealizedLoading, SprintSelector.isUnrealizedError]);
 
   //{Object.values.map(([columnId, column], index) => {
 
   //modal za delete
   const [show, setShow] = useState(false);
+
+  const [showContextMenu, setShowContextMenu] = useState(false);
 
   //modal za zgodbe
   const [showstory, setShowStory] = useState(false);
@@ -383,6 +582,9 @@ function ProductBacklog() {
 
   // modal za edit story
   const [showEditStoryModal, setShowEditStoryModal] = useState(false);
+
+  // modal za reject
+  const [showRejectStoryModal, setShowRejectStoryModal] = useState(false);
 
   const openNewStoryModal = () => {
     setShowNewStoryModal(true);
@@ -400,7 +602,13 @@ function ProductBacklog() {
   const hideEditStoryModal = () => {
     setShowEditStoryModal(false);
   };
-
+  const openRejectStoryModal = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({item, status, index});
+    setShowRejectStoryModal(true);
+  };
+  const hideRejectStoryModal = () => {
+    setShowRejectStoryModal(false);
+  };
   const initvalue: StoryData = {
     id: "",
     title: "",
@@ -412,13 +620,43 @@ function ProductBacklog() {
     category: 0,
     timeComplexity: 0,
     isRealized: false,
+    tasks: []
   };
 
   const [tempDataStory, setTempDataStory] = useState<StoryData>(initvalue);
   const getDataStory = (item: StoryData) => {
     setTempDataStory(item);
+    console.log('call');
     //console.log(item);
     return setShowStory(true);
+  };
+  const [tempDataReject, setTempDataReject] = useState<{
+    item: StoryData;
+    status: string;
+    index: number;
+  }>();
+  const getDataReject = (item: StoryData, status: string, index: number) => {
+    setTempDataReject({ item, status, index });
+    //console.log(item);
+    return setShowRejectStoryModal(true);
+  };
+
+  const updateTimeComplexities = (newComplexities: any) => {
+    setItemTime(newComplexities);
+  }
+
+  const getDataApproved = (item: StoryData, status: string, index: number) => {
+    //setTempDataApproved({ item, status, index });
+    //console.log(item);
+    dispatch(confirmStory(item.id!));
+    let projectRoleData = {
+      projectId: parseInt(projectsState.activeProject?.id || ""),
+      category: categoryChange(ProductBacklogItemStatus.DONE),
+      storyId: item.id || "",
+    };
+    console.log(projectRoleData)
+    dispatch(updateStoryCategory(projectRoleData));
+    dispatch(reset());
   };
 
   // utility function for edit story
@@ -426,28 +664,48 @@ function ProductBacklog() {
     return items.map((item: any) => item.description);
   }
 
-  //{if Object.keys(defaultItems).includes(status)}
+  function handleShowPlanningPokerModal(story: StoryData) {
+    setStoryIdForPoker(story.id!)
+    setShowPlanningPokerModal(true);
+  }
 
+  function closePlanningPokerModal() {
+    setShowPlanningPokerModal(false);
+  }
+  
+  
+  //console.log(totalComplexity)
   return (
-    <>
-      <div className="row flex-row flex-sm-nowrap m-1 mt-3">
+    <><div className="col-sm-8 col-md-6 col-xl-6 p-3 pb-0">
+        <div className="d-flex align-items-end justify-content-center bg-light">Product Backlog</div>
+
+      </div>
+      <div className="row flex-row flex-sm-nowrap m-1">
         <DragDropContext onDragEnd={handleDragEnd}>
           {Object.values(ProductBacklogItemStatus).map((status) => {
             return (
               <div className="col-sm-4 col-md-3 col-xl-3 mt-3" key={status}>
                 <Card className="bg-light border-0 ">
                   <div className="pt-3 hstack gap-2 mx-3">
-                    <Card.Title className="fs-6 my-0">{status}</Card.Title>
+                    <Card.Title className="fs-6 my-0  text-truncate">
+                      {status}
+                    </Card.Title>
                     <div className="vr my-0"></div>
                     <p className="fs-6 my-0">{itemsByStatus[status].length}</p>
-                    {status === ProductBacklogItemStatus.UNALLOCATED && (
+                    {status === ProductBacklogItemStatus.UNALLOCATED && (isUserProductOwn() || isUserScramMaster()) && (
                       <Button
-                        className="ms-auto"
+                        className="ms-auto m-0 p-0"
                         variant="light"
                         onClick={() => openNewStoryModal()}
                       >
                         New Story
                       </Button>
+                    )}
+                    {status === ProductBacklogItemStatus.ALLOCATED && (
+                      <p className="fs-6 my-0 ms-auto">
+                    Velocity: {totalComplexity}  / {SprintSelector.activeSprint?.velocity} PT
+                      </p>
+                     
                     )}
                   </div>
                   <hr className="hr mx-3" />
@@ -467,6 +725,7 @@ function ProductBacklog() {
                         >
                           {itemsByStatus[status].map((item, index) => {
                             return (
+                              //{if (item.category !== 2) { } }
                               <Draggable
                                 key={item.id}
                                 draggableId={item.id!}
@@ -474,7 +733,19 @@ function ProductBacklog() {
                                 isDragDisabled={
                                   status ===
                                     ProductBacklogItemStatus.WONTHAVE ||
-                                  !Boolean(item.timeComplexity)
+                                  !Boolean(itemTime[item.id!]) ||
+                                  !isUserScramMaster()
+                                    ? true
+                                    : status === ProductBacklogItemStatus.DONE
+                                    ? true
+                                    : status ===
+                                      ProductBacklogItemStatus.ALLOCATED
+                                    ? true
+                                    : SprintSelector.activeSprint?.velocity! < (totalComplexity + item.timeComplexity)
+                                    ? true
+                                    : SprintSelector.activeSprint === undefined
+                                    ? true
+                                    : undefined
                                 }
                               >
                                 {(provided, snapshot) => {
@@ -494,76 +765,71 @@ function ProductBacklog() {
                                           <p className="fs-6 text-muted m-1">
                                             TSK-{item.sequenceNumber}
                                           </p>
-
-                                          <Dropdown className="ms-auto">
-                                            <Dropdown.Toggle
-                                              variant="link"
-                                              id="dropdown-custom-components"
-                                              bsPrefix="p-0"
-                                            >
-                                              <ThreeDots />
-                                            </Dropdown.Toggle>
-                                            <Dropdown.Menu>
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
+                                          {status ===
+                                            ProductBacklogItemStatus.ALLOCATED &&
+                                            isUserProductOwn() && item.tasks.every(item => item.category === 250) && item.tasks.length !== 0 && (
+                                              <>
+                                                <p className="fs-6 text-muted m-1 mx-auto">
+                                                  Task Finished:{" "}
+                                                </p>
+                                                <Button
+                                                  className="m-0 p-0 px-2"
+                                                  variant="danger"
                                                   onClick={() =>
-                                                    openEditStoryModal(item)
+                                                    getDataReject(
+                                                      item,
+                                                      status,
+                                                      index
+                                                    )
                                                   }
                                                 >
-                                                  <Pencil /> Edit
-                                                </Dropdown.Item>
-                                              )}
-                                              {status ===
-                                                ProductBacklogItemStatus.UNALLOCATED && (
-                                                <Dropdown.Item
-                                                  onClick={() => setShow(true)}
-                                                  /* onClick={() =>
-                                              Modal.confirm({
-                                                title: 'Delete?',
-                                                content: `Are you sure to delete "${item.title}"?`,
-                                                onOk: () =>
-                                                  onDelete({
-                                                    status,
-                                                    itemToDelete: item,
-                                                  }),
-                                              })
-                                            } */
+                                                  Reject
+                                                </Button>
+                                                <Button
+                                                  className="m-0 p-0 px-2"
+                                                  variant="primary"
+                                                  onClick={() =>
+                                                    getDataApproved(
+                                                      item,
+                                                      status,
+                                                      index
+                                                    )
+                                                  }
                                                 >
-                                                  <Trash /> Delete
-                                                </Dropdown.Item>
-                                              )}
-                                              <DeleteConfirmation
+                                                  Accept
+                                                </Button>
+                                              </>
+                                            )}
+                                          {status !==
+                                            ProductBacklogItemStatus.WONTHAVE && status !==
+                                            ProductBacklogItemStatus.DONE &&  (
+                                              <DropdownStory
                                                 item={item}
                                                 status={status}
-                                                onCancel={() => setShow(false)}
+                                                index={index}
+                                                openEditStoryModal={({item}) => openEditStoryModal(item)}
+                                                setShow={setShow}
+                                                getDataReject={({ item, status, index }) => getDataReject(item, status, index)}
                                                 show={show}
+                                                handleShowPlanningPokerModal={handleShowPlanningPokerModal}
+                                                isUserProductOwn={isUserProductOwn}
                                               />
-                                            </Dropdown.Menu>
-                                          </Dropdown>
+                                          )}
                                         </Card.Header>
                                         <Card.Body>
                                           <Card.Text
                                             onClick={() => getDataStory(item)}
-                                            className="m-0"
+                                            className="m-0  text-truncate"
                                           >
                                             <Button
-                                              className="text-decoration-none"
+                                              className="text-decoration-none "
                                               variant="link"
                                             >
                                               {item.title}
                                             </Button>
                                           </Card.Text>
-
-                                          <div className="text-end">
-                                            <small className="custom-font-size text-muted mb-1 d-inline-block">
-                                              25%
-                                            </small>
-                                          </div>
-                                          <ProgressBar
-                                            style={{ height: "3px" }}
-                                            now={60}
-                                          />
+                                            
+                                         
 
                                           <div className="pt-3 hstack gap-2 ">
                                             <p
@@ -604,7 +870,10 @@ function ProductBacklog() {
                                                         className="mobileBox"
                                                         size="sm"
                                                         pattern="[0-9]*"
-                                                        defaultValue="0"
+                                                        //value={itemTime[item.id!]}
+                                                        placeholder={itemTime[
+                                                          item.id!
+                                                        ].toString()}
                                                         id={item.id}
                                                         onChange={handleKeyDown}
                                                         type="tel"
@@ -616,17 +885,26 @@ function ProductBacklog() {
                                                     </InputGroup>
                                                   </Form>
                                                 )}
-                                                {!itemVisibility[item.id!] && (
-                                                  <Button
-                                                    id={item.id}
-                                                    onClick={() =>
-                                                      handleFormToggle(item.id!)
-                                                    }
-                                                    variant="link"
-                                                    className="m-0 p-0 float-end text-decoration-none"
-                                                  >
-                                                    {item.timeComplexity}
-                                                  </Button>
+                                                {!itemVisibility[item.id!] &&
+                                                  isUserScramMaster() && (
+                                                    <Button
+                                                      id={item.id}
+                                                      //isUserScramMaster
+                                                      onClick={() =>
+                                                        handleFormToggle(
+                                                          item.id!
+                                                        )
+                                                      }
+                                                      variant="link"
+                                                      className="m-0 p-0 float-end text-decoration-none"
+                                                    >
+                                                      {itemTime[item.id!]}
+                                                    </Button>
+                                                  )}
+                                                {!isUserScramMaster() && (
+                                                  <p className="m-0 p-0 float-end text-decoration-none">
+                                                    {itemTime[item.id!]}
+                                                  </p>
                                                 )}
                                               </Col>
                                             </Row>
@@ -638,6 +916,8 @@ function ProductBacklog() {
                                 }}
                               </Draggable>
                             );
+
+
                           })}
 
                           {provided.placeholder}
@@ -652,10 +932,9 @@ function ProductBacklog() {
         </DragDropContext>
       </div>
       {showNewStoryModal && (
-        <Modal show={showNewStoryModal} onHide={hideNewStoryModal}>
-          <Modal.Body>
+        
             <StoryForm
-              projectId={activeProject.id}
+              projectId={projectsState.activeProject.id}
               isEdit={false}
               sequenceNumberInit=""
               titleInit=""
@@ -664,9 +943,9 @@ function ProductBacklog() {
               priorityInit=""
               businessValueInit=""
               closeModal={hideNewStoryModal}
+              show={showNewStoryModal}
             />
-          </Modal.Body>
-        </Modal>
+        
       )}
       {showstory && (
         <StoryModal
@@ -676,8 +955,6 @@ function ProductBacklog() {
         />
       )}
       {showEditStoryModal && (
-        <Modal show={showEditStoryModal} onHide={hideEditStoryModal}>
-          <Modal.Body>
             <StoryForm
               id={tempDataStory.id}
               isEdit={true}
@@ -688,10 +965,27 @@ function ProductBacklog() {
               priorityInit={tempDataStory.priority.toString()}
               businessValueInit={tempDataStory.businessValue.toString()}
               closeModal={hideEditStoryModal}
+              show={showEditStoryModal}
             />
-          </Modal.Body>
-        </Modal>
       )}
+      {showRejectStoryModal && (
+        <RejectStoryModal
+          elements={tempDataReject!}
+          onCancel={() => setShowRejectStoryModal(false)}
+          show={showRejectStoryModal}
+        />
+      )}
+      {showPlanningPokerModal &&
+          <PlanningPokerModal
+            projectId={projectsState.activeProject.id!}
+            storyIdForPoker={storyIdForPoker}
+            isUserScrumMaster={isUserScramMaster()}
+            showModal={showPlanningPokerModal}
+            closeModal={closePlanningPokerModal}
+            itemTime={itemTime}
+            updateTimeComplexities={updateTimeComplexities}
+          />
+      }
     </>
   );
 }

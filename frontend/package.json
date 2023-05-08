@@ -17,17 +17,20 @@
     "bootstrap-icons": "^1.10.3",
     "date-fns": "^2.29.3",
     "go-try": "^2.0.2",
+    "markdown-it": "^13.0.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
     "react-bootstrap-icons": "^1.10.2",
     "react-date-range": "^1.4.0",
     "react-dom": "^18.2.0",
+    "react-markdown-editor-lite": "^1.3.4",
     "react-password-strength-bar": "^0.4.1",
     "react-qr-code": "^2.0.11",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.8.2",
     "react-scripts": "5.0.1",
     "react-toastify": "^9.1.2",
+    "recharts": "^2.5.0",
     "typescript": "^4.9.5",
     "uuidv4": "^6.2.13",
     "web-vitals": "^2.1.4"
@@ -57,6 +60,7 @@
     ]
   },
   "devDependencies": {
+    "@types/markdown-it": "^12.2.3",
     "@types/react-date-range": "^1.4.4",
     "typescript-plugin-css-modules": "^4.2.2"
   }

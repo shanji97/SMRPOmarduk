@@ -53,7 +53,35 @@ export class SprintController {
     return await this.sprintService.getStoriesForSprintById(sprintId);
   }
 
-  @ApiOperation({ summary: 'Get active sprint for porject.' })
+  @ApiOperation({ summary: 'List unfinished stories for sprint.' })
+  @ApiOkResponse()
+  @Get(':sprintId/story/unfinished')
+  async listUnfinishedStoriesForSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<Story[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    return await this.sprintService.getUnfinishedStoriesForSprintById(sprintId);
+  }
+
+  @ApiOperation({ summary: 'List unrealized stories for sprint.' })
+  @ApiOkResponse()
+  @Get(':sprintId/story/unrealized-stories')
+  async listUnrealizedStoriesForSprint(
+    @Token() token: TokenDto,
+    @Param('sprintId', ParseIntPipe) sprintId: number,
+  ): Promise<Story[]> {
+    // Check permissions
+    if (!token.isAdmin && !await this.sprintService.hasUserPermissionForSprint(token.sid, sprintId))
+      throw new ForbiddenException();
+
+    return await this.sprintService.getUnrealizedStoriesForSprintById(sprintId);
+  }
+
+  @ApiOperation({ summary: 'Get active sprint for project.' })
   @ApiOkResponse()
   @Get('project/:projectId/active')
   async getActiveSprintByProjectId(
@@ -61,7 +89,7 @@ export class SprintController {
     @Param('projectId', ParseIntPipe) projectId: number,
   ): Promise<Sprint> {
     // Check permissions
-    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster]))
+    if (!token.isAdmin && !await this.projectService.hasUserRoleOnProject(projectId, token.sid, [UserRole.Developer, UserRole.ScrumMaster, UserRole.ProjectOwner]))
       throw new ForbiddenException();
 
     const sprint = await this.sprintService.getActiveSprintForProject(projectId);

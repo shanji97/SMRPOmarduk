@@ -1,5 +1,5 @@
 import axios from "axios";
-import { StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
+import { RejectStory, StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
 import { getBaseUrl } from "../../helpers/helpers";
 
 
@@ -8,14 +8,14 @@ const SPRINTS_API_URL = `${getBaseUrl()}/api/sprint`;
 
 // const STORY_API_URL = `http://localhost:3000/api/story`;
 
-const getAllStory = async (token: string) => {
+const getAllStoryById = async (projectId: string, token: string) => {
     const config = {
         headers: {
             Authorization: `JWT ${token}`
         }
     }
 
-    const response = await axios.get(`${STORY_API_URL}`, config);
+    const response = await axios.get(`${STORY_API_URL}/${projectId}/stories-by-project`, config);
 
     return response.data;
 }
@@ -32,6 +32,18 @@ const getStoriesForSprint = async (sprintId: string, token: string) => {
     return response.data;
 }
 
+const getStoriesForUser = async (token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${STORY_API_URL}/user`, config);
+
+    return response.data;
+}
+
 
 const create = async (storyData: StoryData, token: string) => {
     const config = {
@@ -39,7 +51,6 @@ const create = async (storyData: StoryData, token: string) => {
             Authorization: `JWT ${token}`
         }
     }
-    console.log(storyData)
     
     const createStoryData = {
         title:  storyData.title,
@@ -74,7 +85,6 @@ const editStory = async (storyData: StoryData, token: string) => {
     
     }
 
-    console.log(storyData);
 
     const response = await axios.patch(`${STORY_API_URL}/${storyData.id}/update`, editStoryData, config);
 
@@ -123,15 +133,52 @@ const updateTimeComplexity = async (updateTimeComplexity: UpdateTimeComplexity, 
     const response = await axios.patch(`${STORY_API_URL}/${updateTimeComplexity.storyId}/time-complexity`, updatedTimeComplexity, config);
     return response.data;
 }
+const confirmStory = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+    const response = await axios.patch(`${STORY_API_URL}/${storyId}/confirm`, storyId, config);
+    return response.data;
+}
+const rejectStory = async (rejectStory: RejectStory, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const updatedRejectStory = {
+        description: rejectStory.description,
+    }
+
+    const response = await axios.patch(`${STORY_API_URL}/${rejectStory.storyId}/reject`, updatedRejectStory, config);
+    return response.data;
+}
+const getNotificationReject = async (storyId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${STORY_API_URL}/${storyId}/notifications/rejection`, config);
+    return response.data;
+}
 
 const storyService = {
     create,
-    getAllStory,
+    getAllStoryById,
     getStoriesForSprint,
     deleteStory,
     updateStoryCategory,
     editStory,
-    updateTimeComplexity
+    updateTimeComplexity,
+    rejectStory,
+    getStoriesForUser,
+    confirmStory,
+    getNotificationReject
 }
 
 export default storyService;

@@ -7,7 +7,8 @@ import classes from "./Users.module.css";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { parseJwt } from "../helpers/helpers";
 import {
-  activateProject, getActiveProject,
+  activateProject,
+  getActiveProject,
   getAllProjects,
   reset,
 } from "../features/projects/projectSlice";
@@ -71,6 +72,14 @@ const Projects = () => {
   const handleActivateProject = (projectId: string) => {
     dispatch(activateProject(projectId));
     toast.info("Project active");
+  };
+
+  const redirectToStats = (projectID: any) => {
+    navigate(`/${projectID}/stats`);
+  };
+
+  const redirectToDocs = (projectID: any) => {
+    navigate(`/${projectID}/docs`);
   };
 
   useEffect(() => {
@@ -164,6 +173,16 @@ const Projects = () => {
                             Edit project roles
                           </Dropdown.Item>
                         )}
+                        <Dropdown.Item
+                          onClick={() => redirectToStats(project.id)}
+                        >
+                          Statistics
+                        </Dropdown.Item>
+                        <Dropdown.Item
+                          onClick={() => redirectToDocs(project.id)}
+                        >
+                          Documentation
+                        </Dropdown.Item>
                       </DropdownButton>
                     </div>
                   </td>

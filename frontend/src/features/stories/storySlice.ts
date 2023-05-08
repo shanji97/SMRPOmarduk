@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
+import { RejectStory, StoryData, UpdateStoryCategory, UpdateTimeComplexity } from "../../classes/storyData";
 import storyService from "./storyService";
 
 let user = JSON.parse(localStorage.getItem('user')!);
@@ -7,37 +7,67 @@ let user = JSON.parse(localStorage.getItem('user')!);
 interface StoryState {
     stories: StoryData[]
     storiesForSprint: StoryData[]
+    storiesForUser: StoryData[]
+    notificationReject: any [],
     isLoading: boolean
     isSuccess: boolean
     isError: boolean
+    isStoriesLoading: boolean
+    isStoriesSuccess: boolean
+    isStoriesError: boolean
     message: any
     isUpdateSuccess: boolean
     isUpdateError: boolean
     isDeleteSuccess: boolean
+    isDeleteLoading: boolean
     isDeleteError: boolean
+    isRejectError: boolean
+    isRejectSuccess: boolean
+    isRejectLoading: boolean
+    isSuccessConfirm: boolean
+    isSuccessLoading: boolean
+    isStoryUpdateLoading: boolean
+    isStoryUpdateSuccess: boolean
+    isStoryUpdateError: boolean
+    isUpdateLoading: boolean
 }
 
 const initialState: StoryState = {
     stories: [],
     storiesForSprint: [],
+    storiesForUser: [],
+    notificationReject: [],
     isLoading: false,
     isSuccess: false,
     isError: false,
+    isStoriesLoading: false,
+    isStoriesSuccess: false,
+    isStoriesError: false,
     isUpdateSuccess: false,
     isUpdateError: false,
+    isUpdateLoading: false,
     isDeleteSuccess: false,
+    isDeleteLoading: false,
     isDeleteError: false,
-    message: ''
+    message: '',
+    isRejectError: false,
+    isRejectSuccess: false,
+    isRejectLoading: false,
+    isSuccessConfirm: false,
+    isSuccessLoading: false,
+    isStoryUpdateLoading: false,
+    isStoryUpdateSuccess: false,
+    isStoryUpdateError: false,
+    
 }
 
 
-export const getAllStory = createAsyncThunk('/story/getAllStory', async (_, thunkAPI: any) => { 
+export const getAllStoryById = createAsyncThunk('/story/getAllStoryById', async (projectId: string, thunkAPI: any) => { 
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
-        return await storyService.getAllStory(token!);
+        return await storyService.getAllStoryById(projectId, token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-        console.log(message);
         return thunkAPI.rejectWithValue(message)
     }  
 });
@@ -46,6 +76,17 @@ export const getStoriesForSprint = createAsyncThunk('/story/getStoriesForSprint'
     try {
         const token = JSON.parse(localStorage.getItem('user')!).token;
         return await storyService.getStoriesForSprint(sprintId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        console.log(message);
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+
+export const getStoriesForUser = createAsyncThunk('/story/getStoriesForUser', async (_, thunkAPI: any) => { 
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.getStoriesForUser(token!);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
         console.log(message);
@@ -101,6 +142,33 @@ export const updateTimeComplexity = createAsyncThunk('/story/timeCompl', async (
         return thunkAPI.rejectWithValue(message)
     }  
 });
+export const confirmStory = createAsyncThunk('/story/confirmStory', async (storyId: string, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.confirmStory(storyId, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+export const rejectStory = createAsyncThunk('/story/rejectStory', async (rejectStory: RejectStory, thunkAPI: any) => {
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.rejectStory(rejectStory, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
+export const getNotificationReject = createAsyncThunk('/story/getNotificationReject', async (storyId: string, thunkAPI: any) => { 
+    try {
+        const token = JSON.parse(localStorage.getItem('user')!).token;
+        return await storyService.getNotificationReject(storyId, token!);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }  
+});
 
 export const storySlice = createSlice({
     name: 'stories',
@@ -110,44 +178,58 @@ export const storySlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
+            state.isStoriesLoading = false
+            state.isStoriesError = false
+            state.isStoriesSuccess = false
             state.isDeleteError = false
             state.isDeleteSuccess = false
+            state.isDeleteLoading = false
             state.isUpdateSuccess = false
             state.isUpdateError = false
+            state.isUpdateLoading = false
             state.message = ''
+            state.isRejectSuccess = false
+            state.isRejectError = false
+            state.isRejectLoading = false
+            state.isSuccessConfirm = false
+            state.isSuccessLoading = false
+            state.isStoryUpdateLoading = false
+            state.isStoryUpdateError = false
+            state.isStoryUpdateSuccess = false
+            
         }
     },
     extraReducers: builder => {
         builder
             .addCase(createStory.pending, (state) => {
-                state.isLoading = true
+                state.isStoryUpdateLoading = true
             })
             .addCase(createStory.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isUpdateSuccess = true;
-                state.isUpdateError = false;
+                state.isStoryUpdateLoading = false;
+                state.isStoryUpdateSuccess = true;
+                state.isStoryUpdateError = false;
                 state.message = '';
             })
             .addCase(createStory.rejected, (state, action) => {
-                state.isLoading = false
-                state.isUpdateSuccess = false;
-                state.isUpdateError = true
+                state.isStoryUpdateLoading = false
+                state.isStoryUpdateSuccess = false;
+                state.isStoryUpdateError = true
                 state.message = action.payload
             })
-            .addCase(getAllStory.pending, (state) => {
-                state.isLoading = true
+            .addCase(getAllStoryById.pending, (state) => {
+                state.isStoriesLoading = true
             })
-            .addCase(getAllStory.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+            .addCase(getAllStoryById.fulfilled, (state, action) => {
+                state.isStoriesLoading = false;
+                state.isStoriesSuccess = true;
+                state.isStoriesError = false;
                 state.message = '';
                 state.stories = action.payload
             })
             .addCase(getStoriesForSprint.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
+                state.isStoriesLoading = false
+                state.isStoriesSuccess = false;
+                state.isStoriesError = true
                 state.message = action.payload
             })
             .addCase(getStoriesForSprint.pending, (state) => {
@@ -160,69 +242,152 @@ export const storySlice = createSlice({
                 state.message = '';
                 state.storiesForSprint = action.payload;
             })
-            .addCase(deleteStory.rejected, (state, action) => {
+            .addCase(getStoriesForUser.rejected, (state, action) => {
                 state.isLoading = false
-                state.isDeleteError = true
+                state.isSuccess = false;
+                state.isError = true
                 state.message = action.payload
-                state.isDeleteSuccess = false;
             })
-            .addCase(deleteStory.pending, (state) => {
+            .addCase(getStoriesForUser.pending, (state) => {
                 state.isLoading = true
             })
-            .addCase(deleteStory.fulfilled, (state, action) => {
+            .addCase(getStoriesForUser.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isDeleteSuccess = true;
-                state.isDeleteError = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = '';
+                state.storiesForUser = action.payload;
+            })
+            .addCase(deleteStory.rejected, (state, action) => {
+                state.isStoryUpdateLoading = false
+                state.isStoryUpdateError = true
+                state.message = action.payload
+                state.isStoryUpdateSuccess = false;
+            })
+            .addCase(deleteStory.pending, (state) => {
+                state.isStoryUpdateLoading = true
+            })
+            .addCase(deleteStory.fulfilled, (state, action) => {
+                state.isStoryUpdateLoading = false;
+                state.isStoryUpdateSuccess = true;
+                state.isStoryUpdateError = false;
                 state.message = '';
             })
             .addCase(editStory.pending, (state) => {
                 state.isLoading = true
             })
             .addCase(editStory.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isUpdateSuccess = true;
-                state.isUpdateError = false;
+                state.isStoryUpdateLoading = false;
+                state.isStoryUpdateSuccess = true;
+                state.isStoryUpdateError = false;
                 state.message = '';
             })
             .addCase(editStory.rejected, (state, action) => {
-                state.isLoading = false
-                state.isUpdateSuccess = false;
-                state.isUpdateError = true
+                state.isStoryUpdateLoading = false
+                state.isStoryUpdateSuccess = false;
+                state.isStoryUpdateError = true
                 state.message = action.payload
             })
             .addCase(updateStoryCategory.pending, (state) => {
-                state.isLoading = true
+                state.isStoryUpdateLoading = true
             })
             .addCase(updateStoryCategory.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isSuccess = true;
-                state.isError = false;
+                state.isStoryUpdateLoading = false;
+                state.isStoryUpdateSuccess = true;
+                state.isStoryUpdateError = false;
                 state.message = '';
-                state.stories = action.payload;
+                //state.stories = action.payload;
+                
 
             })
             .addCase(updateStoryCategory.rejected, (state, action) => {
+                state.isStoryUpdateLoading = false;
+                state.isStoryUpdateSuccess = false;
+                state.isStoryUpdateError = true;
+                state.message = action.payload;
+            })
+            .addCase(updateTimeComplexity.pending, (state) => {
+                state.isStoryUpdateLoading = true;
+            })
+            .addCase(updateTimeComplexity.fulfilled, (state, action) => {
+                state.isStoryUpdateLoading = false;
+                state.isStoryUpdateSuccess = true;
+                state.isStoryUpdateError = false;
+                state.message = '';
+                state.stories = action.payload;
+                
+                /*
+                const obj = action.meta.arg;
+                const index = state.stories.findIndex(story => story.id === obj.storyId);
+                const starStory = state.stories.find(story => story.id === obj.storyId)!;
+                console.log(JSON.stringify(starStory));
+                /
+                starStory.timeComplexity = obj.timeComplexity;
+                const newStories = [...state.stories];
+                newStories[index] = starStory;
+                state.stories = newStories;
+                */
+                // 
+            })
+            .addCase(updateTimeComplexity.rejected, (state, action) => {
+                state.isStoryUpdateLoading = false
+                state.isStoryUpdateSuccess = false;
+                state.isStoryUpdateError = true
+                state.message = action.payload
+            })
+            .addCase(rejectStory.pending, (state) => {
+                state.isRejectLoading = true
+            })
+            .addCase(rejectStory.fulfilled, (state, action) => {
+                state.isRejectLoading = false;
+                state.isRejectSuccess = true;
+                state.isRejectError = false;
+                state.message = '';
+                state.stories = action.payload;
+                
+            })
+            .addCase(rejectStory.rejected, (state, action) => {
+                state.isRejectLoading = false
+                state.isRejectSuccess = false;
+                state.isRejectError = true;
+                state.message = action.payload;
+            })
+            .addCase(confirmStory.pending, (state) => {
+                state.isLoading = true
+                state.isSuccessLoading = true
+            })
+            .addCase(confirmStory.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.isError = false;
+                state.message = "Story is approved";
+                state.isSuccessConfirm = true;
+                state.isSuccessLoading = false
+                
+            })
+            .addCase(confirmStory.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = false;
+                state.isError = true;
+                state.message = action.payload;
+                state.isSuccessLoading = false
+                state.isSuccessConfirm = false;
+            })
+            .addCase(getNotificationReject.rejected, (state, action) => {
                 state.isLoading = false
                 state.isSuccess = false;
                 state.isError = true
                 state.message = action.payload
             })
-            .addCase(updateTimeComplexity.pending, (state) => {
+            .addCase(getNotificationReject.pending, (state) => {
                 state.isLoading = true
             })
-            .addCase(updateTimeComplexity.fulfilled, (state, action) => {
+            .addCase(getNotificationReject.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.isError = false;
                 state.message = '';
-                state.stories = action.payload;
-
-            })
-            .addCase(updateTimeComplexity.rejected, (state, action) => {
-                state.isLoading = false
-                state.isSuccess = false;
-                state.isError = true
-                state.message = action.payload
+                state.notificationReject = action.payload;
             })
     }
 })

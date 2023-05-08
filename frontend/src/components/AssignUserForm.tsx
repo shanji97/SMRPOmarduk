@@ -7,11 +7,7 @@ import classes from "./StoryForm.module.css";
 
 import { StoryData } from "../classes/storyData";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import {
-  createStory,
-  editStory,
-  getAllStory,
-} from "../features/stories/storySlice";
+
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -19,7 +15,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { parseJwt } from "../helpers/helpers";
 import { getAllUsers } from "../features/users/userSlice";
-import { assignUser, createTask, reset } from "../features/tasks/taskSlice";
+import {
+  assignUser,
+  createTask,
+  getTasksForSprint,
+  reset,
+} from "../features/tasks/taskSlice";
 
 // for testing
 const userRoles = [
@@ -51,6 +52,7 @@ const AssignUserForm: React.FC<AssignUserProps> = ({
   );
   const { activeProject } = useAppSelector((state) => state.projects);
   const { users } = useAppSelector((state) => state.users);
+  let { activeSprint } = useAppSelector((state) => state.sprints);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,7 +77,9 @@ const AssignUserForm: React.FC<AssignUserProps> = ({
       toast.success("User successfully changed!");
       resetInputs();
       dispatch(reset());
-      // dispatch(getAllStory);
+      if (activeSprint != undefined) {
+        dispatch(getTasksForSprint(activeSprint.id!));
+      }
       closeModal();
     }
     if (isError && !isLoading) {

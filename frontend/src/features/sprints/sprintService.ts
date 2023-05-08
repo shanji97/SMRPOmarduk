@@ -66,6 +66,16 @@ const getAllSprints = async (projectId: string, token: string) => {
     const response = await axios.get(`${SPRINTS_API_URL}/project/${projectId}`, config);
     return response.data;
 }
+const getUnrealizedStoriesForSprint = async (sprintId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `JWT ${token}`
+        }
+    }
+
+    const response = await axios.get(`${SPRINTS_API_URL}/${sprintId}/story/unrealized-stories`, config);
+    return response.data;
+}
 
 const getActiveSprint = async (projectId: string, token: string) => {
     const config = {
@@ -89,13 +99,16 @@ const deleteSprint = async (sprintId: string, token: string) => {
     return response.data;
 }
 
+
 const sprintService = {
     createSprint,
     getAllSprints,
     getActiveSprint,
     updateSprint,
     deleteSprint,
-    addStoryToSprint
+    addStoryToSprint,
+    getUnrealizedStoriesForSprint
+    
 }
 
 export default sprintService;

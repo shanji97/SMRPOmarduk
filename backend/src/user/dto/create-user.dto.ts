@@ -80,4 +80,15 @@ export const CreateUserSchema = Joi.object().keys({
   description: Joi.string().trim().min(1).max(65535).allow(null),
   dateCreated: Joi.any().strip(),
   dateUpdated: Joi.any().strip(),
+
+  logins: Joi.any().strip(),
+  userRoles: Joi.any().strip(),
+  tasks: Joi.any().strip(),
+  storyNotiications: Joi.any().strip(),
+  projectWallNotiications: Joi.any().strip(),
+  projectWallNotificationComments: Joi.any().strip(),
+  taskTime: Joi.any().strip(),
+  stories: Joi.any().strip(),
+  assignedStories: Joi.any().strip(),
+  planningPokerVotes: Joi.any().strip(),
 });

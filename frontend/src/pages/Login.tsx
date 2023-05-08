@@ -29,7 +29,7 @@ const Login = () => {
     const formIsValid                 = username !== '' && password !== '';
 
     useEffect(() => {
-        if (isError) {
+        if (isError && message !== '') {
             toast.error(message);
         }
         if (user !== null || isSuccess) {

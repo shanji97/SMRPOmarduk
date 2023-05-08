@@ -81,10 +81,10 @@ const getActiveProject = async (token: string) => {
 const projectService = {
     create,
     getAllProjects,
-    getProjectUserRoles,
     editProject,
     activateProject,
     getActiveProject,
+    getProjectUserRoles
 }
 
 export default projectService;

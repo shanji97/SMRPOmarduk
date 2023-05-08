@@ -14,7 +14,7 @@ export class PlanningPokerVote {
   @PrimaryColumn({ unsigned: true })
   userId: number;
 
-  @ManyToOne(type => User, user => user.planningPockerVotes, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+  @ManyToOne(type => User, user => user.planningPokerVotes, { onUpdate: 'CASCADE', onDelete: 'CASCADE' })
   user: User;
 
   @CreateDateColumn()

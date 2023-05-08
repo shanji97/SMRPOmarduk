@@ -3,8 +3,8 @@ import { Story } from '../story/story.entity';
 import { User } from '../user/user.entity';
 
 export enum NotificationStatus {
-  Rejected = 0, //26 kartica
-  Info = 1, //10 kartica
+  Rejected = 0,
+  Info = 1,
 }
 
 @Entity()
@@ -18,11 +18,8 @@ export class StoryNotification {
   @Column({ unsigned: true, type: 'int' })
   userId: number;
 
-  @Column({ unsigned: true, type: 'int', nullable: true })
-  userFor?: number | null;
-
-  @Column({type: 'boolean', default: false})
-  userViewed: boolean;
+  @Column({ length: 200 })
+  authorName: string;
 
   @Column({ type: 'text' })
   notificationText: string;
