@@ -70,8 +70,10 @@ export interface RejectStory {
 
 export interface NotificationData {
     id?:       string,
-    description: string
-    storyId: string
+    description: string,
+    storyId: string,
+    authorName?: string,
+    created?: string
 }
 
 export interface PostDataNotification {

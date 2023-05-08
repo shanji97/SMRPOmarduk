@@ -18,6 +18,7 @@ import {
   getAllSprints,
   setActiveSprint,
 } from "../features/sprints/sprintSlice";
+import { getProjectUserRoles } from "../features/projects/projectSlice";
 
 function Header() {
   const dispatch = useAppDispatch();
@@ -25,7 +26,7 @@ function Header() {
 
   const { user, lastLogin, userData } = useAppSelector((state) => state.users);
   const { sprints } = useAppSelector((state) => state.sprints);
-  const { activeProject } = useAppSelector((state) => state.projects);
+  const { activeProject, userRoles } = useAppSelector((state) => state.projects);
 
   const [sub, setSub] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -40,14 +41,49 @@ function Header() {
 
     setSub(userData1.sub);
     setIsAdmin(userData1.isAdmin);
-
+    setUserId(userData1.sid);
     dispatch(getLastLogin(userData1.sid));
     setLastLoginDate(lastLogin);
   }, [user, lastLogin]);
 
+
+  const [scrumMasterId, setScrumMasterId] = useState();
+   const [productOwnerId, setScrumProductOwnerId] = useState();
+   const [userId, setUserId] = useState();
+
+  const isUserScramMaster = () => {
+    if (scrumMasterId === userId && userId && scrumMasterId) return true;
+    else return false;
+  };
+  const isUserProductOwn = () => {
+    if (productOwnerId === userId && userId && productOwnerId) return true;
+    else return false;
+  };
+
+  useEffect(() => {
+    if (activeProject.id) {
+      
+      const dataArray = Object.values(userRoles);
+      const filteredDataScramMaster = dataArray.filter(
+        (item) => item.role === 1
+      );
+      const filteredDataProductOwner = dataArray.filter(
+        (item) => item.role === 2
+      );
+      if (filteredDataScramMaster) {
+        setScrumMasterId(filteredDataScramMaster[0].userId);
+      }
+      if (filteredDataProductOwner) {
+        setScrumProductOwnerId(filteredDataProductOwner[0].userId);
+      }
+    }
+  }, [userRoles]);
+
+
   useEffect(() => {
     if (activeProject.id !== "") {
       dispatch(getAllSprints(activeProject.id!));
+      dispatch(getProjectUserRoles(activeProject.id!));
     }
   }, [activeProject, dispatch, sprints.length]);
 
@@ -143,11 +179,12 @@ function Header() {
               <NavDropdown.Item onClick={redirectToProductBacklog}>
                 ProductBacklog
               </NavDropdown.Item>
-              {
+              {!isUserProductOwn() && (
+                                          
                 <NavDropdown.Item onClick={redirectToSprintBacklog}>
                   SprintBacklog
                 </NavDropdown.Item>
-              }
+              )}
             </NavDropdown>
 
             <NavDropdown

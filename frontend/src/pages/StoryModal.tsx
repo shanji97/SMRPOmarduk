@@ -27,6 +27,7 @@ import {
   getRejectMessage,
   reset,
 } from "../features/stories/storyNotificationSlice";
+//import  isGetNotSuccess  from "../features/stories/storyNotificationSlice";
 import { toast } from "react-toastify";
 import PostNotification from "../components/PostNotification";
 import { getNotificationReject } from "../features/stories/storySlice";
@@ -85,27 +86,20 @@ function StoryModal({ onCancel, show, item }: StoryModalProps) {
     setUser(userData);
     setIsAdmin(userData.isAdmin);
     setUserName(userData.sub);
-    dispatch(getActiveProject());
+    
   }, []);
 
   useEffect(() => {
     dispatch(getNotifications(item.id!));
     //dispatch(getRejectMessage(item.id!));
     dispatch(getNotificationReject(item.id!));
-  }, [activeProject]);
+  }, []);
+
+ 
 
   useEffect(() => {
-    if (isError ) {
-      toast.error(message);
-    }
-
-    return () => {
-      dispatch(reset());
-    };
-  }, [isError, message]);
-
-  useEffect(() => {
-    if (isNotificationSuccess && !isNotificationLoading && message !== '') {
+    if (isNotificationSuccess && !isNotificationLoading) {
+      //dispatch(reset())
       toast.success(message);
       dispatch(getNotifications(item.id!));
     }
@@ -121,6 +115,8 @@ function StoryModal({ onCancel, show, item }: StoryModalProps) {
   const submitNewPost = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newPost: NotificationData = {
+      authorName: userName,
+      created: new Date().toString(),
       description: postContent,
       storyId: item.id!,
     };
@@ -129,7 +125,7 @@ function StoryModal({ onCancel, show, item }: StoryModalProps) {
     setPostContent("");
     //dispatch(getNotifications(item.id!));
   };
-
+  
   return (
     <Modal
       show={show}
